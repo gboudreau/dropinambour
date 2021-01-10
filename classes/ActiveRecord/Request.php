@@ -101,9 +101,6 @@ class Request extends AbstractActiveRecord
         $m->imdb_id = $movie->imdbId ?? NULL;
         $m->tmdb_id = $movie->tmdbId ?? NULL;
         $m->added_when = date('Y-m-d H:i:s', strtotime($movie->added));
-        if (!empty($movie->movieFile->dateAdded)) {
-            $m->filled_when = date('Y-m-d H:i:s', strtotime($movie->movieFile->dateAdded));
-        }
         return $m;
     }
 
@@ -120,9 +117,6 @@ class Request extends AbstractActiveRecord
         $m->imdb_id = $show->imdbId ?? NULL;
         $m->tvdb_id = $show->tvdbId ?? NULL;
         $m->added_when = date('Y-m-d H:i:s', strtotime($show->added));
-        if (@$show->statistics->episodeCount > 0) {
-            $m->filled_when = date('Y-m-d H:i:s');
-        }
         return $m;
     }
 
