@@ -1,0 +1,25 @@
+{
+  "name" : "pommepause/dropinambour-requests-for-plex",
+  "description": "Requests manager for Plex",
+  "license": "GPL-3.0-or-later",
+  "config": {
+    "optimize-autoloader": true,
+    "apcu-autoloader": true
+  },
+  "require": {
+    "php": ">=7.3",
+    "ext-PDO": "*",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-simplexml": "*",
+    "delight-im/cookie": "^3.4",
+    "sendgrid/sendgrid": "~6.2",
+    "league/plates": "3.*",
+    "symfony/http-foundation": "^4.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "PommePause\\Dropinambour\\": "classes/"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+.movie_box {
+    text-decoration: none;
+    color: #333;
+}
+.movie_box.available .poster, .available > .poster {
+    border-bottom: 7px solid #6eee6e;
+}
+.movie_box.available_partially .poster, .available_partially > .poster {
+    border-bottom: 7px solid #ffe563;
+}
+.movie_box.requested .poster, .requested > .poster {
+    border-bottom: 7px solid #ff9063;
+}
+.poster {
+    box-shadow: 0 6px 8px 0 rgba(0, 0, 0, 0.2) !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+.movie_box .poster {
+    margin-bottom: 10px;
+    width: 185px;
+}
+.card {
+    border: none;
+}
+.card-title {
+    margin-bottom: .3rem;
+}
+.card-body {
+    padding: 0.7rem 1rem;
+}
+.card-body p {
+    margin-bottom: 0;
+}

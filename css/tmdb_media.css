@@ -1,0 +1,42 @@
+.poster {
+    margin-top: 0.66em;
+    /*position: absolute;*/
+    /*right: 0;*/
+}
+.backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 500px;
+    background-size: cover;
+    background-position-y: 25%;
+    z-index: -1;
+}
+.overview {
+    font-size: 1.2em;
+}
+
+.urls_container {
+    margin-top: 1.33em;
+}
+
+.urls_container .url {
+    padding-left: 0.66em;
+}
+
+.available .availability .value {
+    background-color: #6eee6e;
+    color: black;
+    padding: 2px 4px;
+}
+.available_partially .availability .value {
+    background-color: #ffe563;
+    color: black;
+    padding: 2px 4px;
+}
+.requested .requested_by .value {
+    background-color: #ff9063;
+    color: black;
+    padding: 2px 4px;
+}

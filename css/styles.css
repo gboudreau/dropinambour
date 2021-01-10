@@ -1,0 +1,18 @@
+html, body {
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+nav form .form-control {
+    width: 190px;
+}
+
+h1 {
+    margin-block-start: 0.66em;
+}
+h4 {
+    margin-block-start: 1em;
+}
+
+.odd {
+    background-color: rgba(0, 0, 0, 0.07);
+}

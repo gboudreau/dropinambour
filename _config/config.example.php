@@ -1,0 +1,44 @@
+<?php
+
+namespace PommePause;
+
+use stdClass;
+
+define('DEBUGSQL', FALSE);
+
+$CONFIG = new stdClass();
+
+$CONFIG->DB_ENGINE = 'mysql';
+$CONFIG->DB_HOST   = '172.17.0.1';
+$CONFIG->DB_PORT   =  3306;
+$CONFIG->DB_USER   = 'dinb_user';
+$CONFIG->DB_PWD    = ''; // Choose something random!
+$CONFIG->DB_NAME   = 'dinb';
+
+$CONFIG->SYSTEM_TIMEZONE = 'America/New_York'; // PHP format; ref: http://php.net/manual/en/timezones.php
+$CONFIG->MYSQL_TIMEZONE  = 'America/New_York'; // MySQL format; ref: SELECT tzn.Name, GROUP_CONCAT(DISTINCT t.Abbreviation) AS abbreviations FROM mysql.time_zone_name tzn LEFT JOIN mysql.time_zone_transition_type t ON (t.Time_zone_id = tzn.Time_zone_id) GROUP BY tzn.Time_zone_id
+
+// Your Plex server
+$CONFIG->PLEX_BASE_URL = 'http://172.17.0.1:32400';
+
+// Only Radarr v3 is supported
+$CONFIG->RADARR_URL = 'http://192.168.155.88:7878/api/v3';
+$CONFIG->RADARR_API_KEY = '3a0000000000000000000000000000c8';
+
+// Only Sonarr v3 is supported
+$CONFIG->SONARR_URL = 'http://192.168.155.88:8989/api/v3';
+$CONFIG->SONARR_API_KEY = 'd1000000000000000000000000000044';
+
+// Unused for now; should be used as available option for search
+$CONFIG->LANGUAGES = ['en', 'fr'];
+
+// Sendgrid API key to send emails
+$CONFIG->SENDGRID_API_KEY         = 'SG....x8';
+$CONFIG->EMAIL_NOTIF_FROM_NAME    = 'dropinambour';
+$CONFIG->EMAIL_NOTIF_FROM_ADDRESS = 'admin@something.com';
+
+// When new requests are made, this email will receive notifications
+$CONFIG->NEW_REQUESTS_NOTIF_EMAIL = 'admin@something.com';
+
+// Make sure this file is writable by the user running the web server
+$CONFIG->LOG_FILE = '/var/log/dropinambour.log';
