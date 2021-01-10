@@ -14,9 +14,17 @@ $this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex"
 <?php $this->end() ?>
 
 <?php foreach (["My Requests" => $requests_mine, "Others' Requests" => $requests_others] as $title => $requests) : ?>
-    <?php if (empty($requests)) { continue; } ?>
-
     <h1><?php phe($title) ?></h1>
+
+    <?php if (empty($requests) && $title == 'My Requests') : ?>
+        <div class="alert alert-primary" role="alert">
+            You didn't request anything yet.<br/>
+            Use the <a href="./">Discover</a> page, or the search field, to find a movie or TV show you'd like to be added on Plex.
+        </div>
+        <?php continue; ?>
+    <?php endif; ?>
+
+    <?php if (empty($requests)) { continue; } ?>
 
     <table id="requests_list" class="table table-striped">
         <thead>
