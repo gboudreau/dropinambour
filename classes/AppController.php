@@ -70,6 +70,57 @@ class AppController extends AbstractController
             'value' => $media->is_available ? 'Yes' . $avail_suffix : 'No',
         ];
 
+        if (!empty($media->requested)) {
+            if (Plex::getUserInfos()->homeAdmin) {
+                $stats[] = [
+                    'name'  => "Requested by",
+                    'class' => 'requested_by',
+                    'value' => $media->requested->requested_by->username,
+                ];
+            }
+            if (!$media->requested->monitored) {
+                $stats[] = [
+                    'name' => "Monitored",
+                    'class' => 'requested_by',
+                    'value' => 'No',
+                ];
+            }
+        }
+
+        if (!empty($media->requested) && $media->media_type == 'tv' && $media->is_available !== TRUE) {
+            ob_start();
+            ?>
+            <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
+                <input name="media_type" type="hidden" value="<?php phe($media->media_type) ?>">
+                <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
+                <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">
+                <input name="req_id" type="hidden" value="<?php phe($media->requested->id) ?>">
+                <div class="col-auto">
+                    <label class="visually-hidden" for="season-input">Season</label>
+                    <select name="season" class="form-control" id="season-input" required onchange="$(this).closest('form').find('button').prop('disabled', $(this).val() === '');">
+                        <option value="">Choose a season</option>
+                        <?php foreach ($media->seasons as $season) : ?>
+                            <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored ? '' : $season->season_number) ?>">
+                                <?php phe($season->name) ?>
+                                <?php if (@$season->is_available === TRUE) { phe(' (already available)'); } elseif (@$season->monitored) { phe(' (already requested)'); } elseif (@$season->is_available === 'partially') { phe(' (partial)'); } ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" type="submit" disabled>Request</button>
+                </div>
+            </form>
+            <?php
+            $request_form_html = ob_get_clean();
+
+            $stats[] = [
+                'name'  => "Request a season",
+                'class' => 'request',
+                'value_html' => $request_form_html,
+            ];
+        }
+
         if (!$media->is_available && empty($media->requested)) {
             $paths = $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths();
             $profiles = $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles();
@@ -84,10 +135,14 @@ class AppController extends AbstractController
                 <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
                 <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">
                 <input name="title" type="hidden" value="<?php phe($media->title) ?>">
+                <?php if ($media->media_type == 'tv') : ?>
+                    <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
+                    <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
+                <?php endif; ?>
                 <?php if (Plex::getUserInfos()->homeAdmin) : ?>
                     <div class="col-auto">
-                        <label class="visually-hidden" for="autoSizingInput">Path</label>
-                        <select name="path" class="form-control">
+                        <label class="visually-hidden" for="path-input">Path</label>
+                        <select name="path" class="form-control" id="path-input">
                             <option value="">Path</option>
                             <?php foreach ($paths as $path) : ?>
                                 <option value="<?php phe($path) ?>" <?php echo_if($path == $default_path, 'selected') ?>><?php phe($path) ?></option>
@@ -95,8 +150,8 @@ class AppController extends AbstractController
                         </select>
                     </div>
                     <div class="col-auto">
-                        <label class="visually-hidden" for="autoSizingInput">Quality</label>
-                        <select name="quality" class="form-control">
+                        <label class="visually-hidden" for="quality-input">Quality</label>
+                        <select name="quality" class="form-control" id="quality-input">
                             <option value="">Quality</option>
                             <?php foreach ($profiles as $qp) : ?>
                                 <option value="<?php phe($qp->id) ?>" <?php echo_if($qp->id == $default_quality, 'selected') ?>><?php phe($qp->name) ?></option>
@@ -104,11 +159,9 @@ class AppController extends AbstractController
                         </select>
                     </div>
                     <?php if ($media->media_type == 'tv') : ?>
-                        <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
-                        <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
                         <div class="col-auto">
-                            <label class="visually-hidden" for="autoSizingInput">Language</label>
-                            <select name="language" class="form-control">
+                            <label class="visually-hidden" for="language-input">Language</label>
+                            <select name="language" class="form-control" id="language-input">
                                 <option value="">Language</option>
                                 <?php foreach (Sonarr::getLanguageProfiles() as $lp) : ?>
                                     <option value="<?php phe($lp->id) ?>" <?php echo_if($lp->id == $default_language, 'selected') ?>><?php phe($lp->name) ?></option>
@@ -138,22 +191,6 @@ class AppController extends AbstractController
                 'value'     => $media->plex_url,
                 'link_text' => 'Click to open on Plex',
             ];
-        }
-        if (!empty($media->requested)) {
-            if (Plex::getUserInfos()->homeAdmin) {
-                $stats[] = [
-                    'name'  => "Requested by",
-                    'class' => 'requested_by',
-                    'value' => $media->requested->requested_by->username,
-                ];
-            }
-            if (!$media->requested->monitored) {
-                $stats[] = [
-                    'name' => "Monitored",
-                    'class' => 'requested_by',
-                    'value' => 'No',
-                ];
-            }
         }
         if (!empty($media->vote_average)) {
             $stats[] = [
@@ -300,7 +337,17 @@ class AppController extends AbstractController
     }
 
     public function saveRequest() : Response {
-        if ($_POST['media_type'] == 'movie') {
+        if (!empty($_POST['req_id'])) {
+            // Add a season to an existing request
+            $request = Request::getOne($_POST['req_id']);
+
+            if (empty($request)) {
+                $this->showError("Error: request ID {$_POST['req_id']} not found.");
+            } else {
+                Sonarr::addSeason($request->external_id, $_POST['season']);
+                $this->showAlert(sprintf("Added request for S%02d of \"$request->title\".", $_POST['season']));
+            }
+        } elseif ($_POST['media_type'] == 'movie') {
             if (empty($_POST['path'])) {
                 $_POST['path'] = Config::getFromDB('RADARR_DEFAULT_PATH');
             }
@@ -322,7 +369,7 @@ class AppController extends AbstractController
             Sonarr::addShow($_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
             $this->showAlert("Added request for \"{$_POST['title']}\" TV show.");
         } else {
-            Logger::error("Error: unknown media type: " . $_POST['media_type']);
+            $this->showError("Error: unknown media type: " . $_POST['media_type']);
         }
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_MEDIA, [$_POST['media_type'] => $_POST['tmdb_id']]));
     }

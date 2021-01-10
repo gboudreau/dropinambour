@@ -80,14 +80,59 @@ class Sonarr {
             'addOptions' => (object) [
                 'monitor'                      => 'firstSeason',
                 'searchForCutoffUnmetEpisodes' => FALSE,
-                'searchForMissingEpisodes'     => FALSE,
+                'searchForMissingEpisodes'     => TRUE,
             ],
         ];
         $show = static::sendPOST('/series', $data);
         $request = Request::fromSonarrShow($show);
         $request->save();
-        $request->notifyAdminRequestAdded();
+        $request->notifyAdminRequestAdded(1);
         return $show;
+    }
+
+    public static function addSeason(int $sonarr_id, int $season_number) : stdClass {
+        $show = static::getShow($sonarr_id);
+        foreach ($show->seasons as $season) {
+            if ($season->seasonNumber == $season_number) {
+                $season->monitored = TRUE;
+                break;
+            }
+        }
+        $show = static::sendPOST("/series/$sonarr_id", $show, 'PUT');
+
+        // Might need to turn on monitoring for specific episodes
+        $episodes_to_monitor = [];
+        $episodes = static::getShowEpisodes($sonarr_id);
+        foreach ($episodes as $episode) {
+            if ($episode->seasonNumber == $season_number && !$episode->monitored) {
+                $episodes_to_monitor[] = $episode->id;
+            }
+        }
+        if (!empty($episodes_to_monitor)) {
+            static::sendPOST("/episode/monitor", ['episodeIds' => $episodes_to_monitor, 'monitored' => TRUE], 'PUT');
+        }
+
+        static::sendCommand('SeasonSearch', ['seriesId' => $sonarr_id, 'seasonNumber' => $season_number]);
+
+        $request = Request::fromSonarrShow($show);
+        $request->save();
+        $request->addSeasonsFromSonarrShow($show);
+        $request->notifyAdminRequestAdded($season_number);
+
+        return $show;
+    }
+
+    public static function getShow(int $sonarr_id) : stdClass {
+        return static::sendGET("/series/$sonarr_id");
+    }
+
+    public static function getShowEpisodes(int $sonarr_id) : array {
+        return static::sendGET("/episode?seriesId=$sonarr_id");
+    }
+
+    public static function sendCommand(string $command_name, array $command_options = []) {
+        $command_options['name'] = $command_name;
+        return static::sendPOST('/command', $command_options);
     }
 
     private static function getBaseURL() : string {
@@ -101,9 +146,9 @@ class Sonarr {
         return $response;
     }
 
-    private static function sendPOST($url, $data) {
+    private static function sendPOST($url, $data, string $method = 'POST') {
         $api_key = Config::get('SONARR_API_KEY');
-        $response = sendPOST(static::getBaseURL() . $url, $data, ["X-Api-Key: $api_key", "Accept: application/json"], 'application/json');
+        $response = sendPOST(static::getBaseURL() . $url, $data, ["X-Api-Key: $api_key", "Accept: application/json"], 'application/json', $method);
         $response = json_decode($response);
         return $response;
     }

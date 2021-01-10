@@ -14,7 +14,13 @@ use stdClass;
 
 <div style="margin-top: 12px">Hi Admin,</div>
 
-<div style="margin-top: 12px"><?php phe($params->request->requested_by) ?> added a request for the <?php phe($params->request->media_type) ?> "<?php phe($params->request->title) ?>".</div>
+<div style="margin-top: 12px">
+    <?php if (!empty($params->season_number)) : ?>
+        <?php phe(sprintf("%s added a request for the season %d of \"%s\".", $params->request->requested_by, $params->season_number, $params->request->title)) ?>
+    <?php else : ?>
+        <?php phe(sprintf("%s added a request for the %s \"%s\".", $params->request->requested_by, $params->request->media_type, $params->request->title)) ?>
+    <?php endif; ?>
+</div>
 
 <div style="margin-top: 12px">Good day to you.</div>
 

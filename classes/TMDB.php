@@ -497,6 +497,12 @@ class TMDB {
                     $q = "SELECT * FROM available_episodes WHERE media_id = :media_id";
                     $available_seasons = DB::getAll($q, $local_media_id, 'season');
 
+                    if (count($medias_by_id) == 1) {
+                        $q = "SELECT season, monitored FROM requested_episodes WHERE request_id = :req_id";
+                        $monitored_seasons = DB::getAll($q, $media->requested->id, 'season');
+                        $monitored_seasons = getPropValuesFromArray($monitored_seasons, 'monitored', TRUE);
+                    }
+
                     $media->available_seasons = [];
                     $media->not_available_seasons = [];
                     foreach ($media->seasons ?? [] as $season) {
@@ -504,6 +510,7 @@ class TMDB {
                             // We don't really care for specials...
                             continue;
                         }
+                        $season->monitored = $monitored_seasons[$season->season_number] ?? FALSE;
                         if (@$available_seasons[$season->season_number]->episodes >= $season->episode_count) {
                             // All episodes are available for this season
                             $season->is_available = TRUE;

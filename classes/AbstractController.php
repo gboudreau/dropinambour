@@ -121,6 +121,7 @@ abstract class AbstractController
     }
 
     protected function showError($error, $escape = TRUE) {
+        Logger::error($error);
         $this->showAlert($error, $escape, TRUE);
     }
 }

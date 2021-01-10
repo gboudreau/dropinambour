@@ -8,6 +8,7 @@ use PommePause\Dropinambour\DBQueryBuilder;
 use PommePause\Dropinambour\Logger;
 use PommePause\Dropinambour\Mailer;
 use PommePause\Dropinambour\Plex;
+use PommePause\Dropinambour\Sonarr;
 use PommePause\Dropinambour\TMDB;
 
 class Request extends AbstractActiveRecord
@@ -55,9 +56,9 @@ class Request extends AbstractActiveRecord
         return $result;
     }
 
-    public function notifyAdminRequestAdded() : void {
+    public function notifyAdminRequestAdded(?int $season_number = NULL) : void {
         $this->media_type = ($this->monitored_by == 'sonarr' ? 'TV show' : 'movie');
-        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this]);
+        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number]);
     }
 
     public function notifyAdminRequestRemoved() : void {
@@ -128,6 +129,17 @@ class Request extends AbstractActiveRecord
 
     public function addSeasonsFromSonarrShow($show) : void {
         foreach ($show->seasons as $season) {
+            if ($season->monitored && $season->statistics->totalEpisodeCount > $season->statistics->episodeCount) {
+                // Some missing episodes; is it because they are not monitored?
+                $episodes = Sonarr::getShowEpisodes($show->id);
+                foreach ($episodes as $episode) {
+                    if ($episode->seasonNumber == $season->seasonNumber && !$episode->monitored) {
+                        $season->monitored = FALSE;
+                        break;
+                    }
+                }
+            }
+
             $q = "INSERT INTO requested_episodes SET request_id = :req_id, season = :season, monitored = :monitored, episodes = :episodes ON DUPLICATE KEY UPDATE monitored = VALUES(monitored), episodes = VALUES(episodes)";
             $params = ['req_id' => $this->id, 'season' => $season->seasonNumber, 'monitored' => $season->monitored, 'episodes' => $season->statistics->totalEpisodeCount ?? NULL];
             DB::insert($q, $params);
