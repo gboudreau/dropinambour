@@ -771,7 +771,7 @@ class DBQueryBuilder
             foreach (glob("classes/ActiveRecord/*.php") as $class_file) {
                 $filename = basename($class_file);
                 $class_name = explode(".", $filename);
-                $class_type = "Netlift\\ActiveRecord\\" . $class_name[0];
+                $class_type = "PommePause\\Dropinambour\\ActiveRecord\\" . $class_name[0];
                 if (is_subclass_of($class_type, AbstractActiveRecord::class)) {
                     static::$_active_record_classes[$class_type::TABLE_NAME] = $class_type;
                 }

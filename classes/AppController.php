@@ -352,6 +352,28 @@ class AppController extends AbstractController
         return $this->response($this->render('/requests', ['requests_mine' => $requests_mine, 'requests_others' => $requests_others]));
     }
 
+    public function removeRequest() : Response {
+        $me = Plex::getUserInfos();
+
+        $request = Request::getOne($this->getQueryParam('id'));
+        if (empty($request)) {
+            Logger::error("User $me->username tried to deleted an unknown request (ID " . $this->getQueryParam('id') . ").");
+            die("Error: This request does not exist!");
+        }
+
+        if (!$me->homeAdmin && $request->requested_by->username != $me->username) {
+            Logger::error("User $me->username tried to deleted a request that isn't hers/his (ID $request->id).");
+            die("Error: This request is not yours!");
+        }
+
+        $q = "UPDATE requests SET hidden = 1 WHERE id = :req_id";
+        DB::execute($q, $request->id);
+
+        $request->notifyAdminRequestRemoved();
+
+        return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS));
+    }
+
     /* pragma mark - Admin pages: Plex, Radarr, Sonarr, cron */
 
     public function viewAdminPlex() : Response {

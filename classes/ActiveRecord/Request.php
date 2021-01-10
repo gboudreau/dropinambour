@@ -60,6 +60,11 @@ class Request extends AbstractActiveRecord
         Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this]);
     }
 
+    public function notifyAdminRequestRemoved() : void {
+        $this->media_type = ($this->monitored_by == 'sonarr' ? 'TV show' : 'movie');
+        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "Request removed: \"$this->title\"", 'request_removed', ['request' => $this]);
+    }
+
     public function notifyIfFilled() : void {
         if (empty($this->filled_when)) {
             return;
@@ -129,11 +134,16 @@ class Request extends AbstractActiveRecord
         }
     }
 
+    public static function getOne($value, ?string $key = NULL, ?DBQueryBuilder $builder = NULL, int $options = 0) {
+        $request = parent::getOne($value, $key, $builder, $options);
+        return self::postProcessRequestRowFromDB($request);
+    }
+
     /**
      * @return self[]
      */
     public static function getAllMovieRequests(bool $order_by_name = FALSE) : array {
-        $q = "SELECT * FROM requests WHERE monitored_by = 'radarr'";
+        $q = "SELECT * FROM requests WHERE monitored_by = 'radarr' AND NOT hidden";
         if ($order_by_name) {
             $q .= " ORDER BY title";
         }
@@ -149,6 +159,7 @@ class Request extends AbstractActiveRecord
                 FROM requests r
                 LEFT JOIN tmdb_external_ids ids ON (ids.tvdb_id = r.tvdb_id)
                WHERE r.monitored_by = 'sonarr'
+                 AND NOT r.hidden
                GROUP BY r.id";
         if ($order_by_name) {
             $q .= " ORDER BY r.title";
@@ -161,7 +172,7 @@ class Request extends AbstractActiveRecord
      * @return self[]
      */
     public static function getOpenMovieRequests() : array {
-        $q = "SELECT * FROM requests WHERE monitored_by = 'radarr' AND notified_when IS NULL";
+        $q = "SELECT * FROM requests WHERE monitored_by = 'radarr' AND notified_when IS NULL AND NOT hidden";
         $rows = DB::getAll($q, [], 'tmdb_id', 0, self::class);
         return array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
     }
@@ -170,7 +181,7 @@ class Request extends AbstractActiveRecord
      * @return self[]
      */
     public static function getOpenShowRequests() : array {
-        $q = "SELECT * FROM requests WHERE monitored_by = 'sonarr' AND notified_when IS NULL";
+        $q = "SELECT * FROM requests WHERE monitored_by = 'sonarr' AND notified_when IS NULL AND NOT hidden";
         $rows = DB::getAll($q, [], 'tvdb_id', 0, self::class);
         return array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
     }

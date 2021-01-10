@@ -57,6 +57,7 @@ CREATE TABLE `requests` (
   `added_when` timestamp NOT NULL DEFAULT current_timestamp(),
   `filled_when` datetime DEFAULT NULL,
   `notified_when` datetime DEFAULT NULL,
+  `hidden` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `external_id` (`external_id`,`monitored_by`),
   KEY `notified_when` (`notified_when`),

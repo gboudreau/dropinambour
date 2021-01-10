@@ -81,7 +81,7 @@ abstract class AbstractController
         return $this->_request;
     }
 
-    protected function getParamFromRequest($key, $default = NULL) {
+    protected function getRequestParam($key, $default = NULL) {
         return $this->request()->request->get($key, $default);
     }
 

@@ -12,6 +12,7 @@ class Router
     public const ACTION_AJAX     = 'ajax';
     public const ACTION_SEARCH   = 'search';
     public const ACTION_CRON     = 'cron';
+    public const ACTION_REMOVE   = 'remove';
 
     public const VIEW_MEDIA        = 'media';
     public const VIEW_COLLECTION   = 'collection';
@@ -28,6 +29,8 @@ class Router
     public const IMPORT_PLEX_MEDIAS     = 'plexMedias';
     public const IMPORT_RADARR_REQUESTS = 'radarrRequests';
     public const IMPORT_SONARR_REQUESTS = 'sonarrRequests';
+
+    public const REMOVE_REQUEST = 'request';
 
     public const AJAX_MORE_MOVIES = 'moreMovies';
     public const AJAX_MORE_SHOWS  = 'moreShows';
@@ -61,6 +64,7 @@ class Router
         case static::ACTION_SAVE:
         case static::ACTION_IMPORT:
         case static::ACTION_AJAX:
+        case static::ACTION_REMOVE:
             return $action . ucfirst($request->query->get('what'));
         case static::ACTION_SEARCH:
         case static::ACTION_CRON:
