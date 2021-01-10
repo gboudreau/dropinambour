@@ -87,7 +87,11 @@ class AppController extends AbstractController
             }
         }
 
-        if (!empty($media->requested) && $media->media_type == 'tv' && $media->is_available !== TRUE) {
+        if ($media->media_type == 'tv') {
+            $episode_counts = getPropValuesFromArray($media->seasons, 'episode_count');
+            $total_episodes = array_sum($episode_counts);
+        }
+        if (!empty($media->requested) && $media->media_type == 'tv' && $media->is_available !== TRUE && $media->status != 'In Production' && $total_episodes > 0) {
             ob_start();
             ?>
             <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
@@ -100,9 +104,9 @@ class AppController extends AbstractController
                     <select name="season" class="form-control" id="season-input" required onchange="$(this).closest('form').find('button').prop('disabled', $(this).val() === '');">
                         <option value="">Choose a season</option>
                         <?php foreach ($media->seasons as $season) : ?>
-                            <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored ? '' : $season->season_number) ?>">
+                            <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored || @$season->episode_count == 0 ? '' : $season->season_number) ?>">
                                 <?php phe($season->name) ?>
-                                <?php if (@$season->is_available === TRUE) { phe(' (already available)'); } elseif (@$season->monitored) { phe(' (already requested)'); } elseif (@$season->is_available === 'partially') { phe(' (partial)'); } ?>
+                                <?php if (@$season->is_available === TRUE) { phe(' (already available)'); } elseif (@$season->monitored) { phe(' (already requested)'); } elseif (@$season->episode_count == 0) { phe(' (empty)'); } elseif (@$season->is_available === 'partially') { phe(' (partial)'); } ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
