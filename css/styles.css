@@ -16,3 +16,8 @@ h4 {
 .odd {
     background-color: rgba(0, 0, 0, 0.07);
 }
+
+.navbar {
+    margin: 24px 0;
+    border-radius: 8px;
+}

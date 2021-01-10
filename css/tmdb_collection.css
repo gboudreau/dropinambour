@@ -32,3 +32,7 @@
 .card-body p {
     margin-bottom: 0;
 }
+.suggested h1 {
+    margin-block-start: 1em;
+    margin-block-end: 0.66em;
+}

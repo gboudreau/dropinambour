@@ -11,8 +11,8 @@ $this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex"
 <link href="./css/tmdb_collection.css" rel="stylesheet">
 <?php $this->end() ?>
 
-<h1>Popular, Now Playing &amp; Upcoming Movies</h1>
-<div id="suggested_movies">
+<div id="suggested_movies" class="suggested">
+    <h1 class="text-center">Popular, Now Playing &amp; Upcoming Movies</h1>
     <?php $this->start('cards-suffix') ?>
     <div class="col">
         <div style="width: 185px; padding-top: 140px; margin-bottom: 140px" class="card load-more">
@@ -23,8 +23,8 @@ $this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex"
     <?php $this->insert('/media_items', ['medias' => TMDB::getSuggestedMovies(), 'suffix' => $this->section('cards-suffix')]) ?>
 </div>
 
-<h1>Popular, Trending &amp; Now Playing TV Shows</h1>
-<div id="suggested_shows">
+<div id="suggested_shows" class="suggested">
+    <h1 class="text-center">Popular, Trending &amp; Now Playing TV Shows</h1>
     <?php $this->start('cards-suffix') ?>
     <div class="col">
         <div style="width: 185px; padding-top: 140px; margin-bottom: 140px" class="card load-more">

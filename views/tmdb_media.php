@@ -23,26 +23,37 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
         <div class="backdrop" style="background-image: url(<?php phe(TMDB::getBackdropImageUrl($media->backdrop_path, TMDB::IMAGE_SIZE_BACKDROP_ORIGINAL)) ?>)"></div>
     <?php endif; ?>
 
-    <?php if (!empty($media->poster_path)) : ?>
-        <img class="poster col-12 col-md-auto" src="<?php phe(TMDB::getPosterImageUrl($media->poster_path, TMDB::IMAGE_SIZE_POSTER_W342)) ?>">
-    <?php endif; ?>
+    <div class="row justify-content-center top-section">
+        <?php if (!empty($media->poster_path)) : ?>
+            <div class="col col-auto pe-2 pe-md-3">
+                <img class="poster" src="<?php phe(TMDB::getPosterImageUrl($media->poster_path, TMDB::IMAGE_SIZE_POSTER_W342)) ?>">
+            </div>
+        <?php endif; ?>
+        <div class="col col-12 col-md-5 col-lg-7 col-xl-8 mt-4 mt-md-0 ps-3 ps-md-2 pe-3 pe-md-0">
+            <div class="sidepanel">
+                <h1><?php phe($media->title) ?></h1>
 
-    <h1><?php phe($media->title) ?></h1>
+                <h4>Overview</h4>
+                <div class="overview"><?php echo $media->overview ?></div>
 
-    <h4>Overview</h4>
-    <div class="overview"><?php echo $media->overview ?></div>
-
-    <div class="urls_container">
-        Links
-        <?php foreach ($urls as $s) : $s = (object) $s; ?>
-            <span class="url">
-            <a href="<?php phe($s->value) ?>" target="_blank" rel="noreferrer"><?php phe($s->link_text ?? $s->name) ?></a>
-        </span>
-        <?php endforeach; ?>
+                <div class="urls_container">
+                    <!-- Source: https://icons.getbootstrap.com/icons/link-45deg/ -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
+                        <path d="M4.715 6.542L3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.001 1.001 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
+                        <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 0 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 0 0-4.243-4.243L6.586 4.672z"/>
+                    </svg>
+                    <?php foreach ($urls as $s) : ?>
+                        <span class="url">
+                        <a href="<?php phe($s->value) ?>" target="_blank" rel="noreferrer"><?php phe($s->link_text ?? $s->name) ?></a>
+                    </span>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="mt-4 table-striped">
-        <?php foreach ($stats as $s) : $s = (object) $s; ?>
+    <div class="mt-4 stats-table">
+        <?php foreach ($stats as $s) : ?>
             <div class="row <?php phe($s->class) ?> <?php echo oddOrEvent() ?>">
                 <div class="name col col-12 col-md-3 col-lg-2 p-2">
                     <?php phe($s->name) ?>
@@ -50,8 +61,6 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
                 <div class="col col-12 col-md-auto text-end text-md-start p-2">
                     <?php if (!empty($s->value_html)) : ?>
                         <?php echo $s->value_html ?>
-                    <?php elseif ($s->class == 'url' && empty($s->link_text)) : ?>
-                        <a href="<?php phe($s->value) ?>" rel="noreferrer"><?php phe($s->link_text ?? $s->name) ?></a>
                     <?php else : ?>
                         <span class="value">
                             <?php
@@ -76,5 +85,4 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
         </div>
     <?php endif; ?>
 
-    <div class="mb-4"></div>
 </div>

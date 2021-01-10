@@ -11,7 +11,7 @@ use stdClass;
 
 ?>
 
-<div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 row-cols-xl-6 g-4">
+<div class="row row-cols-auto g-4 justify-content-center">
     <?php foreach ($medias ?? [] as $media) : ?>
         <div class="col">
             <a style="width: 185px;" class="card movie_box <?php phe(AvailableMedia::getClassForMedia($media)) ?>" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_MEDIA, [$media->media_type => $media->id])) ?>">
