@@ -308,6 +308,7 @@ class AppController extends AbstractController
                 $_POST['quality'] = (int) Config::getFromDB('RADARR_DEFAULT_QUALITY');
             }
             Radarr::addMovie($_POST['tmdb_id'], $_POST['title'], $_POST['quality'], $_POST['path']);
+            $this->showAlert("Added request for \"{$_POST['title']}\" movie.");
         } elseif ($_POST['media_type'] == 'tv') {
             if (empty($_POST['path'])) {
                 $_POST['path'] = Config::getFromDB('SONARR_DEFAULT_PATH');
@@ -319,6 +320,7 @@ class AppController extends AbstractController
                 $_POST['language'] = (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
             }
             Sonarr::addShow($_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
+            $this->showAlert("Added request for \"{$_POST['title']}\" TV show.");
         } else {
             Logger::error("Error: unknown media type: " . $_POST['media_type']);
         }
@@ -371,6 +373,8 @@ class AppController extends AbstractController
 
         $request->notifyAdminRequestRemoved();
 
+        $this->showAlert("Removed request for \"$request->title\"");
+
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS));
     }
 
@@ -386,11 +390,13 @@ class AppController extends AbstractController
         $selected_sections = $_POST['selected_sections'];
         $selected_sections = array_map('intval', $selected_sections);
         Config::setInDB('PLEX_SECTIONS', $selected_sections);
+        $this->showAlert("Saved settings for Plex.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_PLEX));
     }
 
     public function importPlexMedias() : Response {
-        AvailableMedia::importAvailableMediasFromPlex(@$_POST['section']);
+        $num = AvailableMedia::importAvailableMediasFromPlex(@$_POST['section']);
+        $this->showAlert("Imported $num movies or shows from Plex.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_PLEX));
     }
 
@@ -401,11 +407,13 @@ class AppController extends AbstractController
     public function saveRadarrSettings() : Response {
         Config::setInDB('RADARR_DEFAULT_PATH', $_POST['path']);
         Config::setInDB('RADARR_DEFAULT_QUALITY', $_POST['quality']);
+        $this->showAlert("Saved settings for Radarr.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_RADARR));
     }
 
     public function importRadarrRequests() : Response {
-        Radarr::importAllRequests();
+        $num = Radarr::importAllRequests();
+        $this->showAlert("Imported $num movies requests from Radarr.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_RADARR));
     }
 
@@ -417,11 +425,13 @@ class AppController extends AbstractController
         Config::setInDB('SONARR_DEFAULT_PATH', $_POST['path']);
         Config::setInDB('SONARR_DEFAULT_QUALITY', $_POST['quality']);
         Config::setInDB('SONARR_DEFAULT_LANGUAGE', $_POST['language']);
+        $this->showAlert("Saved settings for Sonarr.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_SONARR));
     }
 
     public function importSonarrRequests() : Response {
-        Sonarr::importAllRequests();
+        $num = Sonarr::importAllRequests();
+        $this->showAlert("Imported $num movies requests from Sonarr.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_SONARR));
     }
 

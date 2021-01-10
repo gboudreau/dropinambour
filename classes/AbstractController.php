@@ -112,4 +112,15 @@ abstract class AbstractController
         ];
         return $this->response($data, Response::HTTP_OK, $headers);
     }
+
+    protected function showAlert(string $text, bool $is_html = FALSE, bool $is_error = FALSE) : void {
+        $js_text = json_encode($is_html ? $text : he($text));
+        $is_error = (int) $is_error;
+        $js = "showAlert($js_text, $is_error);";
+        $_SESSION['pending_notifications'][] = "$js";
+    }
+
+    protected function showError($error, $escape = TRUE) {
+        $this->showAlert($error, $escape, TRUE);
+    }
 }

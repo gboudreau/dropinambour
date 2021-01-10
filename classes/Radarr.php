@@ -9,7 +9,7 @@ class Radarr {
 
     // Ref: https://radarr.video/docs/api/
 
-    public static function importAllRequests() : void {
+    public static function importAllRequests() : int {
         Logger::info("Importing Radarr requests...");
         $movies = static::getAllMovies();
         foreach ($movies as $movie) {
@@ -17,6 +17,7 @@ class Radarr {
             $req->save();
         }
         Logger::info("Done importing Radarr requests.");
+        return count($movies);
     }
 
     public static function getAllMovies() : array {

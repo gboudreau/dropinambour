@@ -61,7 +61,9 @@ class AvailableMedia extends AbstractActiveRecord
         static::importAvailableMediasFromPlex(Plex::SECTION_RECENTLY_ADDED);
     }
 
-    public static function importAvailableMediasFromPlex(?int $section = NULL) {
+    public static function importAvailableMediasFromPlex(?int $section = NULL) : int {
+        $num = 0;
+
         Logger::info("Importing available medias from Plex...");
         DB::startTransaction();
 
@@ -95,6 +97,7 @@ class AvailableMedia extends AbstractActiveRecord
                 $media->save();
                 Logger::info("  - Added $media->type '$media->title' (media ID $media->id)");
                 $media->importGUIDs();
+                $num++;
 
                 if ($media->type == 'show') {
                     // Import episodes
@@ -127,6 +130,7 @@ class AvailableMedia extends AbstractActiveRecord
 
             DB::commitTransaction();
             Logger::info("Done importing available medias from Plex.");
+            return $num;
         } catch (Exception $ex) {
             DB::rollbackTransaction();
             throw $ex;

@@ -9,7 +9,7 @@ class Sonarr {
 
     // Ref: https://github.com/Sonarr/Sonarr/wiki/API
 
-    public static function importAllRequests() : void {
+    public static function importAllRequests() : int {
         Logger::info("Importing Sonarr requests...");
         $shows = static::getAllShows();
         foreach ($shows as $show) {
@@ -18,6 +18,7 @@ class Sonarr {
             $req->addSeasonsFromSonarrShow($show);
         }
         Logger::info("Done importing Sonarr requests.");
+        return count($shows);
     }
 
     public static function lookupShow(int $tvdb_id) : ?stdClass {
