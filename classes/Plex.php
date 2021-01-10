@@ -22,6 +22,12 @@ class Plex {
             if (!$list_all_sections && !array_contains($enabled_sections, $d->key)) {
                 continue;
             }
+            if ($d->type != 'show' && $d->type != 'movie') {
+                continue;
+            }
+            if ($d->language == 'xn') {
+                continue;
+            }
             $sections[] = (object) [
                 'id' => (int) $d->key,
                 'title' => $d->title,
