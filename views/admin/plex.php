@@ -5,7 +5,7 @@ namespace PommePause\Dropinambour;
  * @var $selected_sections int[]
  */
 
-$this->layout('/page', ['title' => "Plex | Admin | dropinambour - Requests for Plex"]);
+$this->layout('/page', ['title' => "Plex | Admin | dropinambour - Requests for Plex", 'nav_active' => 'admin']);
 ?>
 
 <h1>Plex Admin</h1>

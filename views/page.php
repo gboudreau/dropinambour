@@ -4,9 +4,8 @@ namespace PommePause\Dropinambour;
 use stdClass;
 
 // Views variables
-/**
- * @var $title string
- */
+/** @var $title string */
+/** @var $nav_active string|null */
 // End of Views variables
 ?>
 <!DOCTYPE html>
@@ -36,11 +35,11 @@ use stdClass;
             </button>
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="./">Discover</a></li>
-                    <li class="nav-item"><a class="nav-link" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS)) ?>">Requests</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'discover', 'active') ?>" href="./">Discover</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'requests', 'active') ?>" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS)) ?>">Requests</a></li>
                     <?php if (Plex::getUserInfos()->homeAdmin) : ?>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Admin</a>
+                            <a class="nav-link dropdown-toggle <?php echo_if(@$nav_active == 'admin', 'active') ?>" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Admin</a>
                             <ul class="dropdown-menu">
                                 <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_PLEX)) ?>">Plex</a></li>
                                 <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_RADARR)) ?>">Radarr</a></li>

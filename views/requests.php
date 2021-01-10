@@ -6,7 +6,7 @@ use PommePause\Dropinambour\ActiveRecord\Request;
 /** @var Request[] $requests_mine */
 /** @var Request[] $requests_others */
 
-$this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex"]);
+$this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex", 'nav_active' => 'requests']);
 ?>
 
 <?php $this->push('head') ?>

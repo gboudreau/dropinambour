@@ -4,7 +4,7 @@ namespace PommePause\Dropinambour;
 // Views variables
 // End of Views variables
 
-$this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex"]);
+$this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex", 'nav_active' => 'discover']);
 ?>
 
 <?php $this->push('head') ?>

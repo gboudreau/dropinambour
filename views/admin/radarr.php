@@ -5,7 +5,7 @@ namespace PommePause\Dropinambour;
 /** @var $selected_sections int[] */
 // End of Views variables
 
-$this->layout('/page', ['title' => "Radarr | Admin | dropinambour - Requests for Plex"]);
+$this->layout('/page', ['title' => "Radarr | Admin | dropinambour - Requests for Plex", 'nav_active' => 'admin']);
 ?>
 
 <h1>Radarr</h1>
