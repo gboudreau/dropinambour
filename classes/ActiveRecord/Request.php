@@ -83,8 +83,7 @@ class Request extends AbstractActiveRecord
         } else {
             $this->media_type = 'TV show';
         }
-        // @TODO Remove this!
-        $this->requested_by = 'gboudreau <guillaume@pommepause.com>';
+        Logger::info("Sending notification about filled request for $this->media_type \"$this->title\".");
         Mailer::sendFromTemplate($this->requested_by, "Your request for \"$this->title\" is now available", 'request_available', ['request' => $this]);
         $this->notified_when = date('Y-m-d H:i:s');
         $this->save();
