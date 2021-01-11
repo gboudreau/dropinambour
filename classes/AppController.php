@@ -13,12 +13,26 @@ class AppController extends AbstractController
     /* pragma mark - Webpages: home, media, collection, search */
 
     public function viewRoot() : Response {
+        if (Plex::needsAuth()) {
+            if (Plex::checkAuthPIN()) {
+                sleep(1);
+                Logger::info("PIN auth succeeded. Refreshing page.");
+                return $this->redirectResponse('./');
+            } else {
+                return $this->response($this->render('/login'));
+            }
+        }
+
         $user_infos = Plex::getUserInfos();
         if (@$user_infos->homeAdmin) {
             Config::setInDB('PLEX_ACCESS_TOKEN', $_SESSION['PLEX_ACCESS_TOKEN']);
         }
 
         return $this->response($this->render('/discover'));
+    }
+
+    public function ajaxCheckLogin() : Response {
+        return $this->jsonResponse(['login_success' => (!Plex::needsAuth() || Plex::checkAuthPIN())]);
     }
 
     public function ajaxMoreMovies() : Response {

@@ -160,6 +160,13 @@ class Plex {
             ];
             $users[] = $user;
         }
+
+        // Return admin user too!
+        $user_token = $_SESSION['PLEX_ACCESS_TOKEN'];
+        $_SESSION['PLEX_ACCESS_TOKEN'] = $response->authToken;
+        $users[] = static::getUserInfos();
+        $_SESSION['PLEX_ACCESS_TOKEN'] = $user_token;
+
         return $users;
     }
 

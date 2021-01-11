@@ -34,6 +34,7 @@ class Router
 
     public const AJAX_MORE_MOVIES = 'moreMovies';
     public const AJAX_MORE_SHOWS  = 'moreShows';
+    public const AJAX_CHECK_LOGIN = 'checkLogin';
 
     /**
      * Create a URL that will either show or do something.

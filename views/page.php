@@ -59,22 +59,6 @@ use stdClass;
         </nav>
     <?php endif; ?>
 
-    <?php
-    if (Plex::needsAuth()) {
-        if (!Plex::checkAuthPIN()) {
-            ?>
-            <a class="btn btn-primary" href="<?php phe(Plex::getAuthURL()) ?>" target="plex_auth">Login with Plex</a><br/>
-            Refresh this page once you logged in using the above button.
-            <?php
-            exit(0);
-        }
-        sleep(1);
-        Logger::info("PIN auth succeeded. Refreshing page.");
-        header('Location: ./');
-        exit(0);
-    }
-    ?>
-
     <div class="notifications"></div>
 
     <?php echo $this->section('content') ?>
