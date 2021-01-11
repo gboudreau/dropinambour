@@ -13,8 +13,8 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
 ?>
 
 <?php $this->push('head') ?>
-<link href="./css/tmdb_media.css" rel="stylesheet">
-<link href="./css/tmdb_collection.css" rel="stylesheet">
+<link href="<?php phe(Router::getAssetUrl('./css/tmdb_media.css')) ?>" rel="stylesheet">
+<link href="<?php phe(Router::getAssetUrl('./css/tmdb_collection.css')) ?>" rel="stylesheet">
 <?php $this->end() ?>
 
 <div class="<?php phe($media->container_class) ?> mb-4">

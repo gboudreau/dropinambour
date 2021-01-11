@@ -74,4 +74,8 @@ class Router
             return 'viewRoot';
         }
     }
+
+    public static function getAssetUrl(string $file, bool $add_content_hash = TRUE) : string {
+        return $file . ($add_content_hash ? "?h=" . md5_file($file) : '');
+    }
 }

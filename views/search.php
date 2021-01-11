@@ -17,7 +17,7 @@ $this->layout('/page', ['title' => $title]);
 ?>
 
 <?php $this->push('head') ?>
-<link href="./css/tmdb_collection.css" rel="stylesheet">
+<link href="<?php phe(Router::getAssetUrl('./css/tmdb_collection.css')) ?>" rel="stylesheet">
 <?php $this->end() ?>
 
 <h1 class="mb-3">Search results for "<?php phe(@$_REQUEST['query']) ?>"</h1>

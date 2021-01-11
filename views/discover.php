@@ -8,7 +8,7 @@ $this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex"
 ?>
 
 <?php $this->push('head') ?>
-<link href="./css/tmdb_collection.css" rel="stylesheet">
+<link href="<?php phe(Router::getAssetUrl('./css/tmdb_collection.css')) ?>" rel="stylesheet">
 <?php $this->end() ?>
 
 <div id="suggested_movies" class="suggested">
