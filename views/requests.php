@@ -54,7 +54,7 @@ $this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex"
                 <?php if (!empty(first($requests)->requested_by->username)) : ?>
                     <td><?php phe($request->requested_by->username) ?></td>
                 <?php endif; ?>
-                <td><?php phe($request->added_when) ?></td>
+                <td><?php phe(substr($request->added_when, 0, 10)) ?></td>
                 <td>
                     <?php if (Plex::getUserInfos()->homeAdmin || $title == "My Requests") : ?>
                         <form method="post" action="<?php phe(Router::getURL(Router::ACTION_REMOVE, Router::REMOVE_REQUEST, ['id' => $request->id])) ?>" onsubmit="<?php phe("if(!confirm(" . json_encode("Are you sure that you want to remove the request for \"$request->title\" ?") . ")) return false;") ?>">
@@ -62,7 +62,7 @@ $this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex"
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">
                                     <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"></path>
                                 </svg>
-                                Remove
+                                <span class="d-none d-md-inline">Remove</span>
                             </button>
                         </form>
                     <?php endif; ?>
