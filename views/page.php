@@ -7,6 +7,8 @@ use stdClass;
 /** @var $title string */
 /** @var $nav_active string|null */
 // End of Views variables
+
+$breakout_search_form = ( @$nav_active == 'discover' || $_REQUEST['action'] == 'search' );
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -26,38 +28,45 @@ use stdClass;
 
 <div class="container">
 
-    <?php if (Plex::getUserInfos()) : ?>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="./">dropinambour</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'discover', 'active') ?>" href="./">Discover</a></li>
-                        <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'requests', 'active') ?>" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS)) ?>">Requests</a></li>
-                        <?php if (Plex::getUserInfos()->homeAdmin) : ?>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle <?php echo_if(@$nav_active == 'admin', 'active') ?>" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Admin</a>
-                                <ul class="dropdown-menu">
-                                    <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_PLEX)) ?>">Plex</a></li>
-                                    <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_RADARR)) ?>">Radarr</a></li>
-                                    <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_SONARR)) ?>">Sonarr</a></li>
-                                </ul>
-                            </li>
-                        <?php endif; ?>
-                    </ul>
-                    <form class="d-flex" method="get" action="./">
-                        <input name="action" type="hidden" value="<?php phe(Router::ACTION_SEARCH) ?>">
-                        <input name="language" type="hidden" value="<?php phe(first(to_array(Config::get('LANGUAGES')))) ?>">
-                        <input name="query" class="form-control me-2" type="search" placeholder="Movie or TV Show title" value="<?php phe(@$_REQUEST['query']) ?>" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
-                    </form>
-                </div>
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="./">dropinambour</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'discover', 'active') ?>" href="./">Discover</a></li>
+                    <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'requests', 'active') ?>" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS)) ?>">Requests</a></li>
+                    <?php if (Plex::getUserInfos()->homeAdmin) : ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle <?php echo_if(@$nav_active == 'admin', 'active') ?>" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Admin</a>
+                            <ul class="dropdown-menu">
+                                <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_PLEX)) ?>">Plex</a></li>
+                                <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_RADARR)) ?>">Radarr</a></li>
+                                <li class=""><a class="dropdown-item" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_SONARR)) ?>">Sonarr</a></li>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+                <form class="<?php echo_if($breakout_search_form, 'd-none d-md-flex', 'd-flex') ?>" method="get" action="./">
+                    <input name="action" type="hidden" value="<?php phe(Router::ACTION_SEARCH) ?>">
+                    <input name="language" type="hidden" value="<?php phe(first(to_array(Config::get('LANGUAGES')))) ?>">
+                    <input name="query" class="form-control me-2" type="search" placeholder="Movie or TV Show title" value="<?php phe(@$_REQUEST['query']) ?>" aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
             </div>
-        </nav>
-    <?php endif; ?>
+        </div>
+    </nav>
+
+    <div class="container-fluid <?php echo_if($breakout_search_form, 'd-md-none', 'd-none') ?>">
+        <form class="d-flex" method="get" action="./">
+            <input name="action" type="hidden" value="<?php phe(Router::ACTION_SEARCH) ?>">
+            <input name="language" type="hidden" value="<?php phe(first(to_array(Config::get('LANGUAGES')))) ?>">
+            <input name="query" class="form-control me-2" type="search" placeholder="Movie or TV Show title" value="<?php phe(@$_REQUEST['query']) ?>" aria-label="Search">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+    </div>
 
     <div class="notifications"></div>
 
