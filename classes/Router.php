@@ -60,6 +60,15 @@ class Router
         // Depending on the value of the 'action' query parameter, we'll either return 'actionWhat' (eg. 'viewMedia', 'saveRequest') or just action (eg. 'search', 'cron')
         // Fallback to view the home page
         $action = $request->query->get('action');
+
+        // Unless this is a cron request (which use the token saved in the DB), verify that the user is logged in.
+        // Otherwise, re-direct to the login page.
+        if ($action != static::ACTION_CRON) {
+            if (Plex::needsAuth()) {
+                return 'viewRoot';
+            }
+        }
+
         switch ($action) {
         case static::ACTION_VIEW:
         case static::ACTION_SAVE:

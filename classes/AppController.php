@@ -15,10 +15,12 @@ class AppController extends AbstractController
     public function viewRoot() : Response {
         if (Plex::needsAuth()) {
             if (Plex::checkAuthPIN()) {
+                // Login succeeded, reload page
                 sleep(1);
                 Logger::info("PIN auth succeeded. Refreshing page.");
                 return $this->redirectResponse('./');
             } else {
+                // Show login page
                 return $this->response($this->render('/login'));
             }
         }
