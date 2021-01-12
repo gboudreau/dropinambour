@@ -51,6 +51,9 @@ If anyone is interested in developping this further, and use it on their own Ple
 5. Run `composer install` to install the required dependencies.
    It might complain about missing PHP extensions; install them using you preferred method (apt/yum).
 
+6. Create a con job on your server to load the following URL every 5 minutes (or as often as you want):
+   `http://localhost/dropinambour/?action=cron` 
+
 ## Development
 
 If you'd like to develop new features, or fix bugs, you only need some PHP and/or CSS/JS know-how.
