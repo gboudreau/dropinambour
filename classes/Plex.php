@@ -9,7 +9,7 @@ use stdClass;
 class Plex {
 
     // Ref: https://forums.plex.tv/t/authenticating-with-plex/609370
-    // Ref: https://github.com/Arcanemagus/plex-api/wiki/Plex-Web-API-Overview
+    // Ref: https://github.com/Arcanemagus/plex-api/wiki
     // Ref: https://github.com/pkkid/python-plexapi/blob/master/plexapi/library.py
 
     public const SECTION_RECENTLY_ADDED = -1;
@@ -142,6 +142,9 @@ class Plex {
 
     public static function getSharedUsers() : array {
         $token = Config::getFromDB('PLEX_ACCESS_TOKEN');
+
+        $this_server_id = Plex::getServerId();
+
         $data = [
             'X-Plex-Product'           => static::getAppName(),
             'X-Plex-Client-Identifier' => static::getClientID(),
@@ -152,6 +155,17 @@ class Plex {
         $response = simplexml_load_string($response);
         $users = [];
         foreach ($response->User as $user) {
+            // Is this user allowed to use this Plex server?
+            $allowed_on_server = FALSE;
+            foreach ($user->Server as $server) {
+                if ($server->attributes()['machineIdentifier'] == $this_server_id) {
+                    $allowed_on_server = TRUE;
+                    break;
+                }
+            }
+            if (!$allowed_on_server) {
+                continue;
+            }
             $user = (object) [
                 'id' => (int) $user->attributes()['id'],
                 'username' => (string) $user->attributes()['username'],
