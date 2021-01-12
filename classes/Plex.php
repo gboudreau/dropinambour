@@ -262,7 +262,17 @@ class Plex {
 
     public static function geUrlForMediaKey(string $key) : string {
         $server_uuid = Plex::getServerId();
-        return "https://app.plex.tv/desktop#!/server/$server_uuid/details?key=" . urlencode($key);
+        foreach (static::getServers() as $server) {
+            if ($server->machineIdentifier == $server_uuid) {
+                if (empty($server->address) || empty($server->port)) {
+                    // Remote Access is disabled
+                    $lan_address = first(explode(' ', $server->localAddresses));
+                    return "http://$lan_address:32400/web/index.html#!/server/$server_uuid/details?key=" . urlencode($key);
+                }
+                return "https://app.plex.tv/desktop#!/server/$server_uuid/details?key=" . urlencode($key);
+            }
+        }
+        return '#NA';
     }
 
     public static function getDevices() {
@@ -271,7 +281,7 @@ class Plex {
 
     public static function getServers() {
         // Is not available as JSON :|
-        $response = static::sendGET('/pms/servers.xml', 'https://plex.tv', NULL, FALSE);
+        $response = static::sendGET('/pms/servers.xml?includeLite=1', 'https://plex.tv', NULL, FALSE);
         $response = simplexml_load_string($response);
         $servers = [];
         foreach ($response->Server as $server) {
