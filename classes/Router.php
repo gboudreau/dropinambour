@@ -63,7 +63,7 @@ class Router
 
         // Unless this is a cron request (which use the token saved in the DB), verify that the user is logged in.
         // Otherwise, re-direct to the login page.
-        if ($action != static::ACTION_CRON) {
+        if ($action != static::ACTION_CRON && $request->query->get('what') != static::AJAX_CHECK_LOGIN) {
             if (Plex::needsAuth()) {
                 return 'viewRoot';
             }

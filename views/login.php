@@ -20,7 +20,7 @@ $this->layout('/page', ['title' => "Login | dropinambour - Requests for Plex"]);
         $btn.text('Waiting for Plex login...').prop('disabled', true).addClass('disabled');
         auth_window = window.open($btn.prop('href'));
         console.log(auth_window);
-        setTimeout(wait_until_login_succeeded, 2000);
+        setTimeout(wait_until_login_succeeded, 4000);
     }
     function wait_until_login_succeeded() {
         console.log("Checking if Plex login succeeded...");
@@ -35,7 +35,7 @@ $this->layout('/page', ['title' => "Login | dropinambour - Requests for Plex"]);
                 $('#login_button').detach();
                 window.location.href = './';
             } else {
-                setTimeout(wait_until_login_succeeded, 2000);
+                setTimeout(wait_until_login_succeeded, 4000);
             }
         });
     }
