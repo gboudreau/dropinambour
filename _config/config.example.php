@@ -42,3 +42,4 @@ $CONFIG->NEW_REQUESTS_NOTIF_EMAIL = 'admin@something.com';
 
 // Make sure this file is writable by the user running the web server
 $CONFIG->LOG_FILE = '/var/log/dropinambour.log';
+$CONFIG->LOG_LEVEL = 'INFO'; // One of: DEBUG, INFO, WARN, ERROR

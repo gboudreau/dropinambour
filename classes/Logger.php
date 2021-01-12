@@ -29,6 +29,13 @@ class Logger
     }
 
     private static function log(string $level, string $log) : void {
+        $log_levels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
+        $this_log_level = array_search($level, $log_levels);
+        $threshold_log_level = array_search(Config::get('LOG_LEVEL', 'INFO'), $log_levels);
+        if ($this_log_level < $threshold_log_level) {
+            return;
+        }
+
         /** @noinspection PhpUnhandledExceptionInspection */
         $date = new DateTime('now', new DateTimeZone(Config::get('SYSTEM_TIMEZONE')));
         $datetime = $date->format('Y-m-d H:i:s T');
