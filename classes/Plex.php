@@ -146,7 +146,7 @@ class Plex {
         $this_server_id = Plex::getServerId();
 
         // Is not available as JSON :|
-        $response = static::sendGET('/users', 'https://plex.tv/api', $token, FALSE);
+        $response = static::sendGET('/users', 'https://plex.tv/api', 0, $token, FALSE);
         $response = simplexml_load_string($response);
         $users = [];
         foreach ($response->User as $user) {
@@ -212,7 +212,7 @@ class Plex {
             return FALSE;
         }
 
-        $response = static::sendGET("/v2/pins/$pin->id?code=$pin->code" , 'https://plex.tv/api', static::ACCESS_TOKEN_SKIP);
+        $response = static::sendGET("/v2/pins/$pin->id?code=$pin->code" , 'https://plex.tv/api', 0, static::ACCESS_TOKEN_SKIP);
 
         if (!empty($response->authToken)) {
             unset($_SESSION['PLEX_PIN']);
@@ -247,17 +247,13 @@ class Plex {
     }
 
     public static function isServerAdmin() : bool {
-        if (!isset($_SESSION['is_server_admin'])) {
-            $_SESSION['is_server_admin'] = FALSE;
-            $this_server_id = Plex::getServerId();
-            foreach (static::getServers() as $server) {
-                if ($server->machineIdentifier == $this_server_id && $server->owned) {
-                    $_SESSION['is_server_admin'] = TRUE;
-                    break;
-                }
+        $this_server_id = Plex::getServerId();
+        foreach (static::getServers() as $server) {
+            if ($server->machineIdentifier == $this_server_id && $server->owned) {
+                return TRUE;
             }
         }
-        return $_SESSION['is_server_admin'];
+        return FALSE;
     }
 
     public static function geUrlForMediaKey(string $key) : string {
@@ -281,7 +277,7 @@ class Plex {
 
     public static function getServers() {
         // Is not available as JSON :|
-        $response = static::sendGET('/pms/servers.xml?includeLite=1', 'https://plex.tv', NULL, FALSE);
+        $response = static::sendGET('/pms/servers.xml?includeLite=1', 'https://plex.tv', 30*60, NULL, FALSE);
         $response = simplexml_load_string($response);
         $servers = [];
         foreach ($response->Server as $server) {
@@ -304,7 +300,7 @@ class Plex {
     }
 
     private static function getServerId() : string {
-        $response = static::sendGET("/identity");
+        $response = static::sendGET("/identity", NULL, 5*60);
         return $response->machineIdentifier;
     }
 
@@ -316,35 +312,30 @@ class Plex {
         return Config::get('PLEX_BASE_URL');
     }
 
+    private static $client_id;
     private static function getClientID() : string {
-        $client_id = Config::getFromDB('PLEX_CLIENT_ID');
-        if (empty($client_id)) {
-            $client_id = 'DINB-' . trim(sendGET('https://ip.danslereseau.com')) . '-' . trim(exec("hostname -f"));
-            Config::setInDB('PLEX_CLIENT_ID', $client_id);
+        if (empty(static::$client_id)) {
+            static::$client_id = Config::getFromDB('PLEX_CLIENT_ID');
+            if (empty($client_id)) {
+                static::$client_id = 'DINB-' . trim(sendGET('https://ip.danslereseau.com')) . '-' . trim(exec("hostname -f"));
+                Config::setInDB('PLEX_CLIENT_ID', static::$client_id);
+            }
         }
-        return $client_id;
+        return static::$client_id;
     }
 
-    protected static $token;
-    protected static $user_infos;
     private static function getAccessToken(&$user_infos = NULL) : ?string {
-        if (!empty(static::$token)) {
-            $user_infos = static::$user_infos;
-            return static::$token;
-        }
         $token = @$_SESSION['PLEX_ACCESS_TOKEN'];
         if (empty($token)) {
             return NULL;
         }
 
         try {
-            $user_infos = static::sendGET('/v2/user', 'https://plex.tv/api', $token);
+            $user_infos = static::sendGET('/v2/user', 'https://plex.tv/api', static::CACHE_DURING_REQUEST, $token);
             if (empty($user_infos->uuid)) {
                 Logger::error("Invalid Plex auth token: " . json_encode($user_infos));
                 return NULL;
             }
-            static::$token = $token;
-            static::$user_infos = $user_infos;
         } catch (Exception $ex) {
             Logger::error("Invalid Plex auth token: " . $ex->getMessage());
             if ($ex->getCode() == 401) {
@@ -352,11 +343,12 @@ class Plex {
             }
             return NULL;
         }
-        return static::$token;
+        return $token;
     }
 
     private const ACCESS_TOKEN_SKIP = 'dont_send_access_token';
-    private static function sendGET($url, ?string $base_url = NULL, ?string $access_token = NULL, bool $decode_json = TRUE) {
+    private const CACHE_DURING_REQUEST = 9876;
+    private static function sendGET($url, ?string $base_url = NULL, int $use_cache_with_timeout = 0, ?string $access_token = NULL, bool $decode_json = TRUE) {
         $data = [
             'X-Plex-Client-Identifier' => static::getClientID(),
             'X-Plex-Product' => static::getAppName(),
@@ -373,11 +365,40 @@ class Plex {
         if (empty($base_url)) {
             $base_url = static::getBaseURL();
         }
-        try {
-            $response = sendGET($base_url . $url, ["Accept: application/json"]);
-        } catch (Exception $ex) {
-            throw new PlexException($ex->getMessage(), $ex->getCode());
+
+        if (!empty($use_cache_with_timeout)) {
+            if ($use_cache_with_timeout == static::CACHE_DURING_REQUEST) {
+                $cache = $_REQUEST['plex_api_cache'] ?? [];
+            } else {
+                $cache = $_SESSION['plex_api_cache'] ?? [];
+            }
+            if (isset($cache["$base_url$url"]) && $cache["$base_url$url"]['expires'] > time()) {
+                Logger::debug("Plex::sendGET($base_url$url) : using cached value (" . ($use_cache_with_timeout == static::CACHE_DURING_REQUEST ? "expires with request" : " (expires " . date('Y-m-d H:i:s', $cache["$base_url$url"]['expires'])) . ")");
+                $response = $cache["$base_url$url"]['response'];
+            }
         }
+
+        if (empty($response)) {
+            try {
+                Logger::debug("Plex::sendGET($base_url$url)...");
+                $response = sendGET($base_url . $url, ["Accept: application/json"]);
+            } catch (Exception $ex) {
+                throw new PlexException($ex->getMessage(), $ex->getCode());
+            }
+
+            if (!empty($use_cache_with_timeout)) {
+                $cache["$base_url$url"] = [
+                    'expires' => time() + $use_cache_with_timeout,
+                    'response' => $response,
+                ];
+                if ($use_cache_with_timeout == static::CACHE_DURING_REQUEST) {
+                    $_REQUEST['plex_api_cache'] = $cache;
+                } else {
+                    $_SESSION['plex_api_cache'] = $cache;
+                }
+            }
+        }
+
         if (!$decode_json) {
             return $response;
         }

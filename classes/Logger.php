@@ -36,6 +36,9 @@ class Logger
             return;
         }
 
+        // Hide Plex tokens from logs
+        $log = preg_replace('/X-Plex-Token=.+\)/U', 'X-Plex-Token=[hidden])', $log);
+
         /** @noinspection PhpUnhandledExceptionInspection */
         $date = new DateTime('now', new DateTimeZone(Config::get('SYSTEM_TIMEZONE')));
         $datetime = $date->format('Y-m-d H:i:s T');
