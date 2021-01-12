@@ -141,6 +141,7 @@ class Sonarr {
 
     private static function sendGET($url) {
         $api_key = Config::get('SONARR_API_KEY');
+        Logger::debug("Sonarr::sendGET($url)");
         $response = sendGET(static::getBaseURL() . $url, ["X-Api-Key: $api_key", "Accept: application/json"]);
         $response = json_decode($response);
         return $response;
@@ -148,6 +149,7 @@ class Sonarr {
 
     private static function sendPOST($url, $data, string $method = 'POST') {
         $api_key = Config::get('SONARR_API_KEY');
+        Logger::debug("Sonarr::sendPOST($url, " . json_encode($data) . ")");
         $response = sendPOST(static::getBaseURL() . $url, $data, ["X-Api-Key: $api_key", "Accept: application/json"], 'application/json', $method);
         $response = json_decode($response);
         return $response;

@@ -86,7 +86,7 @@ CREATE TABLE `tmdb_cache` (
 
 CREATE TABLE `tmdb_external_ids` (
   `tmdb_id` int(11) unsigned NOT NULL,
-  `tmdbtv_id` int(11) unsigned NOT NULL,
+  `tmdbtv_id` int(11) NOT NULL,
   `imdb_id` varchar(11) NOT NULL DEFAULT '0',
   `tvdb_id` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`tmdb_id`,`tmdbtv_id`)

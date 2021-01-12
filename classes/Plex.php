@@ -380,7 +380,7 @@ class Plex {
 
         if (empty($response)) {
             try {
-                Logger::debug("Plex::sendGET($base_url$url)...");
+                Logger::debug("Plex::sendGET($base_url$url)");
                 $response = sendGET($base_url . $url, ["Accept: application/json"]);
             } catch (Exception $ex) {
                 throw new PlexException($ex->getMessage(), $ex->getCode());

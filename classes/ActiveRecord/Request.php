@@ -160,7 +160,7 @@ class Request extends AbstractActiveRecord
      * @return self[]
      */
     public static function getAllShowRequests(bool $order_by_name = FALSE) : array {
-        $q = "SELECT r.*, ids.tmdbtv_id
+        $q = "SELECT r.*, IF(ids.tmdbtv_id <= 0, 0, ids.tmdbtv_id) AS tmdbtv_id
                 FROM requests r
                 LEFT JOIN tmdb_external_ids ids ON (ids.tvdb_id = r.tvdb_id)
                WHERE r.monitored_by = 'sonarr'
@@ -204,9 +204,16 @@ class Request extends AbstractActiveRecord
             $tmdb_media = TMDB::getDetailsByExternalId($row->tvdb_id, 'tvdb');
             if (empty($tmdb_media) && !empty($row->imdb_id)) {
                 $tmdb_media = TMDB::getDetailsByExternalId($row->imdb_id, 'imdb');
+                if ($tmdb_media && empty($tmdb_media->tvdb_id)) {
+                    $q = "INSERT INTO tmdb_external_ids SET tmdbtv_id = :tmdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE tvdb_id = VALUES(tvdb_id)";
+                    DB::insert($q, ['tmdb_id' => $tmdb_media->id, 'tvdb_id' => $row->tvdb_id]);
+                }
             }
             if (!empty($tmdb_media)) {
                 $row->tmdbtv_id = $tmdb_media->id;
+            } else {
+                $q = "INSERT INTO tmdb_external_ids SET tmdbtv_id = :tmdb_id, imdb_id = :imdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE tvdb_id = VALUES(tvdb_id)";
+                DB::insert($q, ['tmdb_id' => -$row->tvdb_id, 'imdb_id' => 0, 'tvdb_id' => $row->tvdb_id]);
             }
         }
         return $row;

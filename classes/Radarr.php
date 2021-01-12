@@ -64,6 +64,7 @@ class Radarr {
         $api_key = Config::get('RADARR_API_KEY');
         $sep = string_contains($url, '?') ? '&' : '?';
         $url .= $sep . "apikey=" . urlencode($api_key);
+        Logger::debug("Radarr::sendGET($url)");
         $response = sendGET(static::getBaseURL() . $url, ["Accept: application/json"]);
         $response = json_decode($response);
         return $response;
@@ -73,6 +74,7 @@ class Radarr {
         $api_key = Config::get('RADARR_API_KEY');
         $sep = string_contains($url, '?') ? '&' : '?';
         $url .= $sep . "apikey=" . urlencode($api_key);
+        Logger::debug("Radarr::sendPOST($url, " . json_encode($data) . ")");
         $response = sendPOST(static::getBaseURL() . $url, $data, ["Accept: application/json"], 'application/json');
         $response = json_decode($response);
         return $response;

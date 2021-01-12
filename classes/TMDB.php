@@ -355,6 +355,7 @@ class TMDB {
 
     private static function sendGET($url) {
         $token = static::getBearerToken();
+        Logger::debug("TMDB::sendGET($url)");
         $response = sendGET(static::getBaseURL() . $url, ["Accept: application/json", "Authorization: Bearer $token", "Content-Type: application/json;charset=utf-8"]);
         $response = json_decode($response);
         return $response;
@@ -409,17 +410,20 @@ class TMDB {
 
         // Fetch missing IMDB IDs from TMDB API
         foreach ($medias_by_id as $media) {
-            if (@$media->imdb_id === NULL && @$media->tvdb_id === NULL) {
+            if ($media->media_type == 'tv') {
+                $pk = 'tmdbtv_id';
+            } else {
+                $pk = 'tmdb_id';
+            }
+            if (@$media->imdb_id === NULL || @$media->tvdb_id === NULL) {
                 if ($media->media_type == 'tv') {
                     // TV Show
                     Logger::info("Loading show external IDs from TMDB API, to get IMDB/TVDB ID: $media->title (ID $media->id)");
                     $external_ids = TMDB::getShowExternalIDs($media->id);
-                    $pk = 'tmdbtv_id';
                 } else {
                     // Movie
                     Logger::info("Loading movie external IDs from TMDB API, to get IMDB/TVDB ID: $media->title (ID $media->id)");
                     $external_ids = TMDB::getMovieExternalIDs($media->id);
-                    $pk = 'tmdb_id';
                 }
 
                 if (!empty($external_ids->imdb_id)) {
@@ -438,10 +442,9 @@ class TMDB {
                         Logger::warning("Empty TVDB ID found for $media->title (ID $media->id)");
                     }
                 }
-
-                $q = "INSERT INTO tmdb_external_ids SET $pk = :tmdb_id, imdb_id = :imdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE imdb_id = VALUES(imdb_id), tvdb_id = VALUES(tvdb_id)";
-                DB::insert($q, ['tmdb_id' => $media->id, 'imdb_id' => @$media->imdb_id, 'tvdb_id' => $media->tvdb_id]);
             }
+            $q = "INSERT INTO tmdb_external_ids SET $pk = :tmdb_id, imdb_id = :imdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE imdb_id = VALUES(imdb_id), tvdb_id = VALUES(tvdb_id)";
+            DB::insert($q, ['tmdb_id' => $media->id, 'imdb_id' => @$media->imdb_id, 'tvdb_id' => $media->tvdb_id]);
         }
 
         $medias = array_values($medias_by_id);
