@@ -145,13 +145,8 @@ class Plex {
 
         $this_server_id = Plex::getServerId();
 
-        $data = [
-            'X-Plex-Product'           => static::getAppName(),
-            'X-Plex-Client-Identifier' => static::getClientID(),
-            'X-Plex-Token'             => $token
-        ];
-        $url = 'https://plex.tv/api/users?' . http_build_query($data);
-        $response = sendGET($url);
+        // Is not available as JSON :|
+        $response = static::sendGET('/users', 'https://plex.tv/api', $token, FALSE);
         $response = simplexml_load_string($response);
         $users = [];
         foreach ($response->User as $user) {
@@ -216,12 +211,9 @@ class Plex {
         if (empty($pin)) {
             return FALSE;
         }
-        $data = [
-            'code' => $pin->code,
-            'X-Plex-Client-Identifier' => static::getClientID(),
-        ];
-        $response = sendGET('https://plex.tv/api/v2/pins/' . $pin->id . '?' . http_build_query($data), ["Accept: application/json"]);
-        $response = json_decode($response);
+
+        $response = static::sendGET("/v2/pins/$pin->id?code=$pin->code" , 'https://plex.tv/api', static::ACCESS_TOKEN_SKIP);
+
         if (!empty($response->authToken)) {
             unset($_SESSION['PLEX_PIN']);
 
@@ -254,7 +246,40 @@ class Plex {
         return NULL;
     }
 
-    public static function getServerId() : string {
+    public static function geUrlForMediaKey(string $key) : string {
+        $server_uuid = Plex::getServerId();
+        return "https://app.plex.tv/desktop#!/server/$server_uuid/details?key=" . urlencode($key);
+    }
+
+    public static function getDevices() {
+        return static::sendGET('/devices.json', 'https://plex.tv');
+    }
+
+    public static function getServers() {
+        // Is not available as JSON :|
+        $response = static::sendGET('/pms/servers.xml', 'https://plex.tv', NULL, FALSE);
+        $response = simplexml_load_string($response);
+        $servers = [];
+        foreach ($response->Server as $server) {
+            $s = [];
+            foreach ($server->attributes() as $prop => $value) {
+                $value = (string) $value;
+                if (is_numeric($value)) {
+                    if (is_float($value+0)) {
+                        $s[$prop] = (float) $value;
+                    } else {
+                        $s[$prop] = (int) $value;
+                    }
+                } else {
+                    $s[$prop] = (string) $value;
+                }
+            }
+            $servers[] = (object) $s;
+        }
+        return $servers;
+    }
+
+    private static function getServerId() : string {
         $response = static::sendGET("/identity");
         return $response->machineIdentifier;
     }
@@ -288,16 +313,10 @@ class Plex {
             return NULL;
         }
 
-        $data = [
-            'X-Plex-Product'           => static::getAppName(),
-            'X-Plex-Client-Identifier' => static::getClientID(),
-            'X-Plex-Token'             => $token
-        ];
         try {
-            $response = sendGET('https://plex.tv/api/v2/user?' . http_build_query($data), ["Accept: application/json"]);
-            $user_infos = json_decode($response);
+            $user_infos = static::sendGET('/v2/user', 'https://plex.tv/api', $token);
             if (empty($user_infos->uuid)) {
-                Logger::error("Invalid Plex auth token: " . $response);
+                Logger::error("Invalid Plex auth token: " . json_encode($user_infos));
                 return NULL;
             }
             static::$token = $token;
@@ -312,18 +331,41 @@ class Plex {
         return static::$token;
     }
 
-    private static function sendGET($url) {
+    private const ACCESS_TOKEN_SKIP = 'dont_send_access_token';
+    private static function sendGET($url, ?string $base_url = NULL, ?string $access_token = NULL, bool $decode_json = TRUE) {
+        $data = [
+            'X-Plex-Client-Identifier' => static::getClientID(),
+            'X-Plex-Product' => static::getAppName(),
+        ];
+        if ($access_token !== static::ACCESS_TOKEN_SKIP) {
+            if ($access_token == NULL) {
+                $access_token = static::getAccessToken();
+            }
+            $data['X-Plex-Token'] = $access_token;
+        }
         $sep = string_contains($url, '?') ? '&' : '?';
-        $url .= $sep . "X-Plex-Token=" . urlencode(static::getAccessToken()) . "&X-Plex-Client-Identifier=" . urlencode(static::getClientID());
+        $url .= $sep . http_build_query($data);
+
+        if (empty($base_url)) {
+            $base_url = static::getBaseURL();
+        }
         try {
-            $response = sendGET(static::getBaseURL() . $url, ["Accept: application/json"]);
+            $response = sendGET($base_url . $url, ["Accept: application/json"]);
         } catch (Exception $ex) {
             throw new PlexException($ex->getMessage(), $ex->getCode());
         }
-        $response = json_decode($response);
-        if (!empty($response->MediaContainer)) {
-            return $response->MediaContainer;
+        if (!$decode_json) {
+            return $response;
         }
-        return $response;
+
+        $result = json_decode($response);
+        if ($result === NULL && $response !== 'null') {
+            // response is not JSON; return it as text
+            return $response;
+        }
+        if (!empty($result->MediaContainer)) {
+            return $result->MediaContainer;
+        }
+        return $result;
     }
 }

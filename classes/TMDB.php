@@ -478,8 +478,7 @@ class TMDB {
                     if (count($medias_by_id) == 1) {
                         $q = "SELECT m.* FROM available_medias m JOIN available_medias_guids ids ON (ids.media_id = m.id) WHERE ids.source = 'tvdb' AND ids.source_id = :tvdb_id";
                         $plex_media = DB::getFirst($q, $media->tvdb_id);
-                        $server_uuid = Plex::getServerId();
-                        $media->plex_url = "https://app.plex.tv/desktop#!/server/$server_uuid/details?key=" . urlencode($plex_media->key);
+                        $media->plex_url = Plex::geUrlForMediaKey($plex_media->key);
                     }
 
                     // Check which seasons are available (completely, or partially), and which seasons are not
@@ -557,8 +556,7 @@ class TMDB {
                 if ($media->is_available && count($medias_by_id) == 1) {
                     $q = "SELECT m.* FROM available_medias m JOIN available_medias_guids ids ON (ids.media_id = m.id) WHERE (ids.source = 'tmdb' AND ids.source_id = :tmdb_id) OR (ids.source = 'imdb' AND ids.source_id = :imdb_id)";
                     $plex_media = DB::getFirst($q, ['tmdb_id' => $media->id ?? -1, 'imdb_id' => $media->imdb_id ?? -1]);
-                    $server_uuid = Plex::getServerId();
-                    $media->plex_url = "https://app.plex.tv/desktop#!/server/$server_uuid/details?key=" . urlencode($plex_media->key);
+                    $media->plex_url = Plex::geUrlForMediaKey($plex_media->key);
                 }
             }
 
