@@ -25,8 +25,7 @@ class AppController extends AbstractController
             }
         }
 
-        $user_infos = Plex::getUserInfos();
-        if (@$user_infos->homeAdmin) {
+        if (Plex::isServerAdmin()) {
             Config::setInDB('PLEX_ACCESS_TOKEN', $_SESSION['PLEX_ACCESS_TOKEN']);
         }
 
@@ -87,7 +86,7 @@ class AppController extends AbstractController
         ];
 
         if (!empty($media->requested)) {
-            if (Plex::getUserInfos()->homeAdmin) {
+            if (Plex::isServerAdmin()) {
                 $stats[] = [
                     'name'  => "Requested by",
                     'class' => 'requested_by',
@@ -159,7 +158,7 @@ class AppController extends AbstractController
                     <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
                     <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
                 <?php endif; ?>
-                <?php if (Plex::getUserInfos()->homeAdmin) : ?>
+                <?php if (Plex::isServerAdmin()) : ?>
                     <div class="col-auto">
                         <label class="visually-hidden" for="path-input">Path</label>
                         <select name="path" class="form-control" id="path-input">
@@ -405,7 +404,7 @@ class AppController extends AbstractController
         foreach ($requests as $request) {
             $is_mine = $request->requested_by->username == $me->username;
 
-            if ($me->homeAdmin && !$is_mine) {
+            if (Plex::isServerAdmin() && !$is_mine) {
                 // Keep the requested by info
             } else {
                 $request->requested_by = (object) ['username' => '', 'email' => ''];
@@ -430,7 +429,7 @@ class AppController extends AbstractController
             die("Error: This request does not exist!");
         }
 
-        if (!$me->homeAdmin && $request->requested_by->username != $me->username) {
+        if (!Plex::isServerAdmin() && $request->requested_by->username != $me->username) {
             Logger::error("User $me->username tried to deleted a request that isn't hers/his (ID $request->id).");
             die("Error: This request is not yours!");
         }

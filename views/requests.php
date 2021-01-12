@@ -56,7 +56,7 @@ $this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex"
                 <?php endif; ?>
                 <td><?php phe(substr($request->added_when, 0, 10)) ?></td>
                 <td>
-                    <?php if (Plex::getUserInfos()->homeAdmin || $title == "My Requests") : ?>
+                    <?php if (Plex::isServerAdmin() || $title == "My Requests") : ?>
                         <form method="post" action="<?php phe(Router::getURL(Router::ACTION_REMOVE, Router::REMOVE_REQUEST, ['id' => $request->id])) ?>" onsubmit="<?php phe("if(!confirm(" . json_encode("Are you sure that you want to remove the request for \"$request->title\" ?") . ")) return false;") ?>">
                             <button type="submit" class="btn btn-outline-danger btn-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16">

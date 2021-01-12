@@ -39,7 +39,7 @@ $breakout_search_form = ( @$nav_active == 'discover' || @$_REQUEST['action'] == 
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'discover', 'active') ?>" href="./">Discover</a></li>
                         <li class="nav-item"><a class="nav-link <?php echo_if(@$nav_active == 'requests', 'active') ?>" href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS)) ?>">Requests</a></li>
-                        <?php if (Plex::getUserInfos()->homeAdmin) : ?>
+                        <?php if (Plex::isServerAdmin()) : ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle <?php echo_if(@$nav_active == 'admin', 'active') ?>" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">Admin</a>
                                 <ul class="dropdown-menu">

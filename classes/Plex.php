@@ -246,6 +246,20 @@ class Plex {
         return NULL;
     }
 
+    public static function isServerAdmin() : bool {
+        if (!isset($_SESSION['is_server_admin'])) {
+            $_SESSION['is_server_admin'] = FALSE;
+            $this_server_id = Plex::getServerId();
+            foreach (static::getServers() as $server) {
+                if ($server->machineIdentifier == $this_server_id && $server->owned) {
+                    $_SESSION['is_server_admin'] = TRUE;
+                    break;
+                }
+            }
+        }
+        return $_SESSION['is_server_admin'];
+    }
+
     public static function geUrlForMediaKey(string $key) : string {
         $server_uuid = Plex::getServerId();
         return "https://app.plex.tv/desktop#!/server/$server_uuid/details?key=" . urlencode($key);
