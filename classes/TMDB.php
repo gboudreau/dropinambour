@@ -499,7 +499,7 @@ class TMDB {
                     $q = "SELECT * FROM available_episodes WHERE media_id = :media_id";
                     $available_seasons = DB::getAll($q, $local_media_id, 'season');
 
-                    if (count($medias_by_id) == 1) {
+                    if (count($medias_by_id) == 1 && !empty($media->requested)) {
                         $q = "SELECT season, monitored FROM requested_episodes WHERE request_id = :req_id";
                         $monitored_seasons = DB::getAll($q, $media->requested->id, 'season');
                         $monitored_seasons = getPropValuesFromArray($monitored_seasons, 'monitored', TRUE);
