@@ -63,7 +63,7 @@ class DB
      * @throws Exception Thrown when we can't connect to the database.
      */
     public static function connect(int $options = 0) : void {
-        if (!Config::get('DB_ENGINE') == 'mysql') {
+        if (Config::get('DB_ENGINE') != 'mysql') {
             die("Error: Only MySQL connections are possible at this time.");
         }
 
