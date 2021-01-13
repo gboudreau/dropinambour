@@ -247,7 +247,7 @@ class AppController extends AbstractController
             $stats[] = [
                 'name'  => "Aired",
                 'class' => 'date',
-                'value' => "$media->first_air_date to $media->last_air_date",
+                'value' => $media->first_air_date . ($media->last_air_date != $media->first_air_date ? " to $media->last_air_date" : ""),
             ];
         }
         if (!empty($media->next_episode_to_air)) {
