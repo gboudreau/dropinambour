@@ -86,7 +86,6 @@ function echo_if($condition, $text_if_true, $text_if_false = '') {
     }
 }
 
-
 function oddOrEvent() : string {
     global $odd_even;
     if (empty($odd_even)) {
@@ -106,6 +105,18 @@ function is_https() : bool {
         return TRUE;
     }
     return FALSE;
+}
+
+function minutes_to_human($minutes) {
+    if ($minutes >= 60) {
+        $hours = floor($minutes / 60);
+        $minutes -= $hours * 60;
+        if ($minutes == 0) {
+            return sprintf("%dh", $hours);
+        }
+        return sprintf("%dh %dm", $hours, $minutes);
+    }
+    return sprintf("%dm", $minutes);
 }
 
 /**

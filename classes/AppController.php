@@ -223,16 +223,14 @@ class AppController extends AbstractController
             $stats[] = [
                 'name'   => "Run time",
                 'class'  => 'runtime',
-                'value'  => first($media->episode_run_time),
-                'suffix' => 'minutes'
+                'value'  => minutes_to_human(first($media->episode_run_time)),
             ];
         }
         if (!empty($media->runtime)) {
             $stats[] = [
                 'name'   => "Run time",
                 'class'  => 'runtime',
-                'value'  => $media->runtime,
-                'suffix' => 'minutes'
+                'value'  => minutes_to_human($media->runtime),
             ];
         }
 
