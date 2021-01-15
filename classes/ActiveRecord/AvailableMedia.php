@@ -206,6 +206,23 @@ class AvailableMedia extends AbstractActiveRecord
             DB::insert($q, ['media_id' => $this->id, 'source' => $re[1], 'id' => $re[2]]);
             $all_guids[] = strtoupper($re[1]) . " ID = $re[2]";
         }
+
+        if (empty($this->tmdb_id)) {
+            // Try to find the TMDB ID using IMDB ID
+            if (!empty($this->imdb_id)) {
+                $tmdb_media = TMDB::getDetailsByExternalId($this->imdb_id, 'imdb');
+                if ($tmdb_media) {
+                    $this->tmdb_id = $tmdb_media->id;
+                    $all_guids[] = "TMDB ID = $this->tmdb_id";
+                    $q = "INSERT INTO available_medias_guids SET media_id = :media_id, source = :source, source_id = :id ON DUPLICATE KEY UPDATE source_id = VALUES(source_id)";
+                    DB::insert($q, ['media_id' => $this->id, 'source' => 'tmdb', 'id' => $this->tmdb_id]);
+                }
+            }
+            if (empty($this->tmdb_id)) {
+                Logger::warning("    - Couldn't find TMDB ID for this media. Won't be able to mark request as filled.");
+            }
+        }
+
         Logger::info("    - Added GUIDs for movie '$this->title': " . implode(', ', $all_guids));
     }
 
