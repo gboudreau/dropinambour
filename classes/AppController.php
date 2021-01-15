@@ -60,10 +60,12 @@ class AppController extends AbstractController
 
         $media->container_class = AvailableMedia::getClassForMedia($media);
 
-        if ($media->media_type == 'tv') {
+        if ($media->media_type == 'tv' && !empty($media->tvdb_id)) {
             $show = Sonarr::lookupShow($media->tvdb_id);
-            $media->titleSlug = $show->titleSlug;
-            $media->images = $show->images;
+            if ($show) {
+                $media->titleSlug = $show->titleSlug;
+                $media->images = $show->images;
+            }
         }
 
         $avail_suffix = '';
@@ -102,18 +104,27 @@ class AppController extends AbstractController
             }
         }
 
+        $paths = $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths();
+        $profiles = $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles();
+        $default_path = $media->media_type == 'movie' ? Config::getFromDB('RADARR_DEFAULT_PATH') : Config::getFromDB('SONARR_DEFAULT_PATH');
+        $default_quality = $media->media_type == 'movie' ? (int) Config::getFromDB('RADARR_DEFAULT_QUALITY') : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
+        $default_language = $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
+
         if ($media->media_type == 'tv') {
             $episode_counts = getPropValuesFromArray($media->seasons, 'episode_count');
             $total_episodes = array_sum($episode_counts);
         }
-        if (!empty($media->requested) && $media->media_type == 'tv' && $media->is_available !== TRUE && $media->status != 'In Production' && $total_episodes > 0) {
+        if ($media->media_type == 'tv' && ($media->is_available !== TRUE || string_contains(@$media->status, 'Returning')) && $media->status != 'In Production' && $total_episodes > 0) {
             ob_start();
             ?>
             <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
+                <input name="req_id" type="hidden" value="<?php phe(@$media->requested->id) ?>">
                 <input name="media_type" type="hidden" value="<?php phe($media->media_type) ?>">
                 <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
                 <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">
-                <input name="req_id" type="hidden" value="<?php phe($media->requested->id) ?>">
+                <input name="title" type="hidden" value="<?php phe($media->title) ?>">
+                <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
+                <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
                 <div class="col-auto">
                     <label class="visually-hidden" for="season-input">Season</label>
                     <select name="season" class="form-control" id="season-input" required onchange="$(this).closest('form').find('button').prop('disabled', $(this).val() === '');">
@@ -126,6 +137,35 @@ class AppController extends AbstractController
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <?php if (Plex::isServerAdmin() && empty($media->requested)) : ?>
+                    <div class="col-auto">
+                        <label class="visually-hidden" for="path-input">Path</label>
+                        <select name="path" class="form-control" id="path-input">
+                            <option value="">Path</option>
+                            <?php foreach ($paths as $path) : ?>
+                                <option value="<?php phe($path) ?>" <?php echo_if($path == $default_path, 'selected') ?>><?php phe($path) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label class="visually-hidden" for="quality-input">Quality</label>
+                        <select name="quality" class="form-control" id="quality-input">
+                            <option value="">Quality</option>
+                            <?php foreach ($profiles as $qp) : ?>
+                                <option value="<?php phe($qp->id) ?>" <?php echo_if($qp->id == $default_quality, 'selected') ?>><?php phe($qp->name) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <label class="visually-hidden" for="language-input">Language</label>
+                        <select name="language" class="form-control" id="language-input">
+                            <option value="">Language</option>
+                            <?php foreach (Sonarr::getLanguageProfiles() as $lp) : ?>
+                                <option value="<?php phe($lp->id) ?>" <?php echo_if($lp->id == $default_language, 'selected') ?>><?php phe($lp->name) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php endif; ?>
                 <div class="col-auto">
                     <button class="btn btn-primary" type="submit" disabled>Request</button>
                 </div>
@@ -140,13 +180,7 @@ class AppController extends AbstractController
             ];
         }
 
-        if (!$media->is_available && empty($media->requested)) {
-            $paths = $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths();
-            $profiles = $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles();
-            $default_path = $media->media_type == 'movie' ? Config::getFromDB('RADARR_DEFAULT_PATH') : Config::getFromDB('SONARR_DEFAULT_PATH');
-            $default_quality = $media->media_type == 'movie' ? (int) Config::getFromDB('RADARR_DEFAULT_QUALITY') : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
-            $default_language = $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
-
+        if (!$media->is_available && empty($media->requested) && ($media->media_type != 'tv' || !empty($media->tvdb_id))) {
             ob_start();
             ?>
             <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
