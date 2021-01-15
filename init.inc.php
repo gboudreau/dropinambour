@@ -16,6 +16,9 @@ ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
 ini_set("log_errors", 1);
 
+set_error_handler(['PommePause\Dropinambour\ErrorHandler', 'handler']);
+set_exception_handler(['PommePause\Dropinambour\ErrorHandler', 'exHandler']);
+
 $is_http_request = !empty($_SERVER['REQUEST_METHOD']);
 
 if ($is_http_request) {
