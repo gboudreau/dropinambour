@@ -275,9 +275,9 @@ class Plex {
         return static::sendGET('/devices.json', 'https://plex.tv');
     }
 
-    public static function getServers() {
+    public static function getServers(bool $include_local_only = TRUE) {
         // Is not available as JSON :|
-        $response = static::sendGET('/pms/servers.xml?includeLite=1', 'https://plex.tv', 30*60, NULL, FALSE);
+        $response = static::sendGET('/pms/servers.xml' . ($include_local_only ? '?includeLite=1' : ''), 'https://plex.tv', 30*60, NULL, FALSE);
         $response = simplexml_load_string($response);
         $servers = [];
         foreach ($response->Server as $server) {
