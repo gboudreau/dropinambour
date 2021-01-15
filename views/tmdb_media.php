@@ -65,7 +65,7 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
                         <span class="value">
                             <?php
                             if ($s->class == 'url') {
-                                ?><a href="<?php phe($s->value) ?>" rel="noreferrer"><?php phe($s->link_text ?? $s->name) ?></a><?php
+                                ?><a href="<?php phe($s->value) ?>" rel="noreferrer" target="_blank"><?php phe($s->link_text ?? $s->name) ?></a><?php
                             } else {
                                 phe($s->value);
                             }
