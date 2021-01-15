@@ -28,3 +28,7 @@ h4 {
     height: 1em;
     vertical-align: -.1em;
 }
+
+select[name=language].small {
+    width: 44px !important;
+}

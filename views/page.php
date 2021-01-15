@@ -52,8 +52,16 @@ $breakout_search_form = ( @$nav_active == 'discover' || @$_REQUEST['action'] == 
                     </ul>
                     <form class="<?php echo_if($breakout_search_form, 'd-none d-md-flex', 'd-flex') ?>" method="get" action="./">
                         <input name="action" type="hidden" value="<?php phe(Router::ACTION_SEARCH) ?>">
-                        <input name="language" type="hidden" value="<?php phe(first(to_array(Config::get('LANGUAGES')))) ?>">
                         <input name="query" class="form-control me-2" type="search" placeholder="Movie or TV Show title" value="<?php phe(@$_REQUEST['query']) ?>" aria-label="Search">
+                        <?php if (count(to_array(Config::get('LANGUAGES'))) < 2) : ?>
+                            <input name="language" type="hidden" value="<?php phe(first(to_array(Config::get('LANGUAGES', ['en'])))) ?>">
+                        <?php else : ?>
+                            <select name="language" class="form-control small me-2">
+                                <?php foreach (to_array(Config::get('LANGUAGES')) as $lang) : ?>
+                                    <option value="<?php phe($lang) ?>"><?php phe(strtoupper($lang)) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
                         <button class="btn btn-outline-success" type="submit">Search</button>
                     </form>
                 </div>
@@ -61,14 +69,24 @@ $breakout_search_form = ( @$nav_active == 'discover' || @$_REQUEST['action'] == 
         </nav>
     <?php endif; ?>
 
-    <div class="container-fluid <?php echo_if($breakout_search_form, 'd-md-none', 'd-none') ?>">
-        <form class="d-flex" method="get" action="./">
-            <input name="action" type="hidden" value="<?php phe(Router::ACTION_SEARCH) ?>">
-            <input name="language" type="hidden" value="<?php phe(first(to_array(Config::get('LANGUAGES')))) ?>">
-            <input name="query" class="form-control me-2" type="search" placeholder="Movie or TV Show title" value="<?php phe(@$_REQUEST['query']) ?>" aria-label="Search">
-            <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
-    </div>
+    <?php if ($breakout_search_form) : ?>
+        <div class="container-fluid d-md-none">
+            <form class="d-flex" method="get" action="./">
+                <input name="action" type="hidden" value="<?php phe(Router::ACTION_SEARCH) ?>">
+                <input name="query" class="form-control me-2" type="search" placeholder="Movie or TV Show title" value="<?php phe(@$_REQUEST['query']) ?>" aria-label="Search">
+                <?php if (count(to_array(Config::get('LANGUAGES'))) < 2) : ?>
+                    <input name="language" type="hidden" value="<?php phe(first(to_array(Config::get('LANGUAGES', ['en'])))) ?>">
+                <?php else : ?>
+                    <select name="language" class="form-control small me-2">
+                        <?php foreach (to_array(Config::get('LANGUAGES')) as $lang) : ?>
+                            <option value="<?php phe($lang) ?>"><?php phe(strtoupper($lang)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
+                <button class="btn btn-outline-success" type="submit">Search</button>
+            </form>
+        </div>
+    <?php endif; ?>
 
     <div class="notifications"></div>
 
