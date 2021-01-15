@@ -22,13 +22,15 @@ class AvailableMedia extends AbstractActiveRecord
     public $guid;
     public $added_when;
 
-    public function save(?DBQueryBuilder $builder = NULL) : bool {
-        $result = parent::save($builder);
+    public function save(?DBQueryBuilder $builder = NULL, bool $update_if_exists = TRUE) : bool {
         if (empty($this->id)) {
             $q = "SELECT id FROM available_medias WHERE section_id = :section_id AND guid = :guid";
             $this->id = DB::getFirstValue($q, ['section_id' => $this->section_id, 'guid' => $this->guid]);
         }
-        return $result;
+        if (empty($this->id)) {
+            return parent::save($builder, FALSE);
+        }
+        return $this->update($this->id);
     }
 
     public static function fromPlexItem($plex_item) : self {
@@ -69,6 +71,8 @@ class AvailableMedia extends AbstractActiveRecord
 
         try {
             if (empty($section)) {
+                Logger::info("Importing all sections from Plex: will truncate available_* tables, and re-import everything.");
+
                 DB::execute("TRUNCATE available_medias");
                 DB::execute("TRUNCATE available_medias_guids");
                 DB::execute("TRUNCATE available_episodes");

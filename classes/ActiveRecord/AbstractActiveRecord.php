@@ -36,12 +36,11 @@ abstract class AbstractActiveRecord extends stdClass
     /**
      * Insert a new record
      *
-     * @return static|bool
+     * @return bool
      */
     public function insert() {
         unset($this->{static::PRIMARY_KEY});
-        $this->save();
-        return static::getOne($this->{static::PRIMARY_KEY});
+        return $this->save(NULL, FALSE);
     }
 
     /**
@@ -49,7 +48,7 @@ abstract class AbstractActiveRecord extends stdClass
      *
      * @param mixed $primary_key_value PK value
      *
-     * @return static|bool
+     * @return bool
      */
     public function update($primary_key_value) {
         if (empty($primary_key_value)) {
@@ -57,9 +56,14 @@ abstract class AbstractActiveRecord extends stdClass
         }
 
         $this->{static::PRIMARY_KEY} = $primary_key_value;
-        $this->save();
 
-        return static::getOne($primary_key_value);
+        $builder = new DBQueryBuilder();
+        $builder->update(static::TABLE_NAME)
+            ->where(static::PRIMARY_KEY, $primary_key_value);
+        $this->setQueryParameters($builder, FALSE);
+        $builder->execute();
+
+        return TRUE;
     }
 
     /**
@@ -69,7 +73,7 @@ abstract class AbstractActiveRecord extends stdClass
      *
      * @return void
      */
-    protected function setQueryParameters($builder) : void {
+    protected function setQueryParameters($builder, bool $update_if_exists = TRUE) : void {
         $update_columns = [];
         foreach ($this as $property => $value) {
             if ($this->skipParamOnSave($property)) {
@@ -87,7 +91,7 @@ abstract class AbstractActiveRecord extends stdClass
                 }
             }
         }
-        if (!empty($update_columns)) {
+        if (!empty($update_columns) && $update_if_exists) {
             $builder->onDuplicateKeyUpdate($update_columns);
         }
     }
@@ -111,18 +115,26 @@ abstract class AbstractActiveRecord extends stdClass
         }
     }
 
-    public function save(?DBQueryBuilder $builder = NULL) : bool {
+    public function save(?DBQueryBuilder $builder = NULL, bool $update_if_exists = TRUE) : bool {
         if ($builder === NULL) {
             $builder = new DBQueryBuilder();
         }
         $builder->insertInto(static::TABLE_NAME);
 
         // Will update the row using ON DUPLICATE KEY UPDATE ...
-        $this->setQueryParameters($builder);
+        $this->setQueryParameters($builder, $update_if_exists);
+
+        if (!$update_if_exists) {
+            $builder->ignore();
+        }
 
         $new_id = $builder->insert();
         if ($new_id) {
             $this->{static::PRIMARY_KEY} = $new_id;
+        }
+
+        if (!$update_if_exists && empty($new_id)) {
+            return FALSE;
         }
 
         return TRUE;

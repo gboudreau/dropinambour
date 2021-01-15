@@ -47,13 +47,15 @@ class Request extends AbstractActiveRecord
         }
     }
 
-    public function save(?DBQueryBuilder $builder = NULL) : bool {
-        $result = parent::save($builder);
+    public function save(?DBQueryBuilder $builder = NULL, bool $update_if_exists = TRUE) : bool {
         if (empty($this->id)) {
             $q = "SELECT id FROM requests WHERE monitored_by = :monitored_by AND external_id = :external_id";
             $this->id = DB::getFirstValue($q, ['monitored_by' => $this->monitored_by, 'external_id' => $this->external_id]);
         }
-        return $result;
+        if (empty($this->id)) {
+            return parent::save($builder, FALSE);
+        }
+        return $this->update($this->id);
     }
 
     public function notifyAdminRequestAdded(?int $season_number = NULL) : void {
