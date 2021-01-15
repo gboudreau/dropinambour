@@ -492,7 +492,10 @@ class AppController extends AbstractController
     }
 
     public function importPlexMedias() : Response {
-        $num = AvailableMedia::importAvailableMediasFromPlex(@$_POST['section']);
+        if (empty($_POST['section'])) {
+            $_POST['section'] = NULL;
+        }
+        $num = AvailableMedia::importAvailableMediasFromPlex($_POST['section']);
         $this->showAlert("Imported $num movies or shows from Plex.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_PLEX));
     }
