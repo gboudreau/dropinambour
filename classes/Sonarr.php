@@ -12,8 +12,14 @@ class Sonarr {
     public static function importAllRequests() : int {
         Logger::info("Importing Sonarr requests...");
         $shows = static::getAllShows();
+        $existing_requests = Request::getAllShowRequests();
         foreach ($shows as $show) {
-            $req = Request::fromSonarrShow($show);
+            $req = @$existing_requests[$show->tvdbId];
+            if ($req) {
+                $req->updateFromSonarShow($show);
+            } else {
+                $req = Request::fromSonarrShow($show);
+            }
             $req->save();
             $req->addSeasonsFromSonarrShow($show);
         }

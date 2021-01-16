@@ -96,14 +96,18 @@ class Request extends AbstractActiveRecord
         $m->external_id = $movie->id;
         $m->monitored_by = 'radarr';
         $m->requested_by = Plex::getUserInfos()->username . ' <' . Plex::getUserInfos()->email . '>';
-        $m->quality_profile = $movie->qualityProfileId;
-        $m->path = $movie->path;
-        $m->title = $movie->title;
-        $m->monitored = $movie->monitored;
-        $m->imdb_id = $movie->imdbId ?? NULL;
         $m->tmdb_id = $movie->tmdbId ?? NULL;
-        $m->added_when = date('Y-m-d H:i:s', strtotime($movie->added));
+        $m->updateFromRadarrMovie($movie);
         return $m;
+    }
+
+    public function updateFromRadarrMovie($movie) : void {
+        $this->quality_profile = $movie->qualityProfileId;
+        $this->path = $movie->path;
+        $this->title = $movie->title;
+        $this->monitored = $movie->monitored;
+        $this->imdb_id = $movie->imdbId ?? NULL;
+        $this->added_when = date('Y-m-d H:i:s', strtotime($movie->added));
     }
 
     public static function fromSonarrShow($show) : self {
@@ -111,15 +115,19 @@ class Request extends AbstractActiveRecord
         $m->external_id = $show->id;
         $m->monitored_by = 'sonarr';
         $m->requested_by = Plex::getUserInfos()->username . ' <' . Plex::getUserInfos()->email . '>';
-        $m->quality_profile = $show->qualityProfileId;
-        $m->language_profile = $show->languageProfileId;
-        $m->path = $show->path;
-        $m->title = $show->title;
-        $m->monitored = $show->monitored;
-        $m->imdb_id = $show->imdbId ?? NULL;
         $m->tvdb_id = $show->tvdbId ?? NULL;
-        $m->added_when = date('Y-m-d H:i:s', strtotime($show->added));
+        $m->updateFromSonarShow($show);
         return $m;
+    }
+
+    public function updateFromSonarShow($show) : void {
+        $this->quality_profile = $show->qualityProfileId;
+        $this->language_profile = $show->languageProfileId;
+        $this->path = $show->path;
+        $this->title = $show->title;
+        $this->monitored = $show->monitored;
+        $this->imdb_id = $show->imdbId ?? NULL;
+        $this->added_when = date('Y-m-d H:i:s', strtotime($show->added));
     }
 
     public function addSeasonsFromSonarrShow($show) : void {

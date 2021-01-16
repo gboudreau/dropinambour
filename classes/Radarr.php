@@ -12,8 +12,14 @@ class Radarr {
     public static function importAllRequests() : int {
         Logger::info("Importing Radarr requests...");
         $movies = static::getAllMovies();
+        $existing_requests = Request::getAllMovieRequests();
         foreach ($movies as $movie) {
-            $req = Request::fromRadarrMovie($movie);
+            $req = @$existing_requests[$movie->tmdbId];
+            if ($req) {
+                $req->updateFromRadarrMovie($movie);
+            } else {
+                $req = Request::fromRadarrMovie($movie);
+            }
             $req->save();
         }
         Logger::info("Done importing Radarr requests.");
