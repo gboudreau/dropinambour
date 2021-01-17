@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4b11ee5390a3874201bb02d50865ee12",
+    "content-hash": "f7daaefdb17ce2c10b6de2749b93da9d",
     "packages": [
         {
             "name": "delight-im/cookie",
@@ -909,7 +909,8 @@
         "ext-curl": "*",
         "ext-json": "*",
         "ext-simplexml": "*",
-        "ext-mbstring": "*"
+        "ext-mbstring": "*",
+        "ext-session": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"

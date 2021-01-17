@@ -13,6 +13,7 @@
     "ext-json": "*",
     "ext-simplexml": "*",
     "ext-mbstring": "*",
+    "ext-session": "*",
     "delight-im/cookie": "^3.4",
     "sendgrid/sendgrid": "~6.2",
     "league/plates": "3.*",
