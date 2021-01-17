@@ -21,20 +21,31 @@ If anyone is interested in developping this further, and use it on their own Ple
 - Plex (obviously)
 - Sonarr and/or Radarr (only v3 are supported)
 - A MySQL-compatible server (eg. MariaDB)
-- PHP 7.3+ & [composer](https://getcomposer.org/)
+- PHP 7.3+ & [composer](https://getcomposer.org/), or Docker
 
 ## Installation
 
+If you want to use Docker to run dropinambour, skip steps 1 to 3 below, and instead run a container using this command:
+
+    sudo docker run --rm --name dropinambour -v /path/to/config:/config -e TZ=America/Toronto -p 3578:8080 -t gboudreau/dropinambour
+
+`/path/to/config` should be the path to an empty folder where `config.php` will be placed. You will probably want to put the log file in there too; see `LOG_FILE` in `config.php`
+
 1. Put all the files in any web-accessible (and PHP-enabled) folder.
-   Alternativaly, you can use PHP to run a server:
+   Alternatively, you can use PHP to run a server (that listens on port `3578`, in this example):
 
    ```bash
-   php -S 0.0.0.0:8080 ./index.php
+   php -S 0.0.0.0:3578 ./index.php
    ```
 
-2. Copy `_config/config.example.php` to `_config/config.php` and edit its content.
+2. Run `composer install` to install the required dependencies.
+   It might complain about missing PHP extensions; install them using you preferred method (apt/yum).
 
-3. Create an empty MySQL database, and user:
+3. Copy `_config/config.example.php` to `_config/config.php`
+   
+4. Edit `config.php` content as needed.
+
+4. Create an empty MySQL database, and user:
 
    ```mysql
    mysql -u root -p
@@ -42,17 +53,14 @@ If anyone is interested in developping this further, and use it on their own Ple
    > GRANT ALL on dinb.* TO dinb_user@'localhost' IDENTIFIED BY 'complicated-password';
    ```
 
-4. Import the empty DB schema from `_db/schema.sql` :
+5. Import the empty DB schema from `_db/schema.sql` :
 
    ```bash
    mysql -u root -p dinb < _db/schema.sql
    ```
 
-5. Run `composer install` to install the required dependencies.
-   It might complain about missing PHP extensions; install them using you preferred method (apt/yum).
-
 6. Create a con job on your server to load the following URL every 5 minutes (or as often as you want):
-   `http://localhost/dropinambour/?action=cron` 
+   `http://localhost:3578/?action=cron`
 
 ## Development
 
