@@ -57,6 +57,11 @@ class Router
      * @return string Method name to call on an AppController instance.
      */
     public static function getRouteForRequest(Request $request) : string {
+        if (!empty($request->getBaseUrl()) || $request->getPathInfo() != "/") {
+            // Static assets (CSS, images, etc.)
+            return 'viewAsset';
+        }
+
         // Depending on the value of the 'action' query parameter, we'll either return 'actionWhat' (eg. 'viewMedia', 'saveRequest') or just action (eg. 'search', 'cron')
         // Fallback to view the home page
         $action = $request->query->get('action');

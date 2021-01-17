@@ -14,6 +14,18 @@ function string_contains($haystack, $needle) {
     return stripos($haystack, $needle) !== FALSE;
 }
 
+function string_begins_with($haystack, $needle) {
+    if (is_array($needle)) {
+        foreach ($needle as $n) {
+            if (string_begins_with($haystack, $n)) {
+                return TRUE;
+            }
+        }
+        return FALSE;
+    }
+    return stripos($haystack, $needle) === 0;
+}
+
 function array_contains($haystack, $needle) {
     if (empty($haystack)) {
         return FALSE;
