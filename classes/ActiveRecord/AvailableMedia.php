@@ -150,6 +150,7 @@ class AvailableMedia extends AbstractActiveRecord
                 DB::insert($q, ['media_id' => $this->id, 'source' => 'tvdb', 'id' => $re[1]]);
                 $this->tvdb_id = (int) $re[1];
                 Logger::info("    - Added GUIDs for show '$this->title': TVDB ID = $this->tvdb_id");
+                return;
             } elseif (preg_match('@themoviedb://(\d+)@', $this->guid, $re)) {
                 // Show is matched to TheMovieDB; need to use TMDB API to get (at least) the TVDB ID
 
@@ -175,11 +176,8 @@ class AvailableMedia extends AbstractActiveRecord
                 }
 
                 Logger::info("    - Added GUIDs for show '$this->title': " . implode(', ', $all_guids));
-            } else {
-                $section_name = Plex::getSectionNameById($this->section_id);
-                Logger::warning("Plex show \"$this->title\" (key = $this->key) in section {$section_name} (ID = {$this->section_id}) has no GUID. Use TheTVDB agent for this section to fix this.");
+                return;
             }
-            return;
         }
 
         $md = Plex::getItemMetadata($this->key);
@@ -189,7 +187,7 @@ class AvailableMedia extends AbstractActiveRecord
         }
         if (!isset($md->Guid)) {
             $section_name = Plex::getSectionNameById($this->section_id);
-            Logger::warning("Plex movie \"$this->title\" (key = $this->key) in section {$section_name} (ID = {$this->section_id}) has no GUID. Use 'Fix match...' in Plex to fix.");
+            Logger::warning("Plex $this->type \"$this->title\" (key = $this->key) in section {$section_name} (ID = {$this->section_id}) has no GUID. Use 'Fix match...' in Plex to fix.");
             return;
         }
 
@@ -202,16 +200,20 @@ class AvailableMedia extends AbstractActiveRecord
             if (!preg_match('@(.+)://(.+)$@', $guid->id, $re)) {
                 Logger::error("Invalid GUID: $guid");
             }
-            if ($re[1] == 'tvdb') {
+            if ($re[1] == 'tvdb' && $this->type == 'movie') {
                 // TheTVDB Movie ID
                 $re[1] = 'tvdbm';
+            }
+            if ($re[1] == 'tmdb' && $this->type == 'show') {
+                // TMDB TV Show ID
+                $re[1] = 'tmdbtv';
             }
             $this->{$re[1].'_id'} = $re[2];
             DB::insert($q, ['media_id' => $this->id, 'source' => $re[1], 'id' => $re[2]]);
             $all_guids[] = strtoupper($re[1]) . " ID = $re[2]";
         }
 
-        if (empty($this->tmdb_id)) {
+        if (empty($this->tmdb_id) && $this->type == 'movie') {
             // Try to find the TMDB ID using IMDB ID
             if (!empty($this->imdb_id)) {
                 $tmdb_media = TMDB::getDetailsByExternalId($this->imdb_id, 'imdb');
@@ -227,7 +229,7 @@ class AvailableMedia extends AbstractActiveRecord
             }
         }
 
-        Logger::info("    - Added GUIDs for movie '$this->title': " . implode(', ', $all_guids));
+        Logger::info("    - Added GUIDs for $this->type '$this->title': " . implode(', ', $all_guids));
     }
 
     public static function getAllTMDBIDs() : array {
