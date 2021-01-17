@@ -7,7 +7,7 @@ RUN apk --no-cache add php7 php7-pdo php7-pdo_mysql php7-mysqli php7-json php7-o
 ENV TZ="UTC"
 
 # Configure PHP
-RUN echo 'date.timezone="$TZ"' >> /etc/php7/conf.d/zzz_custom.ini
+RUN echo "date.timezone=$TZ" >> /etc/php7/conf.d/zzz_custom.ini
 
 # Setup document root
 RUN mkdir -p /var/www/
