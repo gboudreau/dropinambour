@@ -75,10 +75,14 @@ abstract class AbstractActiveRecord extends stdClass
      */
     protected function setQueryParameters($builder, bool $update_if_exists = TRUE) : void {
         $update_columns = [];
-        foreach ($this as $property => $value) {
+        foreach (get_class_vars(static::class) as $property => $value) {
+            if ($property == 'object_cache') {
+                continue;
+            }
             if ($this->skipParamOnSave($property)) {
                 continue;
             }
+            $value = $this->{$property};
             if ($value !== NULL || array_contains($this->getNullableFields(), $property)) {
                 $overridden_method_name = 'setQueryParameter' . ucfirst($property);
                 if (method_exists($this, $overridden_method_name)) {
