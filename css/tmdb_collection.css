@@ -14,13 +14,13 @@
         width: 185px;
     }
 }
-.movie_box.available .poster, .available > .poster {
+.movie_box.available .poster, .available .this.poster {
     border-bottom: 7px solid #6eee6e;
 }
-.movie_box.available_partially .poster, .available_partially > .poster {
+.movie_box.available_partially .poster, .available_partially .this.poster {
     border-bottom: 7px solid #ffe563;
 }
-.movie_box.requested .poster, .requested > .poster {
+.movie_box.requested .poster, .requested .this.poster {
     border-bottom: 7px solid #ff9063;
 }
 .poster {
