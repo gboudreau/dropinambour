@@ -54,6 +54,8 @@ class Radarr {
             'qualityProfileId'    => $quality_profile_id,
             'rootFolderPath'      => $path,
             'minimumAvailability' => 'announced',
+            'monitored'           => TRUE,
+            'addOptions'          => (object) ['searchForMovie' => TRUE],
         ];
         $movie = static::sendPOST('/movie', $data);
         $request = Request::fromRadarrMovie($movie);
