@@ -44,7 +44,8 @@ CREATE TABLE `requested_episodes` (
 CREATE TABLE `requests` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `external_id` int(11) unsigned DEFAULT NULL,
-  `monitored_by` enum('radarr','sonarr') NOT NULL,
+  `monitored_by` enum('radarr','sonarr','none') NOT NULL,
+  `type` enum('movie','show') NOT NULL,
   `requested_by` tinytext DEFAULT NULL,
   `quality_profile` tinyint(3) unsigned DEFAULT NULL,
   `language_profile` tinyint(3) unsigned DEFAULT NULL,

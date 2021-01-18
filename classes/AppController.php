@@ -115,7 +115,7 @@ class AppController extends AbstractController
             $total_episodes = array_sum($episode_counts);
         }
 
-        if (!$media->is_available && empty($media->requested) && ($media->media_type != 'tv' || !empty($media->tvdb_id))) {
+        if (!$media->is_available && empty($media->requested)) {
             ob_start();
             ?>
             <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
@@ -170,7 +170,7 @@ class AppController extends AbstractController
                 'class' => 'request',
                 'value_html' => $request_form_html,
             ];
-        } elseif ($media->media_type == 'tv' && ($media->is_available !== TRUE || string_contains(@$media->status, 'Returning')) && $media->status != 'In Production' && $total_episodes > 0) {
+        } elseif ($media->media_type == 'tv' && ($media->is_available !== TRUE || string_contains(@$media->status, 'Returning')) && $media->status != 'In Production' && $total_episodes > 0 && @$media->requested->monitored_by != 'none') {
             ob_start();
             ?>
             <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
@@ -179,8 +179,8 @@ class AppController extends AbstractController
                 <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
                 <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">
                 <input name="title" type="hidden" value="<?php phe($media->title) ?>">
-                <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
-                <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
+                <input name="title_slug" type="hidden" value="<?php phe(@$media->titleSlug) ?>">
+                <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images ?? [])) ?>">
                 <div class="col-auto">
                     <label class="visually-hidden" for="season-input">Season</label>
                     <select name="season" class="form-control" id="season-input" required onchange="$(this).closest('form').find('button').prop('disabled', $(this).val() === '');">
@@ -407,16 +407,23 @@ class AppController extends AbstractController
             Radarr::addMovie($_POST['tmdb_id'], $_POST['title'], $_POST['quality'], $_POST['path']);
             $this->showAlert("Added request for \"{$_POST['title']}\" movie.");
         } elseif ($_POST['media_type'] == 'tv') {
-            if (empty($_POST['path'])) {
-                $_POST['path'] = Config::getFromDB('SONARR_DEFAULT_PATH');
+            if (empty($_POST['tvdb_id'])) {
+                $show = TMDB::getDetailsTV($_POST['tmdb_id']);
+                $request = Request::fromTMDBShow($show);
+                $request->save();
+                $request->notifyAdminRequestAdded(1);
+            } else {
+                if (empty($_POST['path'])) {
+                    $_POST['path'] = Config::getFromDB('SONARR_DEFAULT_PATH');
+                }
+                if (empty($_POST['quality'])) {
+                    $_POST['quality'] = (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
+                }
+                if (empty($_POST['language'])) {
+                    $_POST['language'] = (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
+                }
+                Sonarr::addShow($_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
             }
-            if (empty($_POST['quality'])) {
-                $_POST['quality'] = (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
-            }
-            if (empty($_POST['language'])) {
-                $_POST['language'] = (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
-            }
-            Sonarr::addShow($_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
             $this->showAlert("Added request for \"{$_POST['title']}\" TV show.");
         } else {
             $this->showError("Error: unknown media type: " . $_POST['media_type']);

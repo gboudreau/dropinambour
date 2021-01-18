@@ -42,11 +42,11 @@ $this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex"
         <tbody>
         <?php foreach ($requests as $request) : ?>
             <tr>
-                <td><?php phe($request->monitored_by == 'sonarr' ? 'TV Show' : 'Movie') ?></td>
+                <td><?php phe($request->type == 'show' ? 'TV Show' : 'Movie') ?></td>
                 <td class="<?php phe(!empty($request->filled_when) ? 'available' : 'requested') ?>"><?php phe(!empty($request->filled_when) ? 'Available' : 'Pending') ?></td>
                 <td>
                     <?php if (!empty($request->tmdb_id ?? $request->tmdbtv_id)) : ?>
-                        <a href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_MEDIA, [($request->monitored_by == 'sonarr' ? 'tv' : 'movie') => $request->tmdb_id ?? $request->tmdbtv_id ?? NULL])) ?>"><?php phe($request->title) ?></a>
+                        <a href="<?php phe(Router::getURL(Router::ACTION_VIEW, Router::VIEW_MEDIA, [($request->type == 'show' ? 'tv' : 'movie') => $request->tmdb_id ?? $request->tmdbtv_id ?? NULL])) ?>"><?php phe($request->title) ?></a>
                     <?php else : ?>
                         <?php phe($request->title) ?>
                     <?php endif; ?>

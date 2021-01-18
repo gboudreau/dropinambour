@@ -14,7 +14,7 @@ class Sonarr {
         $shows = static::getAllShows();
         $existing_requests = Request::getAllShowRequests();
         foreach ($shows as $show) {
-            $req = @$existing_requests[$show->tvdbId];
+            $req = @$existing_requests["tvdb:$show->tvdbId"];
             if ($req) {
                 $req->updateFromSonarShow($show);
             } else {
@@ -66,7 +66,10 @@ class Sonarr {
         return $paths;
     }
 
-    public static function addShow(int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, int $language_profile_id, string $path, array $images) : stdClass {
+    public static function addShow(int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, int $language_profile_id, string $path, ?array $images) : stdClass {
+        if (empty($title_slug)) {
+            $title_slug = $tvdb_id;
+        }
         $data = [
             'title'             => $title,
             'tvdbId'            => $tvdb_id,
@@ -74,7 +77,7 @@ class Sonarr {
             'qualityProfileId'  => $quality_profile_id,
             'languageProfileId' => $language_profile_id,
             'rootFolderPath'    => $path,
-            'images'            => $images,
+            'images'            => $images ?? [],
             'monitored'         => TRUE,
             'seasonFolder'      => TRUE,
             'seasons' => [

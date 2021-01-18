@@ -17,7 +17,8 @@ class Request extends AbstractActiveRecord
 
     public $id;
     public $external_id;
-    public $monitored_by;
+    public $monitored_by; // sonarr, radarr, none
+    public $type; // movie or show
     public $requested_by;
     public $quality_profile;
     public $language_profile;
@@ -59,12 +60,12 @@ class Request extends AbstractActiveRecord
     }
 
     public function notifyAdminRequestAdded(?int $season_number = NULL) : void {
-        $this->media_type = ($this->monitored_by == 'sonarr' ? 'TV show' : 'movie');
+        $this->media_type = ($this->type == 'show' ? 'TV show' : 'movie');
         Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number]);
     }
 
     public function notifyAdminRequestRemoved() : void {
-        $this->media_type = ($this->monitored_by == 'sonarr' ? 'TV show' : 'movie');
+        $this->media_type = ($this->type == 'show' ? 'TV show' : 'movie');
         Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "Request removed: \"$this->title\"", 'request_removed', ['request' => $this]);
     }
 
@@ -80,7 +81,7 @@ class Request extends AbstractActiveRecord
         }
 
         // Request has been filled; send notification
-        if ($this->monitored_by == 'radarr') {
+        if ($this->type == 'movie') {
             $this->media_type = 'movie';
         } else {
             $this->media_type = 'TV show';
@@ -95,6 +96,7 @@ class Request extends AbstractActiveRecord
         $m = new self();
         $m->external_id = $movie->id;
         $m->monitored_by = 'radarr';
+        $m->type = 'movie';
         $m->requested_by = Plex::getUserInfos()->username . ' <' . Plex::getUserInfos()->email . '>';
         $m->tmdb_id = $movie->tmdbId ?? NULL;
         $m->updateFromRadarrMovie($movie);
@@ -114,6 +116,7 @@ class Request extends AbstractActiveRecord
         $m = new self();
         $m->external_id = $show->id;
         $m->monitored_by = 'sonarr';
+        $m->type = 'show';
         $m->requested_by = Plex::getUserInfos()->username . ' <' . Plex::getUserInfos()->email . '>';
         $m->tvdb_id = $show->tvdbId ?? NULL;
         $m->updateFromSonarShow($show);
@@ -149,6 +152,20 @@ class Request extends AbstractActiveRecord
         }
     }
 
+    public static function fromTMDBShow($show) : self {
+        $m = new self();
+        $m->external_id = $show->id;
+        $m->monitored_by = 'none';
+        $m->type = 'show';
+        $m->requested_by = Plex::getUserInfos()->username . ' <' . Plex::getUserInfos()->email . '>';
+        $m->tvdb_id = NULL;
+        $m->title = $show->title;
+        $m->monitored = FALSE;
+        $m->imdb_id = empty($show->imdb_id) ? NULL : $show->imdb_id;
+        $m->added_when = date('Y-m-d H:i:s');
+        return $m;
+    }
+
     public static function getOne($value, ?string $key = NULL, ?DBQueryBuilder $builder = NULL, int $options = 0) {
         $request = parent::getOne($value, $key, $builder, $options);
         return self::postProcessRequestRowFromDB($request);
@@ -173,14 +190,23 @@ class Request extends AbstractActiveRecord
         $q = "SELECT r.*, IF(ids.tmdbtv_id <= 0, 0, ids.tmdbtv_id) AS tmdbtv_id
                 FROM requests r
                 LEFT JOIN tmdb_external_ids ids ON (ids.tvdb_id = r.tvdb_id)
-               WHERE r.monitored_by = 'sonarr'
+               WHERE (r.monitored_by = 'sonarr' OR (r.monitored_by = 'none' AND r.type = 'show'))
                  AND NOT r.hidden
                GROUP BY r.id";
         if ($order_by_name) {
             $q .= " ORDER BY r.title";
         }
-        $rows = DB::getAll($q, [], 'tvdb_id', 0, self::class);
-        return array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
+        $rows = DB::getAll($q, [], NULL, 0, self::class);
+        $rows = array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
+        foreach ($rows as $k => $row) {
+            unset($rows[$k]);
+            if (!empty($row->tvdb_id)) {
+                $rows["tvdb:$row->tvdb_id"] = $row;
+            } else {
+                $rows["tmdb:$row->external_id"] = $row;
+            }
+        }
+        return $rows;
     }
 
     /**

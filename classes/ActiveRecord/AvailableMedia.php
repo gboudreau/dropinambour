@@ -16,7 +16,7 @@ class AvailableMedia extends AbstractActiveRecord
     public $id;
     public $title;
     public $year;
-    public $type;
+    public $type; // movie or show
     public $key;
     public $section_id;
     public $guid;

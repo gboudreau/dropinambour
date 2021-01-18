@@ -102,13 +102,13 @@ class Mailer
     /**
      * Send an email to the specified user, using a specific email template (@see /t/emails)
      *
-     * @param string       $email_to     To: email address
-     * @param string       $subject      Subject
-     * @param string       $template     Email template to use.
-     * @param array        $params       Parameters to inject into the template.
-     * @param string|null  $from_email   From: email address
-     * @param string|null  $from_name    From: name
-     * @param bool         $track_clicks Should we track clicks on links included in this email?
+     * @param string      $email_to     To: email address
+     * @param string      $subject      Subject
+     * @param string      $template     Email template to use.
+     * @param array       $params       Parameters to inject into the template.
+     * @param string|null $from_email   From: email address
+     * @param string|null $from_name    From: name
+     * @param bool        $track_clicks Should we track clicks on links included in this email?
      *
      * @return bool Did it work?
      * @throws Exception
@@ -118,7 +118,16 @@ class Mailer
         return static::send($email_to, $subject, NULL, $html_content, $from_email, $from_name, $track_clicks, NULL, [$template]);
     }
 
-    private static function getEmailHTMLBody($email_to, $template, &$params = []) : string {
+    /**
+     * Generate HTML that can be sent in am email, using a template view, and injectable parameters.
+     *
+     * @param string $email_to Email address
+     * @param string $template Email template; a file in /views/emails
+     * @param array  $params   Parameters to be used in the template code
+     *
+     * @return string HTML
+     */
+    private static function getEmailHTMLBody(string $email_to, string $template, &$params = []) : string {
         if (is_array($params)) {
             $params = (object) $params;
         }
