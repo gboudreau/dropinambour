@@ -114,23 +114,29 @@ class AvailableMedia extends AbstractActiveRecord
                     }
                 }
 
-                if (!empty($media->tmdb_id) && isset($open_movie_requests[$media->tmdb_id])) {
-                    $req = $open_movie_requests[$media->tmdb_id];
-                    if (empty($req->filled_when)) {
-                        Logger::info("First time we notice this movie request has been filed!");
-                        $req->filled_when = date('Y-m-d H:i:s');
-                        $req->save();
-                        $req->notifyIfFilled();
-                    }
+                $req = FALSE;
+                if (!empty($media->tmdb_id) && isset($open_movie_requests["tmdb:$media->tmdb_id"])) {
+                    $req = $open_movie_requests["tmdb:$media->tmdb_id"];
                 }
-                if (!empty($media->tvdb_id) && isset($open_show_requests[$media->tvdb_id])) {
-                    $req = $open_show_requests[$media->tvdb_id];
-                    if (empty($req->filled_when)) {
-                        Logger::info("First time we notice this TV request has been filed!");
-                        $req->filled_when = date('Y-m-d H:i:s');
-                        $req->save();
-                        $req->notifyIfFilled();
-                    }
+                if ($req && empty($req->filled_when)) {
+                    Logger::info("First time we notice this movie request has been filed!");
+                    $req->filled_when = date('Y-m-d H:i:s');
+                    $req->save();
+                    $req->notifyIsFilled();
+                }
+
+                $req = FALSE;
+                if (!empty($media->tvdb_id) && isset($open_show_requests["tvdb:$media->tvdb_id"])) {
+                    $req = $open_show_requests["tvdb:$media->tvdb_id"];
+                }
+                if (!empty($media->tmdbtv_id) && isset($open_show_requests["tmdb:$media->tmdbtv_id"])) {
+                    $req = $open_show_requests["tmdb:$media->tmdbtv_id"];
+                }
+                if ($req && empty($req->filled_when)) {
+                    Logger::info("First time we notice this TV request has been filed!");
+                    $req->filled_when = date('Y-m-d H:i:s');
+                    $req->save();
+                    $req->notifyIsFilled();
                 }
             }
 

@@ -14,7 +14,7 @@ class Radarr {
         $movies = static::getAllMovies();
         $existing_requests = Request::getAllMovieRequests();
         foreach ($movies as $movie) {
-            $req = @$existing_requests[$movie->tmdbId];
+            $req = @$existing_requests["tmdb:$movie->tmdbId"];
             if ($req) {
                 $req->updateFromRadarrMovie($movie);
             } else {

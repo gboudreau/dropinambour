@@ -69,11 +69,7 @@ class Request extends AbstractActiveRecord
         Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "Request removed: \"$this->title\"", 'request_removed', ['request' => $this]);
     }
 
-    public function notifyIfFilled() : void {
-        if (empty($this->filled_when)) {
-            return;
-        }
-
+    public function notifyIsFilled() : void {
         $this->reload(); // Get .notified_when from DB
         if (!empty($this->notified_when)) {
             // Already notified;
@@ -168,19 +164,18 @@ class Request extends AbstractActiveRecord
 
     public static function getOne($value, ?string $key = NULL, ?DBQueryBuilder $builder = NULL, int $options = 0) {
         $request = parent::getOne($value, $key, $builder, $options);
-        return self::postProcessRequestRowFromDB($request);
+        return static::postProcessRequestRowFromDB($request);
     }
 
     /**
      * @return self[]
      */
     public static function getAllMovieRequests(bool $order_by_name = FALSE) : array {
-        $q = "SELECT * FROM requests WHERE monitored_by = 'radarr' AND NOT hidden";
+        $q = "SELECT r.* FROM requests r WHERE r.type = 'movie' AND NOT r.hidden";
         if ($order_by_name) {
-            $q .= " ORDER BY title";
+            $q .= " ORDER BY r.title";
         }
-        $rows = DB::getAll($q, [], 'tmdb_id', 0, self::class);
-        return array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
+        return static::getRequestsFromQuery($q);
     }
 
     /**
@@ -190,41 +185,33 @@ class Request extends AbstractActiveRecord
         $q = "SELECT r.*, IF(ids.tmdbtv_id <= 0, 0, ids.tmdbtv_id) AS tmdbtv_id
                 FROM requests r
                 LEFT JOIN tmdb_external_ids ids ON (ids.tvdb_id = r.tvdb_id)
-               WHERE (r.monitored_by = 'sonarr' OR (r.monitored_by = 'none' AND r.type = 'show'))
+               WHERE r.type = 'show'
                  AND NOT r.hidden
                GROUP BY r.id";
         if ($order_by_name) {
             $q .= " ORDER BY r.title";
         }
-        $rows = DB::getAll($q, [], NULL, 0, self::class);
-        $rows = array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
-        foreach ($rows as $k => $row) {
-            unset($rows[$k]);
-            if (!empty($row->tvdb_id)) {
-                $rows["tvdb:$row->tvdb_id"] = $row;
-            } else {
-                $rows["tmdb:$row->external_id"] = $row;
-            }
-        }
-        return $rows;
+        return static::getRequestsFromQuery($q);
     }
 
     /**
      * @return self[]
      */
     public static function getOpenMovieRequests() : array {
-        $q = "SELECT * FROM requests WHERE monitored_by = 'radarr' AND notified_when IS NULL AND NOT hidden";
-        $rows = DB::getAll($q, [], 'tmdb_id', 0, self::class);
-        return array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
+        $q = "SELECT r.* FROM requests r WHERE r.type = 'movie' AND r.notified_when IS NULL AND NOT r.hidden";
+        return static::getRequestsFromQuery($q);
     }
 
     /**
      * @return self[]
      */
     public static function getOpenShowRequests() : array {
-        $q = "SELECT * FROM requests WHERE monitored_by = 'sonarr' AND notified_when IS NULL AND NOT hidden";
-        $rows = DB::getAll($q, [], 'tvdb_id', 0, self::class);
-        return array_map([self::class, 'postProcessRequestRowFromDB'], $rows);
+        $q = "SELECT r.*
+                FROM requests r
+               WHERE r.type = 'show'
+                 AND r.notified_when IS NULL
+                 AND NOT r.hidden";
+        return static::getRequestsFromQuery($q);
     }
 
     private static function postProcessRequestRowFromDB(self $row) : self {
@@ -253,5 +240,27 @@ class Request extends AbstractActiveRecord
             }
         }
         return $row;
+    }
+
+    /**
+     * @return self[]
+     */
+    private static function getRequestsFromQuery(string $query) : array {
+        $rows = static::getAll($query);
+        /** @var $rows self[] */
+        foreach ($rows as $k => $row) {
+            unset($rows[$k]);
+            $row = static::postProcessRequestRowFromDB($row);
+            if ($row->type == 'movie') {
+                $rows["tmdb:$row->tmdb_id"] = $row;
+            } else {
+                if (!empty($row->tvdb_id)) {
+                    $rows["tvdb:$row->tvdb_id"] = $row;
+                } else {
+                    $rows["tmdb:$row->external_id"] = $row;
+                }
+            }
+        }
+        return $rows;
     }
 }

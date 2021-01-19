@@ -411,7 +411,7 @@ class AppController extends AbstractController
                 $show = TMDB::getDetailsTV($_POST['tmdb_id']);
                 $request = Request::fromTMDBShow($show);
                 $request->save();
-                $request->notifyAdminRequestAdded(1);
+                $request->notifyAdminRequestAdded($_POST['season'] ??  1);
             } else {
                 if (empty($_POST['path'])) {
                     $_POST['path'] = Config::getFromDB('SONARR_DEFAULT_PATH');
