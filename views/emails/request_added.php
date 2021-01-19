@@ -22,6 +22,12 @@ use stdClass;
     <?php endif; ?>
 </div>
 
+<?php if ($params->request->monitored_by == 'none') : ?>
+    <div style="margin-top: 12px">
+        <strong>Of note: This TV show is unmonitored, since it couldn't be added to Sonarr. You'll need to manually add it, or find it somewhere else.</strong>
+    </div>
+<?php endif; ?>
+
 <div style="margin-top: 12px">Good day to you.</div>
 
 <div style="margin-top: 12px">- The dropinambour Bot</div>
