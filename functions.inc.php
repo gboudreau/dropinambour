@@ -98,7 +98,7 @@ function echo_if($condition, $text_if_true, $text_if_false = '') {
     }
 }
 
-function oddOrEvent() : string {
+function oddOrEven() : string {
     global $odd_even;
     if (empty($odd_even)) {
         $odd_even = 1;

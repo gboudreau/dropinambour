@@ -54,7 +54,7 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
 
     <div class="mt-4 stats-table">
         <?php foreach ($stats as $s) : ?>
-            <div class="row <?php phe($s->class) ?> <?php echo oddOrEvent() ?>">
+            <div class="row <?php phe($s->class) ?> <?php echo oddOrEven() ?>">
                 <div class="name col col-12 col-md-3 col-lg-2 p-2">
                     <?php phe($s->name) ?>
                 </div>
