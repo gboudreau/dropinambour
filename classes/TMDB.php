@@ -475,12 +475,13 @@ class TMDB {
             }
 
             $available_tvdb_ids = AvailableMedia::getAllTVDBIDs();
+            $available_tmdb_ids = AvailableMedia::getAllTMDBTVIDs();
             foreach ($shows as $key => $media) {
-                $media->is_available = !empty($media->tvdb_id) && array_contains($available_tvdb_ids, $media->tvdb_id);
+                $media->is_available = !empty($media->tvdb_id) && array_contains($available_tvdb_ids, $media->tvdb_id) || array_contains($available_tmdb_ids, $media->id);
                 if ($media->is_available) {
                     if (count($medias_by_id) == 1) {
-                        $q = "SELECT m.* FROM available_medias m JOIN available_medias_guids ids ON (ids.media_id = m.id) WHERE ids.source = 'tvdb' AND ids.source_id = :tvdb_id";
-                        $plex_media = DB::getFirst($q, $media->tvdb_id);
+                        $q = "SELECT m.* FROM available_medias m JOIN available_medias_guids ids ON (ids.media_id = m.id) WHERE (ids.source = 'tvdb' AND ids.source_id = :tvdb_id) OR (ids.source = 'tmdbtv' AND ids.source_id = :tmdbtv_id)";
+                        $plex_media = DB::getFirst($q, ['tvdb_id' => $media->tvdb_id, 'tmdbtv_id' => $media->id]);
                         $media->plex_url = Plex::geUrlForMediaKey($plex_media->key);
                     }
 
@@ -496,6 +497,9 @@ class TMDB {
                     }
 
                     $local_media_id = array_search($media->tvdb_id, $available_tvdb_ids);
+                    if (empty($local_media_id)) {
+                        $local_media_id = array_search($media->id, $available_tmdb_ids);
+                    }
                     $q = "SELECT * FROM available_episodes WHERE media_id = :media_id";
                     $available_seasons = DB::getAll($q, $local_media_id, 'season');
 

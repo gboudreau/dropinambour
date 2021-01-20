@@ -38,7 +38,7 @@ class AvailableMedia extends AbstractActiveRecord
 
         if ($plex_item->type == 'season') {
             // Remove season number from GUID
-            $plex_item->guid = preg_replace('@(com.plexapp.agents.thetvdb://\d+)/\d+(\?lang=.*)$@', '\1\2', $plex_item->guid);
+            $plex_item->guid = preg_replace('@^(.*db://\d+)/\d+(\?lang=.*)$@', '\1\2', $plex_item->guid);
 
             // Convert seasons to TV shows
             $plex_item->key = $plex_item->parentKey;
@@ -250,6 +250,11 @@ class AvailableMedia extends AbstractActiveRecord
 
     public static function getAllTVDBIDs() : array {
         $q = "SELECT media_id, source_id FROM available_medias_guids WHERE source = 'tvdb'";
+        return getPropValuesFromArray(DB::getAll($q, [], 'media_id'), 'source_id', TRUE);
+    }
+
+    public static function getAllTMDBTVIDs() : array {
+        $q = "SELECT media_id, source_id FROM available_medias_guids WHERE source = 'tmdbtv'";
         return getPropValuesFromArray(DB::getAll($q, [], 'media_id'), 'source_id', TRUE);
     }
 
