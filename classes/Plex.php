@@ -215,7 +215,12 @@ class Plex {
             return FALSE;
         }
 
-        $response = static::sendGET("/v2/pins/$pin->id?code=$pin->code" , 'https://plex.tv/api', 0, static::ACCESS_TOKEN_SKIP);
+        try {
+            $response = static::sendGET("/v2/pins/$pin->id?code=$pin->code" , 'https://plex.tv/api', 0, static::ACCESS_TOKEN_SKIP);
+        } catch (Exception $ex) {
+            unset($_SESSION['PLEX_PIN']);
+            return FALSE;
+        }
 
         if (!empty($response->authToken)) {
             unset($_SESSION['PLEX_PIN']);
