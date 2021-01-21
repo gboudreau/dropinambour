@@ -504,7 +504,6 @@ class AppController extends AbstractController
     /* pragma mark - Admin pages: Plex, Radarr, Sonarr, cron */
 
     public function viewAdminPlex() : Response {
-        //var_dump(Plex::getSharedUsers());
         $selected_sections = getPropValuesFromArray(Plex::getSections(FALSE), 'id');
         return $this->response($this->render('/admin::plex', ['selected_sections' => $selected_sections]));
     }

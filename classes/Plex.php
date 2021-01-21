@@ -142,6 +142,9 @@ class Plex {
 
     public static function getSharedUsers() : array {
         $token = Config::getFromDB('PLEX_ACCESS_TOKEN');
+        if (empty($token)) {
+            return [];
+        }
 
         $this_server_id = Plex::getServerId();
 
@@ -172,7 +175,7 @@ class Plex {
 
         // Return admin user too!
         $user_token = $_SESSION['PLEX_ACCESS_TOKEN'];
-        $_SESSION['PLEX_ACCESS_TOKEN'] = $response->authToken;
+        $_SESSION['PLEX_ACCESS_TOKEN'] = $token;
         $users[] = static::getUserInfos();
         $_SESSION['PLEX_ACCESS_TOKEN'] = $user_token;
 
@@ -220,8 +223,13 @@ class Plex {
             $_SESSION['PLEX_ACCESS_TOKEN'] = $response->authToken;
             $user = Plex::getUserInfos();
 
+            $allowed_users = Plex::getSharedUsers();
             $allowed_to_login = FALSE;
-            foreach (Plex::getSharedUsers() as $allowed_user) {
+            if (empty($allowed_users)) {
+                // First login; always allow
+                $allowed_to_login = TRUE;
+            }
+            foreach ($allowed_users as $allowed_user) {
                 if ($allowed_user->id == $user->id) {
                     $allowed_to_login = TRUE;
                     break;
