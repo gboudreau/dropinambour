@@ -16,7 +16,8 @@ $CONFIG->DB_PWD    = ''; // Choose something random!
 $CONFIG->DB_NAME   = 'dinb';
 
 $CONFIG->SYSTEM_TIMEZONE = 'America/New_York'; // PHP format; ref: http://php.net/manual/en/timezones.php
-$CONFIG->MYSQL_TIMEZONE  = 'America/New_York'; // MySQL format; ref: SELECT tzn.Name, GROUP_CONCAT(DISTINCT t.Abbreviation) AS abbreviations FROM mysql.time_zone_name tzn LEFT JOIN mysql.time_zone_transition_type t ON (t.Time_zone_id = tzn.Time_zone_id) GROUP BY tzn.Time_zone_id
+// If your DB is already using the same timezone as the above, no need to set a MYSQL_TIMEZONE
+// $CONFIG->MYSQL_TIMEZONE  = 'America/New_York'; // MySQL format; ref: SELECT tzn.Name, GROUP_CONCAT(DISTINCT t.Abbreviation) AS abbreviations FROM mysql.time_zone_name tzn LEFT JOIN mysql.time_zone_transition_type t ON (t.Time_zone_id = tzn.Time_zone_id) GROUP BY tzn.Time_zone_id
 
 // Your Plex server
 $CONFIG->PLEX_BASE_URL = 'http://172.17.0.1:32400';

@@ -117,6 +117,13 @@ class DB
             $stmt = $handle->prepare("SET sql_mode = ''");
             $stmt->execute();
 
+            $tz = Config::get('MYSQL_TIMEZONE');
+            if (!empty($tz)) {
+                $stmt = $handle->prepare("SET time_zone = :tz");
+                $stmt->bindParam(':tz', $tz);
+                $stmt->execute();
+            }
+
             $handle->host = $host;
 
             return $handle;
