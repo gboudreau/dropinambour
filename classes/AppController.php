@@ -106,9 +106,10 @@ class AppController extends AbstractController
 
         $paths = $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths();
         $profiles = $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles();
-        $default_path = $media->media_type == 'movie' ? Config::getFromDB('RADARR_DEFAULT_PATH') : Config::getFromDB('SONARR_DEFAULT_PATH');
-        $default_quality = $media->media_type == 'movie' ? (int) Config::getFromDB('RADARR_DEFAULT_QUALITY') : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
+        $default_path = $media->media_type == 'movie' ? Radarr::getDefaultPath($media) : Config::getFromDB('SONARR_DEFAULT_PATH');
+        $default_quality = $media->media_type == 'movie' ? (int) Radarr::getDefaultQuality($media) : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
         $default_language = $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
+        $default_tags = $media->media_type == 'movie' ? Radarr::getDefaultTags($media) : '';
 
         if ($media->media_type == 'tv') {
             $episode_counts = getPropValuesFromArray($media->seasons, 'episode_count');
@@ -123,11 +124,27 @@ class AppController extends AbstractController
                 <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
                 <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">
                 <input name="title" type="hidden" value="<?php phe($media->title) ?>">
+                <input name="tags" type="hidden" value="<?php phe($default_tags) ?>">
                 <?php if ($media->media_type == 'tv') : ?>
                     <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
                     <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
                 <?php endif; ?>
-                <?php if (Plex::isServerAdmin()) : ?>
+                <?php if (!Plex::isServerAdmin()) : ?>
+                    <input name="path" type="hidden" value="<?php phe($default_path) ?>">
+                    <?php if (Config::get('RADARR_SIMPLIFIED_QUALITY')) : ?>
+                        <div class="col-auto">
+                            <label class="visually-hidden" for="quality-input">Quality</label>
+                            <select name="quality" class="form-control" id="quality-input">
+                                <option value="">Choose one</option>
+                                <?php foreach (Config::get('RADARR_SIMPLIFIED_QUALITY', [], Config::GET_OPT_PARSE_AS_JSON) as $id => $name) : ?>
+                                    <option value="<?php phe($id) ?>" <?php echo_if($id == $default_quality, 'selected') ?>><?php phe($name) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php else: ?>
+                        <input name="quality" type="hidden" value="<?php phe($default_quality) ?>">
+                    <?php endif; ?>
+                <?php else : ?>
                     <div class="col-auto">
                         <label class="visually-hidden" for="path-input">Path</label>
                         <select name="path" class="form-control" id="path-input">
@@ -146,17 +163,17 @@ class AppController extends AbstractController
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <?php if ($media->media_type == 'tv') : ?>
-                        <div class="col-auto">
-                            <label class="visually-hidden" for="language-input">Language</label>
-                            <select name="language" class="form-control" id="language-input">
-                                <option value="">Language</option>
-                                <?php foreach (Sonarr::getLanguageProfiles() as $lp) : ?>
-                                    <option value="<?php phe($lp->id) ?>" <?php echo_if($lp->id == $default_language, 'selected') ?>><?php phe($lp->name) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php endif; ?>
+                <?php endif; ?>
+                <?php if ($media->media_type == 'tv') : ?>
+                    <div class="col-auto">
+                        <label class="visually-hidden" for="language-input">Language</label>
+                        <select name="language" class="form-control" id="language-input">
+                            <option value="">Language</option>
+                            <?php foreach (Sonarr::getLanguageProfiles() as $lp) : ?>
+                                <option value="<?php phe($lp->id) ?>" <?php echo_if($lp->id == $default_language, 'selected') ?>><?php phe($lp->name) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 <?php endif; ?>
                 <div class="col-auto">
                     <button class="btn btn-primary" type="submit">Request</button>
@@ -398,13 +415,7 @@ class AppController extends AbstractController
                 $this->showAlert(sprintf("Added request for S%02d of \"$request->title\".", $_POST['season']));
             }
         } elseif ($_POST['media_type'] == 'movie') {
-            if (empty($_POST['path'])) {
-                $_POST['path'] = Config::getFromDB('RADARR_DEFAULT_PATH');
-            }
-            if (empty($_POST['quality'])) {
-                $_POST['quality'] = (int) Config::getFromDB('RADARR_DEFAULT_QUALITY');
-            }
-            Radarr::addMovie($_POST['tmdb_id'], $_POST['title'], $_POST['quality'], $_POST['path']);
+            Radarr::addMovie($_POST['tmdb_id'], $_POST['title'], $_POST['quality'], $_POST['path'], $_POST['tags']);
             $this->showAlert("Added request for \"{$_POST['title']}\" movie.");
         } elseif ($_POST['media_type'] == 'tv') {
             if (empty($_POST['tvdb_id'])) {
@@ -413,15 +424,6 @@ class AppController extends AbstractController
                 $request->save();
                 $request->notifyAdminRequestAdded($_POST['season'] ??  1);
             } else {
-                if (empty($_POST['path'])) {
-                    $_POST['path'] = Config::getFromDB('SONARR_DEFAULT_PATH');
-                }
-                if (empty($_POST['quality'])) {
-                    $_POST['quality'] = (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
-                }
-                if (empty($_POST['language'])) {
-                    $_POST['language'] = (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
-                }
                 Sonarr::addShow($_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
             }
             $this->showAlert("Added request for \"{$_POST['title']}\" TV show.");
@@ -530,8 +532,14 @@ class AppController extends AbstractController
     }
 
     public function saveRadarrSettings() : Response {
-        Config::setInDB('RADARR_DEFAULT_PATH', $_POST['path']);
-        Config::setInDB('RADARR_DEFAULT_QUALITY', $_POST['quality']);
+        $defaults = Config::getFromDB('RADARR_DEFAULTS', (object) [], Config::GET_OPT_PARSE_AS_JSON);
+        $when = $_POST['when'];
+        $defaults->{$when} = (object) [
+            'path' => $_POST['path'],
+            'quality' => $_POST['quality'],
+            'tags' => $_POST['tags'],
+        ];
+        Config::setInDB('RADARR_DEFAULTS', $defaults);
         $this->showAlert("Saved settings for Radarr.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_RADARR));
     }

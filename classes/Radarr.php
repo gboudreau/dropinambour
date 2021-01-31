@@ -47,7 +47,53 @@ class Radarr {
         return $paths;
     }
 
-    public static function addMovie(int $tmdb_id, string $title, int $quality_profile_id, string $path) : stdClass {
+    private static function getDefault($media) : stdClass {
+        $defaults = Config::getFromDB('RADARR_DEFAULTS', ['language=en' => ''], Config::GET_OPT_PARSE_AS_JSON);
+        foreach ($defaults as $when => $default) {
+            $when = explode('=', $when);
+            if ($when[0] == 'language' && @$media->original_language == $when[1]) {
+                return $default;
+            }
+            if ($when[0] == 'genre') {
+                foreach ($media->genres ?? [] as $genre) {
+                    if (strtolower($genre->name) == strtolower($when[1])) {
+                        return $default;
+                    }
+                }
+            }
+        }
+        return $defaults->default;
+    }
+
+    public static function getDefaultPath($media) : string {
+        $default = static::getDefault($media);
+        return $default->path ?? '';
+    }
+
+    public static function getDefaultQuality($media) : string {
+        $default = static::getDefault($media);
+        return $default->quality ?? '';
+    }
+
+    public static function getDefaultTags($media) : string {
+        $default = static::getDefault($media);
+        return $default->tags ?? '';
+    }
+
+    public static function addMovie(int $tmdb_id, string $title, int $quality_profile_id, string $path, ?string $tags = '') : stdClass {
+        if (empty($tags)) {
+            $tags = '';
+        }
+        $existing_tags = static::getAllTags();
+        $existing_tag_labels = array_map('strtolower', getPropValuesFromArray($existing_tags, 'label'));
+        $tags = array_map('strtolower', array_map('trim', explode(',', $tags)));
+        $tag_ids = [];
+        foreach ($tags as $tag_name) {
+            $pos = array_search($tag_name, $existing_tag_labels);
+            if ($pos !== FALSE) {
+                $tag_ids[] = getPropValuesFromArray($existing_tags, 'id')[$pos];
+            }
+        }
         $data = [
             'title'               => $title,
             'tmdbId'              => $tmdb_id,
@@ -56,12 +102,22 @@ class Radarr {
             'minimumAvailability' => 'announced',
             'monitored'           => TRUE,
             'addOptions'          => (object) ['searchForMovie' => TRUE],
+            'tags'                => $tag_ids,
         ];
         $movie = static::sendPOST('/movie', $data);
         $request = Request::fromRadarrMovie($movie);
         $request->save();
         $request->notifyAdminRequestAdded();
         return $movie;
+    }
+
+    public static function getAllTags() : array {
+        $tags = static::sendGET('/tag');
+        $fct_sort = function ($q1, $q2) {
+            return strtolower($q1->name) <=> strtolower($q2->name);
+        };
+        usort($tags, $fct_sort);
+        return $tags;
     }
 
     private static function getBaseURL() : string {
