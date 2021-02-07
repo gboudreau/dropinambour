@@ -203,6 +203,13 @@ class AppController extends AbstractController
                 'value'  => implode(', ', getPropValuesFromArray($media->genres, 'name')),
             ];
         }
+        if (!empty($media->original_language)) {
+            $stats[] = [
+                'name'   => "Original Language",
+                'class'  => 'lang',
+                'value'  => $media->original_language,
+            ];
+        }
         if (!empty($media->networks)) {
             $stats[] = [
                 'name'   => "Network",
