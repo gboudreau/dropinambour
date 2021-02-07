@@ -21,18 +21,13 @@
     padding-left: 0.66em;
 }
 
-.available .availability .value {
-    background-color: #6eee6e;
-    color: black;
-    padding: 2px 4px;
-}
-.available_partially .availability .value {
-    background-color: #ffe563;
-    color: black;
-    padding: 2px 4px;
-}
-.requested .requested_by .value {
+.requested .requested_by .value, .available_partially .availability .value {
     background-color: #ff9063;
+    color: black;
+    padding: 2px 4px;
+}
+.available .availability .value, .available_partially .availability .value.available {
+    background-color: #6eee6e;
     color: black;
     padding: 2px 4px;
 }

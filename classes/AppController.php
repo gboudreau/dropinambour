@@ -69,15 +69,15 @@ class AppController extends AbstractController
             }
         }
 
-        $avail_suffix = '';
+        $avail_value = $media->is_available ? 'Yes' : 'No';
         if ($media->media_type == 'tv' && ($media->is_available === 'partially' || string_contains(implode(', ', $media->available_seasons ?? []), 'partial'))) {
             // List which seasons are available, and which aren't
-            $avail_suffix = ": " . implode(', ', $media->available_seasons);
+            $avail_value .= ": " . implode(', ', $media->available_seasons);
             if (!empty($media->not_available_seasons)) {
                 if (!empty($media->available_seasons)) {
-                    $avail_suffix .= ";";
+                    $avail_value .= "</span> <span class='value'>";
                 }
-                $avail_suffix .= ' No: ' . implode(', ', $media->not_available_seasons);
+                $avail_value .= 'No: ' . implode(', ', $media->not_available_seasons);
             }
         }
 
@@ -85,7 +85,7 @@ class AppController extends AbstractController
         $stats[] = [
             'name'  => "Available on Plex",
             'class' => 'availability',
-            'value' => $media->is_available ? 'Yes' . $avail_suffix : 'No',
+            'value_html' => '<span class="value ' . ($media->is_available ? 'available' : '') . '">' . $avail_value . '</span>',
         ];
 
         if (!empty($media->requested)) {
