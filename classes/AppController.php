@@ -6,6 +6,7 @@ use Exception;
 use PommePause\Dropinambour\ActiveRecord\AvailableMedia;
 use PommePause\Dropinambour\ActiveRecord\Request;
 use PommePause\Dropinambour\Exceptions\PlexException;
+use stdClass;
 use Symfony\Component\HttpFoundation\Response;
 
 class AppController extends AbstractController
@@ -104,148 +105,20 @@ class AppController extends AbstractController
             }
         }
 
-        $paths = $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths();
-        $profiles = $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles();
-        $default_path = $media->media_type == 'movie' ? Radarr::getDefaultPath($media) : Config::getFromDB('SONARR_DEFAULT_PATH');
-        $default_quality = $media->media_type == 'movie' ? (int) Radarr::getDefaultQuality($media) : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY');
-        $default_language = $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
-        $default_tags = $media->media_type == 'movie' ? Radarr::getDefaultTags($media) : '';
-
         if ($media->media_type == 'tv') {
             $episode_counts = getPropValuesFromArray($media->seasons, 'episode_count');
             $total_episodes = array_sum($episode_counts);
         }
 
         if (!$media->is_available && empty($media->requested)) {
-            ob_start();
-            ?>
-            <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
-                <input name="media_type" type="hidden" value="<?php phe($media->media_type) ?>">
-                <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
-                <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">
-                <input name="title" type="hidden" value="<?php phe($media->title) ?>">
-                <input name="tags" type="hidden" value="<?php phe($default_tags) ?>">
-                <?php if ($media->media_type == 'tv') : ?>
-                    <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
-                    <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
-                <?php endif; ?>
-                <?php if (!Plex::isServerAdmin()) : ?>
-                    <input name="path" type="hidden" value="<?php phe($default_path) ?>">
-                    <?php if (Config::get('RADARR_SIMPLIFIED_QUALITY')) : ?>
-                        <div class="col-auto">
-                            <label class="visually-hidden" for="quality-input">Quality</label>
-                            <select name="quality" class="form-control" id="quality-input">
-                                <option value="">Choose one</option>
-                                <?php foreach (Config::get('RADARR_SIMPLIFIED_QUALITY', [], Config::GET_OPT_PARSE_AS_JSON) as $id => $name) : ?>
-                                    <option value="<?php phe($id) ?>" <?php echo_if($id == $default_quality, 'selected') ?>><?php phe($name) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    <?php else: ?>
-                        <input name="quality" type="hidden" value="<?php phe($default_quality) ?>">
-                    <?php endif; ?>
-                <?php else : ?>
-                    <div class="col-auto">
-                        <label class="visually-hidden" for="path-input">Path</label>
-                        <select name="path" class="form-control" id="path-input">
-                            <option value="">Path</option>
-                            <?php foreach ($paths as $path) : ?>
-                                <option value="<?php phe($path) ?>" <?php echo_if($path == $default_path, 'selected') ?>><?php phe($path) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <label class="visually-hidden" for="quality-input">Quality</label>
-                        <select name="quality" class="form-control" id="quality-input">
-                            <option value="">Quality</option>
-                            <?php foreach ($profiles as $qp) : ?>
-                                <option value="<?php phe($qp->id) ?>" <?php echo_if($qp->id == $default_quality, 'selected') ?>><?php phe($qp->name) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                <?php endif; ?>
-                <?php if ($media->media_type == 'tv') : ?>
-                    <div class="col-auto">
-                        <label class="visually-hidden" for="language-input">Language</label>
-                        <select name="language" class="form-control" id="language-input">
-                            <option value="">Language</option>
-                            <?php foreach (Sonarr::getLanguageProfiles() as $lp) : ?>
-                                <option value="<?php phe($lp->id) ?>" <?php echo_if($lp->id == $default_language, 'selected') ?>><?php phe($lp->name) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                <?php endif; ?>
-                <div class="col-auto">
-                    <button class="btn btn-primary" type="submit">Request</button>
-                </div>
-            </form>
-            <?php
-            $request_form_html = ob_get_clean();
-
+            $request_form_html = $this->render('request_form_first', static::getRequestFormData($media));
             $stats[] = [
                 'name'  => "Request",
                 'class' => 'request',
                 'value_html' => $request_form_html,
             ];
         } elseif ($media->media_type == 'tv' && ($media->is_available !== TRUE || string_contains(@$media->status, 'Returning')) && $media->status != 'In Production' && $total_episodes > 0 && @$media->requested->monitored_by != 'none') {
-            ob_start();
-            ?>
-            <form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
-                <input name="req_id" type="hidden" value="<?php phe(@$media->requested->id) ?>">
-                <input name="media_type" type="hidden" value="<?php phe($media->media_type) ?>">
-                <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
-                <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">
-                <input name="title" type="hidden" value="<?php phe($media->title) ?>">
-                <input name="title_slug" type="hidden" value="<?php phe(@$media->titleSlug) ?>">
-                <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images ?? [])) ?>">
-                <div class="col-auto">
-                    <label class="visually-hidden" for="season-input">Season</label>
-                    <select name="season" class="form-control" id="season-input" required onchange="$(this).closest('form').find('button').prop('disabled', $(this).val() === '');">
-                        <option value="">Choose a season</option>
-                        <?php foreach ($media->seasons as $season) : ?>
-                            <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored || @$season->episode_count == 0 ? '' : $season->season_number) ?>">
-                                <?php phe($season->name) ?>
-                                <?php if (@$season->is_available === TRUE) { phe(' (already available)'); } elseif (@$season->monitored) { phe(' (already requested)'); } elseif (@$season->episode_count == 0) { phe(' (empty)'); } elseif (@$season->is_available === 'partially') { phe(' (partial)'); } ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <?php if (Plex::isServerAdmin() && empty($media->requested)) : ?>
-                    <div class="col-auto">
-                        <label class="visually-hidden" for="path-input">Path</label>
-                        <select name="path" class="form-control" id="path-input">
-                            <option value="">Path</option>
-                            <?php foreach ($paths as $path) : ?>
-                                <option value="<?php phe($path) ?>" <?php echo_if($path == $default_path, 'selected') ?>><?php phe($path) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <label class="visually-hidden" for="quality-input">Quality</label>
-                        <select name="quality" class="form-control" id="quality-input">
-                            <option value="">Quality</option>
-                            <?php foreach ($profiles as $qp) : ?>
-                                <option value="<?php phe($qp->id) ?>" <?php echo_if($qp->id == $default_quality, 'selected') ?>><?php phe($qp->name) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="col-auto">
-                        <label class="visually-hidden" for="language-input">Language</label>
-                        <select name="language" class="form-control" id="language-input">
-                            <option value="">Language</option>
-                            <?php foreach (Sonarr::getLanguageProfiles() as $lp) : ?>
-                                <option value="<?php phe($lp->id) ?>" <?php echo_if($lp->id == $default_language, 'selected') ?>><?php phe($lp->name) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                <?php endif; ?>
-                <div class="col-auto">
-                    <button class="btn btn-primary" type="submit" disabled>Request</button>
-                </div>
-            </form>
-            <?php
-            $request_form_html = ob_get_clean();
-
+            $request_form_html = $this->render('request_form_new_season', static::getRequestFormData($media));
             $stats[] = [
                 'name'  => "Request a season",
                 'class' => 'request',
@@ -388,6 +261,18 @@ class AppController extends AbstractController
         $urls = array_map('to_object', $urls);
 
         return $this->response($this->render('/tmdb_media', ['media' => $media, 'recommended_medias' => $recommended_medias, 'stats' => $stats, 'urls' => $urls]));
+    }
+
+    private static function getRequestFormData(stdClass $media) : array {
+        return [
+            'media' => $media,
+            'paths' => $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths(),
+            'profiles' => $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles(),
+            'default_path' => $media->media_type == 'movie' ? Radarr::getDefaultPath($media) : Config::getFromDB('SONARR_DEFAULT_PATH'),
+            'default_quality' => $media->media_type == 'movie' ? (int) Radarr::getDefaultQuality($media) : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY'),
+            'default_language' => $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE'),
+            'default_tags' => $media->media_type == 'movie' ? Radarr::getDefaultTags($media) : '',
+        ];
     }
 
     public function viewCollection() : Response {
