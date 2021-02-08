@@ -207,7 +207,7 @@ class AppController extends AbstractController
             $stats[] = [
                 'name'   => "Original Language",
                 'class'  => 'lang',
-                'value'  => $media->original_language,
+                'value'  => lang_from_code($media->original_language),
             ];
         }
         if (!empty($media->networks)) {
