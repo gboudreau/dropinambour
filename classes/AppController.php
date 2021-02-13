@@ -186,7 +186,16 @@ class AppController extends AbstractController
             ];
         }
         if (!empty($media->seasons)) {
-            $episodes = array_map(function ($season) { if ($season->name == 'Specials') { return NULL; } if (preg_match('/Season (\d+)/', $season->name, $re)) { $season->name = sprintf('S%02d', $re[1]); } return "$season->name ($season->episode_count ep)"; }, $media->seasons);
+            $fct_map_seasons_eps = function ($season) use ($media) {
+                if ($season->name == 'Specials') {
+                    return NULL;
+                }
+                if (preg_match('/Season (\d+)/', $season->name, $re)) {
+                    $season->name = sprintf('S%02d', $re[1]);
+                }
+                return "$season->name ($season->episode_count ep)";
+            };
+            $episodes = array_map($fct_map_seasons_eps, $media->seasons);
             if (count($episodes) == 1 && first($episodes) == "Season 1 (1)") {
                 $episodes = ['N/A'];
             }
