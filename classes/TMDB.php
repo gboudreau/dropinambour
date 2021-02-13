@@ -517,6 +517,12 @@ class TMDB {
                             continue;
                         }
                         $season->monitored = $monitored_seasons[$season->season_number] ?? FALSE;
+
+                        // Sometimes, $season->episode_count is too high (larger than $media->last_episode_to_air->episode_number); fix that:
+                        if ($season->season_number == @$media->last_episode_to_air->season_number && $season->episode_count > $media->last_episode_to_air->episode_number) {
+                            $season->episode_count = $media->last_episode_to_air->episode_number;
+                        }
+
                         if (@$available_seasons[$season->season_number]->episodes >= $season->episode_count) {
                             // All episodes are available for this season
                             $season->is_available = TRUE;
