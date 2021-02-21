@@ -7,7 +7,7 @@
     "apcu-autoloader": true
   },
   "require": {
-    "php": ">=7.3",
+    "php": ">=8.0",
     "ext-PDO": "*",
     "ext-curl": "*",
     "ext-json": "*",
