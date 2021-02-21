@@ -2,6 +2,7 @@
 
 namespace PommePause\Dropinambour;
 
+use JetBrains\PhpStorm\NoReturn;
 use League\Plates\Engine;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -9,13 +10,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 abstract class AbstractController
 {
-    private $_request;
-    private $_response;
+    private Request $_request;
+    private Response $_response;
 
-    /** @var Engine */
-    private $_engine;
+    private Engine $_engine;
 
-    private static $requestStart;
+    private static float $_request_start;
 
     public function __construct() {
         $templates_directory = './views';
@@ -25,7 +25,7 @@ abstract class AbstractController
         return $this->_engine;
     }
 
-    public function route(Request $request) {
+    public function route(Request $request) : Response|FALSE {
         $this->_request = $request;
         // Which AppController method to call depends on the query parameters; see Router::getRouteForRequest()
         $method = Router::getRouteForRequest($this->_request);
@@ -38,12 +38,12 @@ abstract class AbstractController
     public function log(?Response $response = NULL) {
         // Log all HTTP requests to Heroku log (error_log)
         if (!empty($response)) {
-            $time = microtime(TRUE)*1000 - static::$requestStart*1000;
+            $time = microtime(TRUE)*1000 - static::$_request_start*1000;
             $http_code_number = $response->getStatusCode();
             $size = strlen($response->getContent());
             Logger::info("[req_time " . round($time) . "] [http_result $http_code_number] [req_size $size]");
         } else {
-            static::$requestStart = microtime(TRUE);
+            static::$_request_start = microtime(TRUE);
             $uri = $_SERVER['REQUEST_URI'];
             if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $post = $_POST;
@@ -63,6 +63,7 @@ abstract class AbstractController
         return $this->_engine->addData($data, $templates);
     }
 
+    #[NoReturn]
     protected function error(string $http_code, string $error_message) : void {
         $http_code_number = (int) preg_replace('/([0-9]+) .*/', '\\1', $http_code);
         header($_SERVER['SERVER_PROTOCOL'] . " $http_code", TRUE, $http_code_number);
@@ -84,11 +85,11 @@ abstract class AbstractController
         return $this->_request;
     }
 
-    protected function getRequestParam($key, $default = NULL) {
+    protected function getRequestParam($key, $default = NULL) : mixed {
         return $this->request()->request->get($key, $default);
     }
 
-    protected function getQueryParam($key, $default = NULL) {
+    protected function getQueryParam($key, $default = NULL) : mixed {
         return $this->request()->query->get($key, $default);
     }
 
@@ -123,7 +124,7 @@ abstract class AbstractController
         $_SESSION['pending_notifications'][] = "$js";
     }
 
-    protected function showError($error, $escape = TRUE) {
+    protected function showError(string $error, $escape = TRUE) : void {
         Logger::error($error);
         $this->showAlert($error, $escape, TRUE);
     }

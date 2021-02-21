@@ -5,7 +5,7 @@ use Throwable;
 
 class ErrorHandler
 {
-    private static $_errorType = array (
+    private static array $_errorType = array (
         E_ERROR             => 'ERROR',
         E_WARNING           => 'WARNING',
         E_PARSE             => 'PARSING ERROR',
@@ -95,7 +95,7 @@ class ErrorHandler
         return $trace;
     }
 
-    private static function _getArgument($arg) {
+    private static function _getArgument($arg) : string {
         switch (strtolower(gettype($arg))) {
         case 'string':
             return ( '"' . str_replace(array("\n"), array(''), $arg) . '"');

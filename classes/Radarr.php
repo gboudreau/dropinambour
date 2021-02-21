@@ -5,7 +5,8 @@ namespace PommePause\Dropinambour;
 use PommePause\Dropinambour\ActiveRecord\Request;
 use stdClass;
 
-class Radarr {
+class Radarr
+{
 
     // Ref: https://radarr.video/docs/api/
 
@@ -27,8 +28,7 @@ class Radarr {
     }
 
     public static function getAllMovies() : array {
-        $movies = static::sendGET('/movie');
-        return $movies;
+        return static::sendGET('/movie');
     }
 
     public static function getQualityProfiles() : array {

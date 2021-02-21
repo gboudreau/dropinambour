@@ -38,7 +38,7 @@ abstract class AbstractActiveRecord extends stdClass
      *
      * @return bool
      */
-    public function insert() {
+    public function insert() : bool {
         unset($this->{static::PRIMARY_KEY});
         return $this->save(NULL, FALSE);
     }
@@ -48,9 +48,9 @@ abstract class AbstractActiveRecord extends stdClass
      *
      * @param mixed $primary_key_value PK value
      *
-     * @return bool
+     * @return true
      */
-    public function update($primary_key_value) {
+    public function update($primary_key_value) : bool {
         if (empty($primary_key_value)) {
             throw new \Exception('The primary key can\'t be empty when updating an object');
         }
@@ -69,11 +69,13 @@ abstract class AbstractActiveRecord extends stdClass
     /**
      * Set the active properties
      *
-     * @param DBQueryBuilder $builder Builder
+     * @param DBQueryBuilder $builder          Builder
+     * @param bool           $update_if_exists Update row if it already exists?
      *
      * @return void
+     * @throws Exception
      */
-    protected function setQueryParameters($builder, bool $update_if_exists = TRUE) : void {
+    protected function setQueryParameters(DBQueryBuilder $builder, bool $update_if_exists = TRUE) : void {
         $update_columns = [];
         foreach (get_class_vars(static::class) as $property => $value) {
             if ($property == 'object_cache') {
@@ -151,7 +153,7 @@ abstract class AbstractActiveRecord extends stdClass
             $builder->delete(static::TABLE_NAME)
                 ->where(static::PRIMARY_KEY, $this->{static::PRIMARY_KEY})
                 ->execute();
-        } catch (PDOException $PDOException) {
+        } catch (PDOException) {
             return FALSE;
         }
 
@@ -161,14 +163,14 @@ abstract class AbstractActiveRecord extends stdClass
     /**
      * Load one row from the DB, using it's primary key, or any other unique key.
      *
-     * @param int|string     $value   Value to look for.
-     * @param string         $key     Key; default to the table's primary key.
-     * @param DBQueryBuilder $builder DBQueryBuilder used to load data from the database. A new instance will be created if not specified.
-     * @param int            $options Options
+     * @param int|string          $value   Value to look for.
+     * @param string              $key     Key; default to the table's primary key.
+     * @param DBQueryBuilder|null $builder DBQueryBuilder used to load data from the database. A new instance will be created if not specified.
+     * @param int                 $options Options
      *
-     * @return bool|static
+     * @return static|false
      */
-    public static function getOne($value, ?string $key = NULL, ?DBQueryBuilder $builder = NULL, int $options = 0) {
+    public static function getOne($value, ?string $key = NULL, ?DBQueryBuilder $builder = NULL, int $options = 0) : static|FALSE {
         if (empty($key)) {
             $key = static::PRIMARY_KEY;
         }
@@ -199,7 +201,7 @@ abstract class AbstractActiveRecord extends stdClass
      *
      * @return static
      */
-    public static function createFromObject(stdClass $obj) {
+    public static function createFromObject(stdClass $obj) : static {
         $ar = new static();
         foreach ((array) $obj as $k => $v) {
             if (ord($k[0]) === 0) {
@@ -215,13 +217,13 @@ abstract class AbstractActiveRecord extends stdClass
      * Load multiple rows from the DB, using it's primary key, or any other column.
      *
      * @param int|string|array $values      Value(s) to look for.
-     * @param string           $key         Key; default to the table's primary key.
+     * @param string|null      $key         Key; default to the table's primary key.
      * @param string|null      $index_field If specified, returned array will use this field as indices.
      * @param int              $options     Options
      *
-     * @return bool|static[] Array of objects, indexed by primary key. Or FALSE if no rows were found matching the specified values.
+     * @return static[]|false Array of objects, indexed by primary key. Or FALSE if no rows were found matching the specified values.
      */
-    public static function getMany($values, ?string $key = NULL, $index_field = NULL, $options = 0) {
+    public static function getMany($values, ?string $key = NULL, $index_field = NULL, $options = 0) : array|FALSE {
         if (empty($key)) {
             $key = static::PRIMARY_KEY;
         }
@@ -253,7 +255,7 @@ abstract class AbstractActiveRecord extends stdClass
      * @return static
      * @throws Exception When object doesn't exist
      */
-    public static function cloneOne($value, ?string $key = NULL) {
+    public static function cloneOne($value, ?string $key = NULL) : static {
         $obj = static::getOne($value, $key);
         if (!$obj) {
             throw new Exception("Object not found.");
@@ -267,7 +269,7 @@ abstract class AbstractActiveRecord extends stdClass
         return $this;
     }
 
-    protected static $object_cache = [];
+    protected static array $object_cache = [];
     public static function cache($objects) {
         $objects = to_array($objects);
         $type = get_class(first($objects));
@@ -283,7 +285,7 @@ abstract class AbstractActiveRecord extends stdClass
      *
      * @return static|false
      */
-    public static function getFromCache($value, $key = NULL) {
+    public static function getFromCache($value, $key = NULL) : static|FALSE {
         if (!@is_array(static::$object_cache[static::class])) {
             return FALSE;
         }
@@ -309,7 +311,7 @@ abstract class AbstractActiveRecord extends stdClass
      *
      * @return static[]
      */
-    public static function getAll(string $q, $args = [], ?string $index_field = NULL, int $options = 0) {
+    public static function getAll(string $q, $args = [], ?string $index_field = NULL, int $options = 0) : array {
         return DB::getAll($q, $args, $index_field, $options, static::class);
     }
 
@@ -318,9 +320,9 @@ abstract class AbstractActiveRecord extends stdClass
      * @param array  $args    Parameters
      * @param int    $options Options
      *
-     * @return static
+     * @return static|false
      */
-    public static function getFirst(string $q, $args = [], int $options = 0) {
+    public static function getFirst(string $q, $args = [], int $options = 0) : static|FALSE {
         return DB::getFirst($q, $args, $options, static::class);
     }
 }

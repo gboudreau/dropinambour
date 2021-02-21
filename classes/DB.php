@@ -33,18 +33,13 @@ class DB
     private const MYSQL_ERROR_CR_SERVER_LOST = 2013;
     private const MYSQL_ERROR_CR_SERVER_LOST_EXTENDED = 2055;
 
-    /**
-     * PDO handle used as the main database connection.
-     *
-     * @var PDO
-     */
-    private static $_handle;
+    private static ?PDO $_handle;
 
-    private static $_lockTimeoutRetries = 0;
+    private static ?int $_lockTimeoutRetries = 0;
 
-    private static $_reconnectTimeoutRetries = 0;
+    private static ?int $_reconnectTimeoutRetries = 0;
 
-    private static $_query_cache = [];
+    private static array $_query_cache = [];
 
     private static function _isDebug() : bool {
         return ( defined('DEBUGSQL') && DEBUGSQL === TRUE );
@@ -159,25 +154,7 @@ class DB
         static::$_handle = NULL;
     }
 
-    /**
-     * Choose the correct PDO handle to run a query. Will choose either the master, or a slave, depending on the query, and on the values in $_forceMaster.
-     *
-     * @param string $q The SQL query.
-     *
-     * @return PDO
-     */
-    private static function _getHandleForQuery(string $q) : PDO {
-        $handle = static::$_handle;
-        if (!($handle instanceof PDO)) {
-            static::_logError("static::\$_handle is " . gettype($handle));
-            throw new Exception("Failed to get a valid PDO handle to work with. Got a " . gettype($handle), static::MYSQL_ERROR_CR_CONNECTION_ERROR);
-        }
-        return $handle;
-    }
-
     public static function execute(string $q, $args = [], int $options = 0) : PDOStatement {
-        $handle = static::_getHandleForQuery($q);
-
         // Handle array arguments; eg. $q = "[...] WHERE id IN (:users)", $args = ['users' => array([...])]
         if (is_array($args)) {
             foreach ($args as $k => $v) {
@@ -195,7 +172,7 @@ class DB
             }
         }
 
-        $stmt = $handle->prepare($q);
+        $stmt = static::$_handle->prepare($q);
 
         if (isset($stats_query_index) && $stats_query_index >= 0) {
             $stmt->stats_query_index = $stats_query_index;
@@ -504,16 +481,16 @@ class DB
     }
 
     public static function startTransaction() : void {
-        static::execute("SET autocommit=0", [], static::QUERY_OPT_NO_STATS);
+        static::execute("SET autocommit=0", options: static::QUERY_OPT_NO_STATS);
     }
 
     public static function commitTransaction() : void {
-        static::execute("COMMIT", [], static::QUERY_OPT_NO_STATS);
-        static::execute("SET autocommit=1", [], static::QUERY_OPT_NO_STATS);
+        static::execute("COMMIT", options: static::QUERY_OPT_NO_STATS);
+        static::execute("SET autocommit=1", options: static::QUERY_OPT_NO_STATS);
     }
 
     public static function rollbackTransaction() : void {
-        static::execute("ROLLBACK", [], static::QUERY_OPT_NO_STATS);
-        static::execute("SET autocommit=1", [], static::QUERY_OPT_NO_STATS);
+        static::execute("ROLLBACK", options: static::QUERY_OPT_NO_STATS);
+        static::execute("SET autocommit=1", options: static::QUERY_OPT_NO_STATS);
     }
 }

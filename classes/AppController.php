@@ -3,6 +3,7 @@
 namespace PommePause\Dropinambour;
 
 use Exception;
+use JetBrains\PhpStorm\ArrayShape;
 use PommePause\Dropinambour\ActiveRecord\AvailableMedia;
 use PommePause\Dropinambour\ActiveRecord\Request;
 use PommePause\Dropinambour\Exceptions\PlexException;
@@ -280,6 +281,7 @@ class AppController extends AbstractController
         return $this->response($this->render('/tmdb_media', ['media' => $media, 'recommended_medias' => $recommended_medias, 'stats' => $stats, 'urls' => $urls]));
     }
 
+    #[ArrayShape(['media' => "object", 'paths' => "array", 'profiles' => "array", 'default_path' => "string", 'default_quality' => "int", 'default_language' => "int|string", 'default_tags' => "string"])]
     private static function getRequestFormData(stdClass $media) : array {
         return [
             'media' => $media,

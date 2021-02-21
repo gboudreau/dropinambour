@@ -8,30 +8,30 @@ use stdClass;
 
 class DBQueryBuilder
 {
-    private $_op = NULL;
+    private ?string $_op = NULL;
     private const OP_SELECT = 1;
     private const OP_UPDATE = 2;
     private const OP_INSERT = 3;
     private const OP_DELETE = 4;
 
-    private $_table_refs = [];
-    private $_params = [];
+    private array $_table_refs = [];
+    private array $_params = [];
 
-    private $_cached = FALSE;
+    private bool $_cached = FALSE;
 
     // SELECT
-    private $_select_expr = [];
-    private $_joins = [];
-    private $_where_conditions = [];
-    private $_group_by = [];
-    private $_having_conditions = [];
-    private $_order_by = [];
-    private $_limit = '';
+    private array $_select_expr = [];
+    private array $_joins = [];
+    private array $_where_conditions = [];
+    private array $_group_by = [];
+    private array $_having_conditions = [];
+    private array $_order_by = [];
+    private string $_limit = '';
 
     // INSERT, UPDATE
-    private $_col_values = [];
-    private $_on_duplicate_key_update_columns = [];
-    private $_option = '';
+    private array $_col_values = [];
+    private array $_on_duplicate_key_update_columns = [];
+    private string $_option = '';
 
     public function __construct() {
     }
@@ -344,7 +344,7 @@ class DBQueryBuilder
      * Defines the table to use in an INSERT query.
      * Usage: $builder->insertInto()->ignore()->set()->insert()
      *
-     * @param string $table_ref Table to insert into
+     * @param string|null $table_ref Table to insert into
      *
      * @return DBQueryBuilder
      */
@@ -705,11 +705,11 @@ class DBQueryBuilder
     /**
      * Helper method to SELECT * FROM :tableRef WHERE :key = :value
      *
-     * @param string         $table_ref Table reference
-     * @param string|int     $value     The ID of the row to select.
-     * @param string         $key       Key's reference
-     * @param DBQueryBuilder $builder   DBQueryBuilder used to load data from the database. A new instance will be created if not specified.
-     * @param int            $options   Options
+     * @param string              $table_ref Table reference
+     * @param string|int          $value     The ID of the row to select.
+     * @param string              $key       Key's reference
+     * @param DBQueryBuilder|null $builder   DBQueryBuilder used to load data from the database. A new instance will be created if not specified.
+     * @param int                 $options   Options
      *
      * @return stdClass|bool ActiveRecord object, or FALSE if not round
      */
@@ -732,7 +732,7 @@ class DBQueryBuilder
         return static::_getByKey($table_ref, $value, $key, $options | DB::OPT_GET_MANY, NULL, $index_field);
     }
 
-    private static function _getByKey(string $table_ref, $value, string $key, int $options = 0, ?DBQueryBuilder $builder = NULL, ?string $index_field = NULL) {
+    private static function _getByKey(string $table_ref, $value, string $key, int $options = 0, ?DBQueryBuilder $builder = NULL, ?string $index_field = NULL) : array|stdClass|FALSE {
         if (is_array($value) && empty($value)) {
             return [];
         }
@@ -763,7 +763,7 @@ class DBQueryBuilder
         return $results;
     }
 
-    private static $_active_record_classes = [];
+    private static array $_active_record_classes = [];
     private static function _getClassTypeForTable(string $table_ref) : ?string {
         if (empty(static::$_active_record_classes)) {
             // Load and cache the implemented AbstractActiveRecord classes

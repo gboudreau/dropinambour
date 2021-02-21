@@ -2,7 +2,7 @@
 
 use PommePause\Dropinambour\Config;
 
-function string_contains($haystack, $needle) {
+function string_contains(string $haystack, string|array $needle) : bool {
     if (is_array($needle)) {
         foreach ($needle as $n) {
             if (string_contains($haystack, $n)) {
@@ -14,7 +14,7 @@ function string_contains($haystack, $needle) {
     return stripos($haystack, $needle) !== FALSE;
 }
 
-function string_begins_with($haystack, $needle) {
+function string_begins_with(string $haystack, string|array $needle) : bool {
     if (is_array($needle)) {
         foreach ($needle as $n) {
             if (string_begins_with($haystack, $n)) {
@@ -26,7 +26,7 @@ function string_begins_with($haystack, $needle) {
     return stripos($haystack, $needle) === 0;
 }
 
-function array_contains($haystack, $needle) {
+function array_contains(array $haystack, mixed $needle) : bool {
     if (empty($haystack)) {
         return FALSE;
     }
@@ -47,50 +47,50 @@ function array_clone(array $array) : array {
     return $new_array;
 }
 
-function to_array($array_or_element) {
+function to_array($array_or_element) : array {
     if (is_array($array_or_element)) {
         return $array_or_element;
     }
     return array($array_or_element);
 }
 
-function to_object($el) {
+function to_object($el) : object {
     if (is_object($el)) {
         return $el;
     }
     return (object) $el;
 }
 
-function first($array) {
+function first($array) : mixed {
     if (!is_array($array) || count($array) == 0) {
         return FALSE;
     }
     return array_shift($array);
 }
 
-function last($array) {
+function last($array) : mixed {
     if (!is_array($array)) {
         return FALSE;
     }
     return end($array);
 }
 
-function options_contains($haystack, $needle) {
+function options_contains($haystack, $needle) : bool {
     return ( ($needle & $haystack) === $needle );
 }
 
-function he($text) {
+function he($text) : string {
     $text = str_replace('&nbsp;', 0x0a00 . 0x0a00 . 0x0a00, $text);
     $text = htmlentities($text, ENT_COMPAT|ENT_QUOTES, 'UTF-8');
     $text = str_replace(0x0a00 . 0x0a00 . 0x0a00, '&nbsp;', $text);
     return $text;
 }
 
-function phe($text) {
+function phe($text) : void {
     echo he($text);
 }
 
-function echo_if($condition, $text_if_true, $text_if_false = '') {
+function echo_if(bool $condition, string $text_if_true, string $text_if_false = '') : void {
     if ($condition) {
         echo $text_if_true;
     } else {
@@ -119,7 +119,7 @@ function is_https() : bool {
     return FALSE;
 }
 
-function minutes_to_human($minutes) {
+function minutes_to_human(int $minutes) : string {
     if ($minutes >= 60) {
         $hours = floor($minutes / 60);
         $minutes -= $hours * 60;
@@ -140,7 +140,7 @@ function minutes_to_human($minutes) {
  *
  * @return array
  */
-function getPropValuesFromArray($array, $props, $keep_indices = FALSE) {
+function getPropValuesFromArray(array $array, string $props, bool $keep_indices = FALSE) : array {
     $values = [];
     foreach ($array as $idx => $value) {
         $found = TRUE;
@@ -163,12 +163,12 @@ function getPropValuesFromArray($array, $props, $keep_indices = FALSE) {
     return $values;
 }
 
-function get_http_accepts() {
+function get_http_accepts() : array {
     $accept = strtolower(str_replace(' ', '', $_SERVER['HTTP_ACCEPT']));
     return explode(',', $accept);
 }
 
-function sendPOST($url, $data, $headers = array(), $content_type = NULL, string $method = 'POST', int $timeout = 30, bool $retry_on_429 = TRUE) {
+function sendPOST(string $url, $data, array $headers = array(), ?string $content_type = NULL, string $method = 'POST', int $timeout = 30, bool $retry_on_429 = TRUE) {
     $ch = curl_init();
 
     if (!empty($content_type)) {
@@ -232,7 +232,7 @@ function sendPOST($url, $data, $headers = array(), $content_type = NULL, string 
     return $result;
 }
 
-function sendGET($url, $headers = array(), bool $follow_redirects = TRUE, int $timeout = 30, bool $retry_on_429 = TRUE) {
+function sendGET(string $url, array $headers = array(), bool $follow_redirects = TRUE, int $timeout = 30, bool $retry_on_429 = TRUE) {
     $ch = curl_init();
 
     $headers[] = 'User-agent: PHP/dropinambour';
@@ -280,7 +280,7 @@ function sendGET($url, $headers = array(), bool $follow_redirects = TRUE, int $t
     return $result;
 }
 
-function lang_from_code($iso_639_1_code) : string {
+function lang_from_code(?string $iso_639_1_code) : string {
     return [
         'ab' => 'Abkhazian',
         'aa' => 'Afar',

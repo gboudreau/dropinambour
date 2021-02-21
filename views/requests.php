@@ -24,7 +24,7 @@ $this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex"
         <?php continue; ?>
     <?php endif; ?>
 
-    <?php if (empty($requests)) { continue; } ?>
+    <?php if (empty($requests)) continue; ?>
 
     <table id="requests_list" class="table table-striped">
         <thead>

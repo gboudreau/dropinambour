@@ -12,7 +12,7 @@ class TMDB {
     // Ref: https://developers.themoviedb.org/3/getting-started/introduction
     // Ref: https://developers.themoviedb.org
 
-    protected static $config;
+    protected static stdClass $config;
 
     /* Pragma mark - Images */
 
@@ -91,7 +91,7 @@ class TMDB {
      * @param string $id     External ID
      * @param string $source 'imdb' or 'tvdb'
      *
-     * @return int|null
+     * @return stdClass|null
      */
     public static function getDetailsByExternalId(string $id, string $source) : ?stdClass {
         // https://developers.themoviedb.org/3/find/find-by-id
@@ -276,8 +276,7 @@ class TMDB {
     public static function getShowExternalIDs($id) : ?stdClass {
         // https://developers.themoviedb.org/3/tv/get-tv-external-ids
         try {
-            $response = static::sendGET("/tv/$id/external_ids");
-            return $response;
+            return static::sendGET("/tv/$id/external_ids");
         } catch (Exception $ex) {
             Logger::error("Failed to load show external_ids on TMDB: " . $ex->getMessage());
         }

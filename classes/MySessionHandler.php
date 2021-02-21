@@ -10,7 +10,7 @@ use Delight\Cookie\Session;
  *
  * Will save the session in the DB.
  *
- * @category  Persistence
+ * @category Persistence
  */
 class MySessionHandler
 {
@@ -41,15 +41,15 @@ class MySessionHandler
         Session::start(Cookie::SAME_SITE_RESTRICTION_LAX);
     }
 
-    public function open() {
+    public function open() : bool {
         return TRUE;
     }
 
-    public function close() {
+    public function close() : bool {
         return TRUE;
     }
 
-    public function read($id) {
+    public function read($id) : string {
         $q = "SELECT data FROM sessions WHERE id = :session_id";
         $data = DB::getFirstValue($q, $id);
         if ($data) {
@@ -58,18 +58,18 @@ class MySessionHandler
         return '';
     }
 
-    public function write($id, $data) {
+    public function write($id, $data) : bool {
         $result = static::save($id, $data);
         return ( $result !== FALSE );
     }
 
-    public function destroy($id) {
+    public function destroy($id) : bool {
         $q = "DELETE FROM sessions WHERE id = :session_id";
         $result = DB::execute($q, $id);
         return ( $result !== FALSE );
     }
 
-    public function clean($max) {
+    public function clean($max) : bool {
         $q = "SELECT id FROM sessions WHERE access_time < :access_time";
         $expired_sessions = DB::getAllValues($q, time() - intval($max));
         foreach ($expired_sessions as $id) {
@@ -78,7 +78,7 @@ class MySessionHandler
         return TRUE;
     }
 
-    public static function flush() {
+    public static function flush() : void {
         $id = session_id();
         $data = session_encode();
         static::save($id, $data);
@@ -86,7 +86,7 @@ class MySessionHandler
 
     private static function save($id, $data) {
         $q = "REPLACE INTO sessions VALUES (:id, :data, :access_time)";
-        $result = DB::execute(
+        return DB::execute(
             $q,
             [
                 'id' => $id,
@@ -94,6 +94,5 @@ class MySessionHandler
                 'access_time' => time(),
             ]
         );
-        return $result;
     }
 }

@@ -4,6 +4,7 @@ namespace PommePause\Dropinambour;
 
 use DateTime;
 use DateTimeZone;
+use JetBrains\PhpStorm\NoReturn;
 
 class Logger
 {
@@ -23,6 +24,7 @@ class Logger
         static::log('ERROR', $log);
     }
 
+    #[NoReturn]
     public static function critical($log) : void {
         static::log('CRITICAL', $log);
         exit(1);

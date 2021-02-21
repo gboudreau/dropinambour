@@ -1,10 +1,8 @@
 <?php
 namespace PommePause\Dropinambour;
 
-use stdClass;
-
 // Views variables
-/** @var $collection stdClass[] */
+/** @var $collection object */
 // End of Views variables
 
 $this->layout('/page', ['title' => $collection->name . " | dropinambour - Requests for Plex"]);

@@ -27,7 +27,15 @@ use stdClass;
             <?php foreach ($media->seasons as $season) : ?>
                 <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored || @$season->episode_count == 0 ? '' : $season->season_number) ?>">
                     <?php phe($season->name) ?>
-                    <?php if (@$season->is_available === TRUE) { phe(' (already available)'); } elseif (@$season->monitored) { phe(' (already requested)'); } elseif (@$season->episode_count == 0) { phe(' (empty)'); } elseif (@$season->is_available === 'partially') { phe(' (partial)'); } ?>
+                    <?php if (@$season->is_available === TRUE) : ?>
+                        (already available)
+                    <?php elseif (@$season->monitored) : ?>
+                        (already requested)
+                    <?php elseif (@$season->episode_count == 0) : ?>
+                        (empty)
+                    <?php elseif (@$season->is_available === 'partially') : ?>
+                        (partial)
+                    <?php endif; ?>
                 </option>
             <?php endforeach; ?>
         </select>

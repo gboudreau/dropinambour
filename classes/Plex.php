@@ -6,7 +6,8 @@ use Exception;
 use PommePause\Dropinambour\Exceptions\PlexException;
 use stdClass;
 
-class Plex {
+class Plex
+{
 
     // Ref: https://forums.plex.tv/t/authenticating-with-plex/609370
     // Ref: https://github.com/Arcanemagus/plex-api/wiki
@@ -93,7 +94,7 @@ class Plex {
      *
      * @return stdClass|array|null
      */
-    public static function getItemMetadata(string $item_key, bool $return_array = FALSE) {
+    public static function getItemMetadata(string $item_key, bool $return_array = FALSE) : stdClass|array|NULL {
         try {
             $response = static::sendGET($item_key);
         } catch (Exception $ex) {
@@ -216,7 +217,7 @@ class Plex {
         }
 
         try {
-            $response = static::sendGET("/v2/pins/$pin->id?code=$pin->code" , 'https://plex.tv/api', 0, static::ACCESS_TOKEN_SKIP);
+            $response = static::sendGET("/v2/pins/$pin->id?code=$pin->code", 'https://plex.tv/api', 0, static::ACCESS_TOKEN_SKIP);
         } catch (Exception $ex) {
             unset($_SESSION['PLEX_PIN']);
             return FALSE;
@@ -325,16 +326,16 @@ class Plex {
         return Config::get('PLEX_BASE_URL');
     }
 
-    private static $client_id;
+    private static string $_client_id;
     private static function getClientID() : string {
-        if (empty(static::$client_id)) {
-            static::$client_id = Config::getFromDB('PLEX_CLIENT_ID');
+        if (empty(static::$_client_id)) {
+            static::$_client_id = (string) Config::getFromDB('PLEX_CLIENT_ID');
             if (empty($client_id)) {
-                static::$client_id = 'DINB-' . trim(sendGET('https://ip.danslereseau.com')) . '-' . trim(exec("hostname -f"));
-                Config::setInDB('PLEX_CLIENT_ID', static::$client_id);
+                static::$_client_id = 'DINB-' . trim(sendGET('https://ip.danslereseau.com')) . '-' . trim(exec("hostname -f"));
+                Config::setInDB('PLEX_CLIENT_ID', static::$_client_id);
             }
         }
-        return static::$client_id;
+        return static::$_client_id;
     }
 
     private static function getAccessToken(&$user_infos = NULL) : ?string {

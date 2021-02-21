@@ -162,7 +162,7 @@ class Request extends AbstractActiveRecord
         return $m;
     }
 
-    public static function getOne($value, ?string $key = NULL, ?DBQueryBuilder $builder = NULL, int $options = 0) {
+    public static function getOne($value, ?string $key = NULL, ?DBQueryBuilder $builder = NULL, int $options = 0) : static|FALSE {
         $request = parent::getOne($value, $key, $builder, $options);
         return static::postProcessRequestRowFromDB($request);
     }

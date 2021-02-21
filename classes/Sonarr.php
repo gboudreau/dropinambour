@@ -33,8 +33,7 @@ class Sonarr {
     }
 
     public static function getAllShows() : array {
-        $shows = static::sendGET('/series');
-        return $shows;
+        return static::sendGET('/series');
     }
 
     public static function getQualityProfiles() : array {

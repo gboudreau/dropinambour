@@ -1,10 +1,8 @@
 <?php
 namespace PommePause\Dropinambour;
 
-use stdClass;
-
 // Views variables
-/** @var $search_results stdClass[] */
+/** @var $search_results object[] */
 // End of Views variables
 
 if (!empty($_REQUEST['query'])) {

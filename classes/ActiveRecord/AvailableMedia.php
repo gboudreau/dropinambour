@@ -240,7 +240,7 @@ class AvailableMedia extends AbstractActiveRecord
 
     public static function getAllTMDBIDs() : array {
         $q = "SELECT source_id FROM available_medias_guids WHERE source = 'tmdb'";
-        return DB::getAllValues($q, [], 'integer');
+        return DB::getAllValues($q, data_type: 'integer');
     }
 
     public static function getAllIMDBIDs() : array {
@@ -250,12 +250,12 @@ class AvailableMedia extends AbstractActiveRecord
 
     public static function getAllTVDBIDs() : array {
         $q = "SELECT media_id, source_id FROM available_medias_guids WHERE source = 'tvdb'";
-        return getPropValuesFromArray(DB::getAll($q, [], 'media_id'), 'source_id', TRUE);
+        return getPropValuesFromArray(DB::getAll($q, index_field: 'media_id'), 'source_id', TRUE);
     }
 
     public static function getAllTMDBTVIDs() : array {
         $q = "SELECT media_id, source_id FROM available_medias_guids WHERE source = 'tmdbtv'";
-        return getPropValuesFromArray(DB::getAll($q, [], 'media_id'), 'source_id', TRUE);
+        return getPropValuesFromArray(DB::getAll($q, index_field: 'media_id'), 'source_id', TRUE);
     }
 
     public static function getClassForMedia($media) : string {
