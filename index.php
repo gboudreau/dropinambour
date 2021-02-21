@@ -15,6 +15,10 @@ $controller->log();
 
 // Call the requested controller method
 $response = $controller->route($request);
+if ($response === FALSE) {
+    // Serve the requested asset resource as-is (CSS, images, etc.); ref: https://www.php.net/manual/en/features.commandline.webserver.php
+    return FALSE;
+}
 
 // Send the response to the client (browser)
 $response->send();

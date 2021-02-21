@@ -36,6 +36,8 @@ class Router
     public const AJAX_MORE_SHOWS  = 'moreShows';
     public const AJAX_CHECK_LOGIN = 'checkLogin';
 
+    public const RETURN_VALUE_ASSET = 'viewAsset';
+
     /**
      * Create a URL that will either show or do something.
      *
@@ -59,7 +61,7 @@ class Router
     public static function getRouteForRequest(Request $request) : string {
         if (!empty($request->getBaseUrl()) || $request->getPathInfo() != "/") {
             // Static assets (CSS, images, etc.)
-            return 'viewAsset';
+            return static::RETURN_VALUE_ASSET;
         }
 
         // Depending on the value of the 'action' query parameter, we'll either return 'actionWhat' (eg. 'viewMedia', 'saveRequest') or just action (eg. 'search', 'cron')

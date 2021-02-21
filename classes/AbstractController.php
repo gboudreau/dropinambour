@@ -25,10 +25,13 @@ abstract class AbstractController
         return $this->_engine;
     }
 
-    public function route(Request $request) : Response {
+    public function route(Request $request) {
         $this->_request = $request;
         // Which AppController method to call depends on the query parameters; see Router::getRouteForRequest()
         $method = Router::getRouteForRequest($this->_request);
+        if ($method == Router::RETURN_VALUE_ASSET) {
+            return FALSE;
+        }
         return $this->$method();
     }
 

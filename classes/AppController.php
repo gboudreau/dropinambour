@@ -385,25 +385,6 @@ class AppController extends AbstractController
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS));
     }
 
-    public function viewAsset() : Response {
-        $request = $this->request();
-        if (empty($request->getBaseUrl()) || !file_exists('.' . $request->getBaseUrl())) {
-            return $this->response("404 Not Found", 404);
-        }
-        if (string_begins_with($request->getBaseUrl(), '/css/') || string_begins_with($request->getBaseUrl(), '/img/')) {
-            if (string_begins_with($request->getBaseUrl(), '/css/')) {
-                header('Content-type: text/css');
-            } else {
-                $ext = last(explode('.', $request->getBaseUrl()));
-                $ext = str_replace(['jpg'], ['jpeg'], $ext);
-                header('Content-type: image/' . $ext);
-            }
-            readfile('.' . $request->getBaseUrl());
-            exit();
-        }
-        return $this->response("404 Not Found", 404);
-    }
-
     /* pragma mark - Admin pages: Plex, Radarr, Sonarr, cron */
 
     public function viewAdminPlex() : Response {
