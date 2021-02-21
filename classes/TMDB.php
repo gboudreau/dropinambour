@@ -54,7 +54,10 @@ class TMDB {
 
     /* Pragma mark - Search */
 
-    public static function searchMulti(string $query, string $language = 'en') : array {
+    public static function searchMulti(string $query, ?string $language = NULL) : array {
+        if (empty($language)) {
+            $language = first(Config::get('LANGUAGES', 'en'));
+        }
         $args = [
             'language' => $language,
             'query'    => $query,
@@ -65,11 +68,12 @@ class TMDB {
         return $response->results;
     }
 
-    public static function getRecommendations($media) : array {
+    public static function getRecommendations($media, ?string $language = NULL) : array {
         // https://developers.themoviedb.org/3/movies/get-movie-details
         // https://developers.themoviedb.org/3/tv/get-tv-recommendations
         try {
-            $response = static::sendGET("/$media->media_type/$media->id/recommendations");
+            $url = "/$media->media_type/$media->id/recommendations" . (!empty($language) ? '?language=' . urlencode($language) : '');
+            $response = static::sendGET($url);
             $results = $response->results;
             $results = array_map([self::class, 'nameToTitle'], $results);
             $fct_name = ($media->media_type == 'tv' ? 'addMediaTypeTV' : 'addMediaTypeMovie');
@@ -113,10 +117,11 @@ class TMDB {
 
     /* Pragma mark - Movie */
 
-    public static function getDetailsMovie($id) : ?stdClass {
+    public static function getDetailsMovie($id, ?string $language = NULL) : ?stdClass {
         // https://developers.themoviedb.org/3/movie/get-movie-details
         try {
-            $response = static::sendGET("/movie/$id");
+            $url = "/movie/$id" . (!empty($language) ? '?language=' . urlencode($language) : '');
+            $response = static::sendGET($url);
             static::addMediaTypeMovie($response);
             $medias = [$response];
             static::addAvailability($medias);
@@ -231,7 +236,7 @@ class TMDB {
 
     /* Pragma mark - TV Show */
 
-    public static function getDetailsTV($id, bool $add_availability = TRUE, bool $use_cache = TRUE, int $cache_timeout = 24*60*60) : ?stdClass {
+    public static function getDetailsTV($id, ?string $language = NULL, bool $add_availability = TRUE, bool $use_cache = TRUE, int $cache_timeout = 24*60*60) : ?stdClass {
         if ($use_cache) {
             $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdbtv_id = :id";
             $cache = DB::getFirst($q, $id);
@@ -244,7 +249,8 @@ class TMDB {
         // https://developers.themoviedb.org/3/tv/get-tv-details
         try {
             if (empty($response)) {
-                $response = static::sendGET("/tv/$id");
+                $url = "/tv/$id" . (!empty($language) ? '?language=' . urlencode($language) : '');
+                $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
                     $q = "INSERT INTO tmdb_cache SET tmdbtv_id = :id, details = :details, last_updated = NOW() ON DUPLICATE KEY UPDATE details = VALUES(details), last_updated = VALUES(last_updated)";
@@ -489,7 +495,7 @@ class TMDB {
 
                     if (empty($media->seasons)) {
                         // Search result don't include all the details we need to identify completely/partially available shows
-                        $full_media = static::getDetailsTV($media->id, FALSE);
+                        $full_media = static::getDetailsTV($media->id, NULL, FALSE);
                         $full_media->is_available = $media->is_available;
                         $full_media->requested = $media->requested;
                         $media = $full_media;

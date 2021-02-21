@@ -48,16 +48,17 @@ class AppController extends AbstractController
     }
 
     public function viewMedia() : Response {
+        $lang = $this->getQueryParam('language');
         if ($this->getQueryParam('tv')) {
-            $media = TMDB::getDetailsTV($this->getQueryParam('tv'));
+            $media = TMDB::getDetailsTV($this->getQueryParam('tv'), $lang);
         } elseif ($this->getQueryParam('movie')) {
-            $media = TMDB::getDetailsMovie($this->getQueryParam('movie'));
+            $media = TMDB::getDetailsMovie($this->getQueryParam('movie'), $lang);
         } else {
             Logger::error("Missing ID in viewMedia()");
             $this->error("400 Bad Request", "Missing ID in viewMedia()");
         }
 
-        $recommended_medias = TMDB::getRecommendations($media);
+        $recommended_medias = TMDB::getRecommendations($media, $lang);
 
         $media->container_class = AvailableMedia::getClassForMedia($media);
 

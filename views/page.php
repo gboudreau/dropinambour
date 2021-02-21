@@ -58,7 +58,7 @@ $breakout_search_form = ( @$nav_active == 'discover' || @$_REQUEST['action'] == 
                         <?php else : ?>
                             <select name="language" class="form-control small me-2">
                                 <?php foreach (to_array(Config::get('LANGUAGES')) as $lang) : ?>
-                                    <option value="<?php phe($lang) ?>"><?php phe(strtoupper($lang)) ?></option>
+                                    <option value="<?php phe($lang) ?>" <?php echo_if(@$_REQUEST['language'] == $lang, 'selected') ?>><?php phe(strtoupper($lang)) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         <?php endif; ?>
@@ -79,7 +79,7 @@ $breakout_search_form = ( @$nav_active == 'discover' || @$_REQUEST['action'] == 
                 <?php else : ?>
                     <select name="language" class="form-control small me-2">
                         <?php foreach (to_array(Config::get('LANGUAGES')) as $lang) : ?>
-                            <option value="<?php phe($lang) ?>"><?php phe(strtoupper($lang)) ?></option>
+                            <option value="<?php phe($lang) ?>" <?php echo_if(@$_REQUEST['language'] == $lang, 'selected') ?>><?php phe(strtoupper($lang)) ?></option>
                         <?php endforeach; ?>
                     </select>
                 <?php endif; ?>
