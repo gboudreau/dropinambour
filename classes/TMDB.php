@@ -152,15 +152,9 @@ class TMDB {
         // Trending/popular movies on pages 3+ are not really interesting... Show upcoming movies past page 2
         if ($page <= 2) {
             $movies = static::getPopularMovies($page);
-            //$movies1 = static::getTrendingMovies($page);
         } else {
-            //$movies = static::getPopularMovies($page);
             $movies = static::getUpcomingMovies($page);
-            //$movies1 = [];
         }
-        //$movies2 = static::getNowPlayingMovies($page);
-        //$movies3 = static::getUpcomingMovies($page);
-        //$movies = array_merge($movies1, $movies2, $movies3);
 
         $movies_ = [];
         foreach ($movies as $movie) {
@@ -178,7 +172,20 @@ class TMDB {
         static::addAvailability($movies);
 
         $sort_by = function ($m1, $m2) {
-            // Pop desc
+            // Available last, then requested, then ...
+            if ($m1->is_available && !$m2->is_available) {
+                return 1;
+            }
+            if (!$m1->is_available && $m2->is_available) {
+                return -1;
+            }
+            if ($m1->requested && !$m2->requested) {
+                return 1;
+            }
+            if (!$m1->requested && $m2->requested) {
+                return -1;
+            }
+            // Popularity desc
             return $m2->popularity <=> $m1->popularity;
         };
         usort($movies, $sort_by);
@@ -289,9 +296,6 @@ class TMDB {
         }
 
         $shows = static::getPopularShows($page);
-        //$shows2 = static::getTopRatedShows($page);
-        //$shows3 = static::getNowPlayingShows($page);
-        //$shows = array_merge($shows1, $shows2, $shows3);
 
         $shows_ = [];
         foreach ($shows as $show) {
@@ -309,7 +313,20 @@ class TMDB {
         static::addAvailability($shows);
 
         $sort_by = function ($m1, $m2) {
-            // Pop desc
+            // Available last, then requested, then ...
+            if ($m1->is_available && !$m2->is_available) {
+                return 1;
+            }
+            if (!$m1->is_available && $m2->is_available) {
+                return -1;
+            }
+            if ($m1->requested && !$m2->requested) {
+                return 1;
+            }
+            if (!$m1->requested && $m2->requested) {
+                return -1;
+            }
+            // Popularity desc
             return $m2->popularity <=> $m1->popularity;
         };
         usort($shows, $sort_by);
