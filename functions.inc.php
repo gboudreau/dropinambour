@@ -2,7 +2,7 @@
 
 use PommePause\Dropinambour\Config;
 
-function string_contains(string $haystack, string|array $needle) : bool {
+function string_contains(?string $haystack, string|array $needle) : bool {
     if (is_array($needle)) {
         foreach ($needle as $n) {
             if (string_contains($haystack, $n)) {
@@ -14,7 +14,7 @@ function string_contains(string $haystack, string|array $needle) : bool {
     return stripos($haystack, $needle) !== FALSE;
 }
 
-function string_begins_with(string $haystack, string|array $needle) : bool {
+function string_begins_with(?string $haystack, string|array $needle) : bool {
     if (is_array($needle)) {
         foreach ($needle as $n) {
             if (string_begins_with($haystack, $n)) {
