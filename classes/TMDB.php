@@ -88,7 +88,7 @@ class TMDB {
             usort($results, [static::class, 'sortByVote']);
             return $results;
         } catch (Exception $ex) {
-            Logger::error("Failed to load movie details on TMDB: " . $ex->getMessage());
+            Logger::error("Failed to load $media->media_type recommendations on TMDB, for ID $media->id: " . $ex->getMessage());
         }
         return [];
     }
@@ -134,7 +134,7 @@ class TMDB {
             $response = first($medias);
             return $response;
         } catch (Exception $ex) {
-            Logger::error("Failed to load movie details on TMDB: " . $ex->getMessage());
+            Logger::error("Failed to load movie details on TMDB, for ID $id: " . $ex->getMessage());
         }
         return NULL;
     }
@@ -145,7 +145,7 @@ class TMDB {
             $response = static::sendGET("/movie/$id/external_ids");
             return $response;
         } catch (Exception $ex) {
-            Logger::error("Failed to load movie external_ids on TMDB: " . $ex->getMessage());
+            Logger::error("Failed to load movie external_ids on TMDB, for ID $id: " . $ex->getMessage());
         }
         return NULL;
     }
@@ -242,7 +242,7 @@ class TMDB {
             static::addAvailability($response->parts);
             return $response;
         } catch (Exception $ex) {
-            Logger::error("Failed to load movie details on TMDB: " . $ex->getMessage());
+            Logger::error("Failed to load collection details on TMDB, for ID $id: " . $ex->getMessage());
         }
         return NULL;
     }
@@ -281,7 +281,7 @@ class TMDB {
             $response = first($medias);
             return $response;
         } catch (Exception $ex) {
-            Logger::error("Failed to load show details on TMDB: " . $ex->getMessage());
+            Logger::error("Failed to load show details on TMDB, for ID $id: " . $ex->getMessage());
         }
         return NULL;
     }
@@ -291,7 +291,7 @@ class TMDB {
         try {
             return static::sendGET("/tv/$id/external_ids");
         } catch (Exception $ex) {
-            Logger::error("Failed to load show external_ids on TMDB: " . $ex->getMessage());
+            Logger::error("Failed to load show external_ids on TMDB, for ID $id: " . $ex->getMessage());
         }
         return NULL;
     }
