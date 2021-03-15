@@ -114,7 +114,7 @@ class Radarr
     public static function getAllTags() : array {
         $tags = static::sendGET('/tag');
         $fct_sort = function ($q1, $q2) {
-            return strtolower($q1->name) <=> strtolower($q2->name);
+            return strtolower($q1->label) <=> strtolower($q2->label);
         };
         usort($tags, $fct_sort);
         return $tags;
