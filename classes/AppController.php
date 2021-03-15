@@ -322,13 +322,21 @@ class AppController extends AbstractController
             Radarr::addMovie($_POST['tmdb_id'], $_POST['title'], $_POST['quality'], $_POST['path'], $_POST['tags']);
             $this->showAlert("Added request for \"{$_POST['title']}\" movie.");
         } elseif ($_POST['media_type'] == 'tv') {
-            if (empty($_POST['tvdb_id'])) {
+            $tvdb_id = $_POST['tvdb_id'];
+            if (!empty($tvdb_id)) {
+                try {
+                    Sonarr::addShow($_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
+                } catch (Exception $ex) {
+                    // Can happen, for example, when the serie exists on TheTVDB, but has no English translation; eg. https://www.thetvdb.com/?id=395619&tab=series
+                    Logger::error("Failed to add request on Sonarr; will create request unmonitored. Exception: " . $ex->getMessage());
+                    $tvdb_id = NULL;
+                }
+            }
+            if (empty($tvdb_id)) {
                 $show = TMDB::getDetailsTV($_POST['tmdb_id']);
                 $request = Request::fromTMDBShow($show);
                 $request->save();
                 $request->notifyAdminRequestAdded($_POST['season'] ??  1);
-            } else {
-                Sonarr::addShow($_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
             }
             $this->showAlert("Added request for \"{$_POST['title']}\" TV show.");
         } else {
