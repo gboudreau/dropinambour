@@ -19,8 +19,8 @@ use stdClass;
     <input name="title" type="hidden" value="<?php phe($media->title) ?>">
     <input name="tags" type="hidden" value="<?php phe($default_tags) ?>">
     <?php if ($media->media_type == 'tv') : ?>
-        <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug) ?>">
-        <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images)) ?>">
+        <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug ?? '') ?>">
+        <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images ?? [])) ?>">
     <?php endif; ?>
     <?php if (!Plex::isServerAdmin()) : ?>
         <input name="path" type="hidden" value="<?php phe($default_path) ?>">
