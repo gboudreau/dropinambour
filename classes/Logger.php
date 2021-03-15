@@ -71,7 +71,13 @@ class Logger
             $prefix .= "[client $ip] ";
             $prefix .= "[date $datetime] [req $log_id]{$method_details}";
         }
-        error_log("[$level] $prefix $log\n", 3, static::getLogFile());
+        $log = "[$level] $prefix $log\n";
+        error_log($log, 3, static::getLogFile());
+
+        if ($level == 'ERROR' || $level == 'CRITICAL') {
+            $email = Config::get('NEW_REQUESTS_NOTIF_EMAIL');
+            Mailer::send($email, 'Dropinambour error', $log);
+        }
     }
 
     private static function getLogFile() : string {
