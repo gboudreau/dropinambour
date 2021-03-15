@@ -107,6 +107,29 @@ $breakout_search_form = ( @$nav_active == 'discover' || @$_REQUEST['action'] == 
             $_SESSION['pending_notifications'] = [];
         }
     ?>
+    function disable_button(btn, text_loading) {
+        if (typeof text_loading == 'undefined') {
+            text_loading = 'Loading...';
+        }
+        let $btn = $(btn);
+        $btn.prop('disabled', true);
+        if ($btn.text() !== '') {
+            $btn.data('original-text', $btn.html());
+            $btn.text(text_loading);
+        } else {
+            $btn.data('original-text', $btn.val());
+            $btn.val(text_loading);
+        }
+    }
+    function reset_button(btn) {
+        let $btn = $(btn);
+        $btn.prop('disabled', false);
+        if ($btn.text() !== '') {
+            $btn.html($btn.data('original-text'));
+        } else {
+            $btn.val($btn.data('original-text'));
+        }
+    }
 </script>
 </body>
 </html>

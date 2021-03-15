@@ -70,6 +70,6 @@ use stdClass;
         </div>
     <?php endif; ?>
     <div class="col-auto">
-        <button class="btn btn-primary" type="submit" disabled>Request</button>
+        <button class="btn btn-primary" type="submit" disabled onclick="disable_button(this); this.form.submit()">Request</button>
     </div>
 </form>
