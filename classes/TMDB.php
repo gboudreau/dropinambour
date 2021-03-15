@@ -63,6 +63,12 @@ class TMDB {
             'query'    => $query,
         ];
         $response = static::sendGET("/search/multi?" . http_build_query($args));
+        // Let's remove Person results
+        foreach ($response->results as $i => $media) {
+            if (@$media->media_type == 'person') {
+                unset($response->results[$i]);
+            }
+        }
         $response->results = array_map([self::class, 'nameToTitle'], $response->results);
         static::addAvailability($response->results);
         return $response->results;
