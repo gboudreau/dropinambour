@@ -169,7 +169,7 @@ class AvailableMedia extends AbstractActiveRecord
 
                 $external_ids = TMDB::getShowExternalIDs($this->tmdbtv_id);
                 if (!empty($external_ids->imdb_id)) {
-                    $this->imdb_id = $external_ids->imdb_id;
+                    $this->imdb_id = trim($external_ids->imdb_id, '/');
                     $all_guids[] = "IMDB ID = $this->imdb_id";
                     $q = "INSERT INTO available_medias_guids SET media_id = :media_id, source = :source, source_id = :id ON DUPLICATE KEY UPDATE source_id = VALUES(source_id)";
                     DB::insert($q, ['media_id' => $this->id, 'source' => 'imdb', 'id' => $this->imdb_id]);
@@ -214,9 +214,10 @@ class AvailableMedia extends AbstractActiveRecord
                 // TMDB TV Show ID
                 $re[1] = 'tmdbtv';
             }
-            $this->{$re[1].'_id'} = $re[2];
-            DB::insert($q, ['media_id' => $this->id, 'source' => $re[1], 'id' => $re[2]]);
-            $all_guids[] = strtoupper($re[1]) . " ID = $re[2]";
+            $id = trim($re[2], '/');
+            $this->{$re[1].'_id'} = $id;
+            DB::insert($q, ['media_id' => $this->id, 'source' => $re[1], 'id' => $id]);
+            $all_guids[] = strtoupper($re[1]) . " ID = $id";
         }
 
         if (empty($this->tmdb_id) && $this->type == 'movie') {
