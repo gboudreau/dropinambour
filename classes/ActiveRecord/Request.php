@@ -28,6 +28,7 @@ class Request extends AbstractActiveRecord
     public $imdb_id;
     public $tmdb_id;
     public $tvdb_id;
+    public $tmdbtv_id;
     public $added_when;
     public $filled_when;
     public $notified_when;
@@ -182,7 +183,7 @@ class Request extends AbstractActiveRecord
      * @return self[]
      */
     public static function getAllShowRequests(bool $order_by_name = FALSE) : array {
-        $q = "SELECT r.*, IF(ids.tmdbtv_id <= 0, 0, ids.tmdbtv_id) AS tmdbtv_id
+        $q = "SELECT r.*, IFNULL(r.tmdbtv_id, IF(ids.tmdbtv_id <= 0, 0, ids.tmdbtv_id)) AS tmdbtv_id
                 FROM requests r
                 LEFT JOIN tmdb_external_ids ids ON (ids.tvdb_id = r.tvdb_id)
                WHERE r.type = 'show'

@@ -65,7 +65,7 @@ class Sonarr {
         return $paths;
     }
 
-    public static function addShow(int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, int $language_profile_id, string $path, ?array $images) : stdClass {
+    public static function addShow(int $tmdbtv_id, int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, int $language_profile_id, string $path, ?array $images) : stdClass {
         if (empty($title_slug)) {
             $title_slug = $tvdb_id;
         }
@@ -93,6 +93,7 @@ class Sonarr {
         ];
         $show = static::sendPOST('/series', $data);
         $request = Request::fromSonarrShow($show);
+        $request->tmdbtv_id = $tmdbtv_id;
         $request->save();
         $request->notifyAdminRequestAdded(1);
         return $show;

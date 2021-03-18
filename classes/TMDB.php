@@ -123,14 +123,35 @@ class TMDB {
 
     /* Pragma mark - Movie */
 
-    public static function getDetailsMovie($id, ?string $language = NULL) : ?stdClass {
+    public static function getDetailsMovie($id, ?string $language = NULL, bool $add_availability = TRUE, bool $use_cache = FALSE, int $cache_timeout = 24*60*60) : ?stdClass {
+        if ($use_cache) {
+            $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdb_id = :id";
+            $cache = DB::getFirst($q, $id);
+            if ($cache) {
+                if (strtotime($cache->last_updated) >= time()-$cache_timeout) {
+                    $response = json_decode($cache->details);
+                }
+            }
+        }
+
         // https://developers.themoviedb.org/3/movie/get-movie-details
         try {
-            $url = "/movie/$id" . (!empty($language) ? '?language=' . urlencode($language) : '');
-            $response = static::sendGET($url);
+            if (empty($response)) {
+                $url = "/movie/$id" . (!empty($language) ? '?language=' . urlencode($language) : '');
+                $response = static::sendGET($url);
+                if ($use_cache) {
+                    // Save in cache
+                    $q = "INSERT INTO tmdb_cache SET tmdb_id = :id, details = :details, last_updated = NOW() ON DUPLICATE KEY UPDATE details = VALUES(details), last_updated = VALUES(last_updated)";
+                    DB::insert($q, ['id' => $id, 'details' => json_encode($response)]);
+                }
+            }
             static::addMediaTypeMovie($response);
             $medias = [$response];
-            static::addAvailability($medias);
+            if ($add_availability) {
+                static::addAvailability($medias);
+            } else {
+                static::addExternalIDs($medias);
+            }
             $response = first($medias);
             return $response;
         } catch (Exception $ex) {

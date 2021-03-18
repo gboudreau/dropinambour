@@ -1,8 +1,6 @@
 <?php
 namespace PommePause\Dropinambour;
 
-use stdClass;
-
 // Views variables
 /** @var $title string */
 /** @var $nav_active string|null */

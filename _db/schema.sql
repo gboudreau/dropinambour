@@ -55,6 +55,7 @@ CREATE TABLE `requests` (
   `imdb_id` varchar(11) DEFAULT NULL,
   `tmdb_id` int(11) unsigned DEFAULT NULL,
   `tvdb_id` int(11) unsigned DEFAULT NULL,
+  `tmdbtv_id` int(11) unsigned DEFAULT NULL,
   `added_when` timestamp NOT NULL DEFAULT current_timestamp(),
   `filled_when` datetime DEFAULT NULL,
   `notified_when` datetime DEFAULT NULL,
@@ -79,10 +80,11 @@ CREATE TABLE `sessions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='PHP sessions';
 
 CREATE TABLE `tmdb_cache` (
+  `tmdb_id` int(11) unsigned DEFAULT NULL,
   `tmdbtv_id` int(11) unsigned NOT NULL,
   `details` text DEFAULT NULL,
   `last_updated` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`tmdbtv_id`)
+  UNIQUE KEY `tmdb_id` (`tmdb_id`,`tmdbtv_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `tmdb_external_ids` (
