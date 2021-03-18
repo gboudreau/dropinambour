@@ -197,6 +197,11 @@ class AvailableMedia extends AbstractActiveRecord
             return;
         }
 
+        if (count($md->Guid) > 10) {
+            Logger::warning("Plex $this->type \"$this->title\" (key = $this->key) (ID = {$this->section_id}) has too many GUIDs (".count($md->Guid).")! Looks like bad metadata. Skipping GUID import.");
+            return;
+        }
+
         $q = "DELETE FROM available_medias_guids WHERE media_id = :media_id";
         DB::execute($q, $this->id);
 
