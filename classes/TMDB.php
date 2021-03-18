@@ -55,21 +55,35 @@ class TMDB {
     /* Pragma mark - Search */
 
     public static function searchMulti(string $query, ?string $language = NULL) : array {
-        if (empty($language)) {
-            $language = first(Config::get('LANGUAGES', 'en'));
-        }
-        $args = [
-            'language' => $language,
-            'query'    => $query,
-        ];
-        $response = static::sendGET("/search/multi?" . http_build_query($args));
-        // Let's remove Person results
-        foreach ($response->results as $i => $media) {
-            if (@$media->media_type == 'person') {
-                unset($response->results[$i]);
+        if (preg_match('/tvdb[_id]*\s*[:=]\s*(\d+)/', $query, $re)) {
+            $response = (object) ['results' => []];
+            $details = static::getDetailsByExternalId($re[1], 'tvdb');
+            if (!empty($details)) {
+                $response->results[] = $details;
             }
+        } elseif (preg_match('/imdb[_id]*\s*[:=]\s*(tt\d+)/', $query, $re)) {
+            $response = (object) ['results' => []];
+            $details = static::getDetailsByExternalId($re[1], 'imdb');
+            if (!empty($details)) {
+                $response->results[] = $details;
+            }
+        } else {
+            if (empty($language)) {
+                $language = first(Config::get('LANGUAGES', 'en'));
+            }
+            $args = [
+                'language' => $language,
+                'query'    => $query,
+            ];
+            $response = static::sendGET("/search/multi?" . http_build_query($args));
+            // Let's remove Person results
+            foreach ($response->results as $i => $media) {
+                if (@$media->media_type == 'person') {
+                    unset($response->results[$i]);
+                }
+            }
+            $response->results = array_map([self::class, 'nameToTitle'], $response->results);
         }
-        $response->results = array_map([self::class, 'nameToTitle'], $response->results);
         static::addAvailability($response->results);
         return $response->results;
     }
