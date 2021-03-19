@@ -145,7 +145,7 @@ class Sonarr {
     }
 
     private static function getBaseURL() : string {
-        return Config::get('SONARR_URL');
+        return Config::get('SONARR_API_URL');
     }
 
     private static function sendGET($url) {

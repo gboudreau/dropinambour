@@ -23,12 +23,16 @@ $CONFIG->SYSTEM_TIMEZONE = 'America/New_York'; // PHP format; ref: http://php.ne
 $CONFIG->PLEX_BASE_URL = 'http://172.17.0.1:32400';
 
 // Only Radarr v3 is supported
-$CONFIG->RADARR_URL = 'http://192.168.155.88:7878/api/v3';
+$CONFIG->RADARR_API_URL = 'http://192.168.155.88:7878/api/v3';
 $CONFIG->RADARR_API_KEY = '3a0000000000000000000000000000c8';
+// Link used in email notifications:
+$CONFIG->RADARR_BASE_URL = 'http://192.168.155.88:7878';
 
 // Only Sonarr v3 is supported
-$CONFIG->SONARR_URL = 'http://192.168.155.88:8989/api/v3';
+$CONFIG->SONARR_API_URL = 'http://192.168.155.88:8989/api/v3';
 $CONFIG->SONARR_API_KEY = 'd1000000000000000000000000000044';
+// Link used in email notifications:
+$CONFIG->SONARR_BASE_URL = 'http://192.168.155.88:8989';
 
 // Unused for now; should be used as available option for search
 $CONFIG->LANGUAGES = ['en', 'fr'];
@@ -44,3 +48,9 @@ $CONFIG->NEW_REQUESTS_NOTIF_EMAIL = 'admin@something.com';
 // Make sure this file is writable by the user running the web server
 $CONFIG->LOG_FILE = '/var/log/dropinambour.log';
 $CONFIG->LOG_LEVEL = 'INFO'; // One of: DEBUG, INFO, WARN, ERROR
+
+// URL to access your dropinambour install remotely; used in the newsletter
+$CONFIG->BASE_URL = 'https://drop.in.nam.bour-url.you';
+
+// The name of your server; used in the newsletter "[name here] newsletter"
+$CONFIG->PLEX_SERVER_NAME = "Guillaume's Plex";

@@ -106,11 +106,42 @@ class AvailableMedia extends AbstractActiveRecord
                 if ($media->type == 'show') {
                     // Import episodes
                     $season_mds = Plex::getItemMetadata($item->key . '/children', TRUE);
+
+                    $q = "SELECT * FROM available_episodes WHERE media_id = :media_id";
+                    $known_seasons = DB::getAll($q, $media->id, 'season');
+
                     foreach ($season_mds as $season_md) {
                         $season = $season_md->index;
                         $num_episodes = $season_md->leafCount;
-                        $q = "INSERT INTO available_episodes SET media_id = :media_id, season = :season, episodes = :episodes ON DUPLICATE KEY UPDATE episodes = VALUES(episodes)";
-                        DB::insert($q, ['media_id' => $media->id, 'season' => $season, 'episodes' => $num_episodes]);
+
+                        $builder = new DBQueryBuilder();
+                        $builder->insertInto('available_episodes')
+                            ->set('media_id', $media->id)
+                            ->set('season', $season)
+                            ->set('episodes', $num_episodes)
+                            ->set('last_updated', $season_md->updatedAt ?? $season_md->addedAt ?? 0);
+                        $cols_to_update = ['episodes', 'last_updated'];
+
+                        if (($season_md->updatedAt ?? $season_md->addedAt) > (@$known_seasons[$season]->last_updated ?? 0)) {
+                            Logger::info("    - Updated season $season; will load recent episodes infos");
+                            $episode_mds = Plex::getItemMetadata($season_md->key, TRUE);
+                            $recent_episodes = [];
+                            $most_recent_episode_at = 0;
+                            foreach ($episode_mds as $episode_md) {
+                                if ($episode_md->addedAt > $most_recent_episode_at) {
+                                    $most_recent_episode_at = $episode_md->addedAt;
+                                }
+                                if ($episode_md->addedAt > strtotime('-1 month')) {
+                                    $recent_episodes[] = (object) ['title' => $episode_md->title, 'addedAt' => $episode_md->addedAt, 'index' => $episode_md->index];
+                                }
+                            }
+                            $builder->set('recent_episodes', json_encode($recent_episodes));
+                            $builder->set('most_recent_episode_at', $most_recent_episode_at);
+                            $cols_to_update[] = 'recent_episodes';
+                            $cols_to_update[] = 'most_recent_episode_at';
+                        }
+                        $builder->onDuplicateKeyUpdate($cols_to_update);
+                        $builder->insert();
                     }
                 }
 

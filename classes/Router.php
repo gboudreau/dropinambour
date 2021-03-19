@@ -22,6 +22,7 @@ class Router
     public const VIEW_ADMIN_PLEX   = 'adminPlex';
     public const VIEW_ADMIN_RADARR = 'adminRadarr';
     public const VIEW_ADMIN_SONARR = 'adminSonarr';
+    public const VIEW_NEWSLETTER   = 'newsletter';
 
     public const SAVE_REQUEST         = 'request';
     public const SAVE_PLEX_SETTINGS   = 'plexSettings';

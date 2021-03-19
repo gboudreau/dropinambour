@@ -6,6 +6,9 @@ use Symfony\Component\HttpFoundation\Request;
 chdir(__DIR__);
 require_once 'init.inc.php';
 
+if ($_SERVER['REMOTE_ADDR'] == '192.168.155.44') {
+}
+
 // Instantiate the controller
 $request = Request::createFromGlobals();
 $controller = new AppController();

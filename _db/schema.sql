@@ -3,6 +3,9 @@ CREATE TABLE `available_episodes` (
   `media_id` int(11) unsigned NOT NULL,
   `season` smallint(5) unsigned NOT NULL,
   `episodes` smallint(5) unsigned NOT NULL DEFAULT 0,
+  `last_updated` int(11) unsigned DEFAULT NULL,
+  `recent_episodes` text DEFAULT NULL,
+  `most_recent_episode_at` int(11) unsigned DEFAULT NULL,
   PRIMARY KEY (`media_id`,`season`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

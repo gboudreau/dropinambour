@@ -397,6 +397,78 @@ class AppController extends AbstractController
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS));
     }
 
+    public function viewNewsletter() : Response {
+        $when = $_REQUEST['when'] ?? date('Y-m-d');
+
+        $newsletter_html = $this->getNewsletterContent($when);
+
+        return $this->response($newsletter_html);
+    }
+
+    private function getNewsletterContent($when) : string {
+        $sections = Plex::getSections();
+        $since_when = "DATE_SUB(:when, INTERVAL 1 WEEK)";
+        $since_when = "'2021-03-18 21:11'";
+        $until_when = "DATE_ADD(:when, INTERVAL 1 DAY)";
+        foreach ($sections as $k => $section) {
+            $q = "SELECT m.title, m.year, m.key, m.guid, IFNULL(g.source_id, g2.source_id) AS tmdb_id, IFNULL(tc.details, tc2.details) AS details
+                    FROM available_medias m
+                    LEFT JOIN available_medias_guids g ON (g.media_id = m.id AND g.source = 'tmdb')
+                    LEFT JOIN tmdb_cache tc ON (tc.tmdb_id = g.source_id)
+                    LEFT JOIN available_medias_guids g2 ON (g2.media_id = m.id AND g2.source = 'tmdbtv')
+                    LEFT JOIN tmdb_cache tc2 ON (tc2.tmdbtv_id = g2.source_id)
+                   WHERE m.added_when BETWEEN $since_when AND $until_when
+                     AND m.section_id = :section
+                   GROUP BY m.key
+                   ORDER BY m.added_when DESC";
+            $medias = DB::getAll($q, ['when' => $when, 'section' => $section->id]);
+
+            if ($section->type == 'show') {
+                $q = "SELECT m.title, m.year, m.key, m.guid, g.source_id AS tmdb_id, tc.details, eps.recent_episodes, eps.season
+                        FROM available_medias m
+                        JOIN available_episodes eps ON (eps.media_id = m.id)
+                        LEFT JOIN available_medias_guids g ON (g.media_id = m.id AND g.source = 'tmdbtv')
+                        LEFT JOIN tmdb_cache tc ON (tc.tmdbtv_id = g.source_id)                
+                       WHERE FROM_UNIXTIME(eps.most_recent_episode_at) BETWEEN $since_when AND $until_when
+                         AND m.section_id = :section
+                         AND m.type = 'show'
+                       GROUP BY m.key
+                       ORDER BY m.added_when DESC, eps.season DESC";
+                $medias_eps = DB::getAll($q, ['when' => $when, 'section' => $section->id]);
+
+                $already_found_tmdb_id = getPropValuesFromArray($medias, 'tmdb_id');
+                foreach ($medias_eps as $media_eps) {
+                    if (!array_contains($already_found_tmdb_id, $media_eps->tmdb_id)) {
+                        $media_eps->recent_episodes = json_decode($media_eps->recent_episodes);
+                        $medias[] = $media_eps;
+                    }
+                }
+            }
+
+            foreach ($medias as $i => $media) {
+                if (!empty($media->details)) {
+                    $media->details = json_decode($media->details);
+                } elseif (!empty($media->tmdb_id)) {
+                    if ($section->type == 'movie') {
+                        $media->details = TMDB::getDetailsMovie($media->tmdb_id, NULL, FALSE, TRUE);
+                    } else {
+                        $media->details = TMDB::getDetailsTV($media->tmdb_id, NULL, FALSE, TRUE);
+                    }
+                }
+
+                if (empty($media->details)) {
+                    unset($medias[$i]);
+                }
+            }
+            $section->medias = array_values($medias);
+            if (empty($medias)) {
+                unset($sections[$k]);
+            }
+        }
+
+        return preg_replace('/\s+/', ' ', $this->render('/newsletter', ['sections' => array_values($sections)]));
+    }
+
     /* pragma mark - Admin pages: Plex, Radarr, Sonarr, cron */
 
     public function viewAdminPlex() : Response {
@@ -469,7 +541,7 @@ class AppController extends AbstractController
         $_SESSION['PLEX_ACCESS_TOKEN'] = Config::getFromDB('PLEX_ACCESS_TOKEN');
 
         try {
-            if (date('Hi') >= 300 && date('Hi') < 305) {
+            if ((date('Hi') >= 300 && date('Hi') < 305) || @$_REQUEST['daily'] == 'y') {
                 AvailableMedia::importAvailableMediasFromPlex();
             } else {
                 AvailableMedia::importRecentMediasFromPlex();

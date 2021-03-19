@@ -285,6 +285,24 @@ class Plex
         return '#NA';
     }
 
+    public static function getUrlForSection(int $section, string $type) : string {
+        $server_uuid = Plex::getServerId();
+        foreach (static::getServers() as $server) {
+            if ($server->machineIdentifier == $server_uuid) {
+                if (empty($server->address) || empty($server->port)) {
+                    // Remote Access is disabled
+                    $lan_address = first(explode(' ', $server->localAddresses));
+                    return "http://$lan_address:32400/web/index.html#!/server/$server_uuid/details?key=" . urlencode($key);
+                }
+                if ($type == 'movie') {
+                    return "https://app.plex.tv/desktop#!/media/$server_uuid/com.plexapp.plugins.library?source=$section&filters=unwatched%3D1&sort=addedAt%3Adesc&pageType=list&key=%2Flibrary%2Fsections%2F$section%2Fall%3Ftype%3D1&context=content.library";
+                }
+                return "https://app.plex.tv/desktop#!/media/$server_uuid/com.plexapp.plugins.library?source=$section&filters=unwatchedLeaves%3D1&sort=episode.addedAt%3Adesc&limit=&pageType=list&key=%2Flibrary%2Fsections%2F$section%2Fall%3Ftype%3D2&context=content.library";
+            }
+        }
+        return '#NA';
+    }
+
     public static function getDevices() {
         return static::sendGET('/devices.json', 'https://plex.tv');
     }

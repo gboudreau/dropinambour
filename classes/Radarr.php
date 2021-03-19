@@ -121,7 +121,7 @@ class Radarr
     }
 
     private static function getBaseURL() : string {
-        return Config::get('RADARR_URL');
+        return Config::get('RADARR_API_URL');
     }
 
     private static function sendGET($url) {
