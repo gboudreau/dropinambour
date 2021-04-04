@@ -274,6 +274,14 @@ class AppController extends AbstractController
                 'value'  => "https://www.themoviedb.org/movie/$media->id",
             ];
         }
+        foreach ($media->videos?->results ?? [] as $video) {
+            if ($video->site == 'YouTube') {
+                $urls[] = [
+                    'name'   => "YouTube: $video->type",
+                    'value'  => "https://youtu.be/$video->key",
+                ];
+            }
+        }
 
         $stats = array_map('to_object', $stats);
         $urls = array_map('to_object', $urls);

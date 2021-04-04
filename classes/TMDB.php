@@ -151,7 +151,7 @@ class TMDB {
         // https://developers.themoviedb.org/3/movie/get-movie-details
         try {
             if (empty($response)) {
-                $url = "/movie/$id" . (!empty($language) ? '?language=' . urlencode($language) : '');
+                $url = "/movie/$id?append_to_response=videos,external_ids" . (!empty($language) ? '&language=' . urlencode($language) : '');
                 $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
@@ -297,7 +297,7 @@ class TMDB {
         // https://developers.themoviedb.org/3/tv/get-tv-details
         try {
             if (empty($response)) {
-                $url = "/tv/$id" . (!empty($language) ? '?language=' . urlencode($language) : '');
+                $url = "/tv/$id?append_to_response=videos,external_ids" . (!empty($language) ? '&language=' . urlencode($language) : '');
                 $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
@@ -479,14 +479,18 @@ class TMDB {
                 $pk = 'tmdb_id';
             }
             if (@$media->imdb_id === NULL || @$media->tvdb_id === NULL) {
-                if ($media->media_type == 'tv') {
-                    // TV Show
-                    Logger::info("Loading show external IDs from TMDB API, to get IMDB/TVDB ID: $media->title (ID $media->id)");
-                    $external_ids = TMDB::getShowExternalIDs($media->id);
+                if (isset($media->external_ids)) {
+                    $external_ids = $media->external_ids;
                 } else {
-                    // Movie
-                    Logger::info("Loading movie external IDs from TMDB API, to get IMDB/TVDB ID: $media->title (ID $media->id)");
-                    $external_ids = TMDB::getMovieExternalIDs($media->id);
+                    if ($media->media_type == 'tv') {
+                        // TV Show
+                        Logger::info("Loading show external IDs from TMDB API, to get IMDB/TVDB ID: $media->title (ID $media->id)");
+                        $external_ids = TMDB::getShowExternalIDs($media->id);
+                    } else {
+                        // Movie
+                        Logger::info("Loading movie external IDs from TMDB API, to get IMDB/TVDB ID: $media->title (ID $media->id)");
+                        $external_ids = TMDB::getMovieExternalIDs($media->id);
+                    }
                 }
 
                 if (!empty($external_ids->imdb_id)) {
@@ -505,9 +509,10 @@ class TMDB {
                         Logger::warning("Empty TVDB ID found for $media->title (ID $media->id)");
                     }
                 }
+
+                $q = "INSERT INTO tmdb_external_ids SET $pk = :tmdb_id, imdb_id = :imdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE imdb_id = VALUES(imdb_id), tvdb_id = VALUES(tvdb_id)";
+                DB::insert($q, ['tmdb_id' => $media->id, 'imdb_id' => @$media->imdb_id, 'tvdb_id' => $media->tvdb_id]);
             }
-            $q = "INSERT INTO tmdb_external_ids SET $pk = :tmdb_id, imdb_id = :imdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE imdb_id = VALUES(imdb_id), tvdb_id = VALUES(tvdb_id)";
-            DB::insert($q, ['tmdb_id' => $media->id, 'imdb_id' => @$media->imdb_id, 'tvdb_id' => $media->tvdb_id]);
         }
 
         $medias = array_values($medias_by_id);
