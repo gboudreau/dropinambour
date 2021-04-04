@@ -2,6 +2,7 @@
 
 namespace PommePause\Dropinambour;
 
+use Exception;
 use PommePause\Dropinambour\ActiveRecord\Request;
 use stdClass;
 
@@ -80,7 +81,7 @@ class Radarr
         return $default->tags ?? '';
     }
 
-    public static function addMovie(int $tmdb_id, string $title, int $quality_profile_id, string $path, ?string $tags = '') : stdClass {
+    public static function addMovie(int $tmdb_id, string $title, int $quality_profile_id, string $path, ?string $tags = '') : ?object {
         if (empty($tags)) {
             $tags = '';
         }
@@ -104,10 +105,17 @@ class Radarr
             'addOptions'          => (object) ['searchForMovie' => TRUE],
             'tags'                => $tag_ids,
         ];
-        $movie = static::sendPOST('/movie', $data);
-        $request = Request::fromRadarrMovie($movie);
-        $request->save();
-        $request->notifyAdminRequestAdded();
+        try {
+            $movie = static::sendPOST('/movie', $data);
+            $request = Request::fromRadarrMovie($movie);
+            $request->save();
+            $request->notifyAdminRequestAdded();
+        } catch (Exception $ex) {
+            if (string_contains($ex->getMessage(), "MovieExistsValidator")) {
+                return NULL;
+            }
+            throw $ex;
+        }
         return $movie;
     }
 
