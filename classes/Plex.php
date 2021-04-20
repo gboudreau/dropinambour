@@ -389,6 +389,9 @@ class Plex
             if ($access_token == NULL) {
                 $access_token = static::getAccessToken();
             }
+            if (empty($access_token)) {
+                throw new PlexException("Empty access token");
+            }
             $data['X-Plex-Token'] = $access_token;
         }
         $sep = string_contains($url, '?') ? '&' : '?';

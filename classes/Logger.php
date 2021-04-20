@@ -41,7 +41,7 @@ class Logger
         // Hide Plex tokens from logs
         $log = preg_replace('/[&?]X-Plex.+\)/U', ')', $log);
 
-        /** @noinspection PhpUnhandledExceptionInspection */
+        /* @noinspection PhpUnhandledExceptionInspection */
         $date = new DateTime('now', new DateTimeZone(Config::get('SYSTEM_TIMEZONE')));
         $datetime = $date->format('Y-m-d H:i:s T');
 
@@ -73,6 +73,11 @@ class Logger
         }
         $log = "[$level] $prefix $log\n";
         error_log($log, 3, static::getLogFile());
+
+        if (string_contains($log, "Invalid Plex auth token: Non-200 HTTP status (502)") || string_contains($log, "Caught exception while trying to import available medias From Plex: Empty access token")) {
+            // Skip emails for those intermittent errors
+            return;
+        }
 
         if ($level == 'ERROR' || $level == 'CRITICAL') {
             $email = Config::get('NEW_REQUESTS_NOTIF_EMAIL');
