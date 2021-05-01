@@ -359,26 +359,59 @@ class AppController extends AbstractController
         $requests = array_merge($requests, Request::getAllMovieRequests(TRUE));
         $requests = array_merge($requests, Request::getAllShowRequests(TRUE));
 
-        $requests_mine = [];
+        $requests_mine   = [];
         $requests_others = [];
+        $requests_filled = [];
         $me = Plex::getUserInfos();
         foreach ($requests as $request) {
             $is_mine = $request->requested_by->username == $me->username;
 
-            if (Plex::isServerAdmin() && !$is_mine) {
-                // Keep the requested by info
-            } else {
+            if (!Plex::isServerAdmin() && !$is_mine) {
+                // Hide the 'requested by' info from non-admin users
                 $request->requested_by = (object) ['username' => '', 'email' => ''];
             }
 
-            if ($is_mine) {
+            if (!empty($request->filled_when)) {
+                $requests_filled[] = $request;
+            } elseif ($is_mine) {
                 $requests_mine[] = $request;
             } else {
                 $requests_others[] = $request;
             }
         }
+        if (empty($_REQUEST['sort_by'])) {
+            $_REQUEST['sort_by'] = $_SESSION['sort_by'] ?? 'title';
+        }
+        $_SESSION['sort_by'] = $_REQUEST['sort_by'];
+        $fct_sort = function ($r1, $r2) {
+            $val1 = $val2 = NULL;
+            if ($_REQUEST['sort_by'] == 'type') {
+                $val1 = $r1->type;
+                $val2 = $r2->type;
+            } elseif ($_REQUEST['sort_by'] == 'requested_by') {
+                $val1 = $r1->requested_by->username;
+                $val2 = $r2->requested_by->username;
+            } elseif ($_REQUEST['sort_by'] == 'release_date') {
+                $val1 = ($r1->details->release_date ?? $r1->details->first_air_date ?? $r1->details->next_episode_to_air->air_date ?? '');
+                if (empty($val1)) {
+                    $val1 = 9999;
+                }
+                $val2 = ($r2->details->release_date ?? $r2->details->first_air_date ?? $r2->details->next_episode_to_air->air_date ?? '');
+                if (empty($val2)) {
+                    $val2 = 9999;
+                }
+            }
+            if ($val1 == $val2) {
+                $val1 = $r1->title;
+                $val2 = $r2->title;
+            }
+            return $val1 <=> $val2;
+        };
+        usort($requests_mine, $fct_sort);
+        usort($requests_others, $fct_sort);
+        usort($requests_filled, $fct_sort);
 
-        return $this->response($this->render('/requests', ['requests_mine' => $requests_mine, 'requests_others' => $requests_others]));
+        return $this->response($this->render('/requests', ['requests_mine' => $requests_mine, 'requests_others' => $requests_others, 'requests_filled' => $requests_filled]));
     }
 
     public function removeRequest() : Response {

@@ -155,7 +155,7 @@ class TMDB {
                 $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
-                    $q = "INSERT INTO tmdb_cache SET tmdb_id = :id, details = :details, last_updated = NOW() ON DUPLICATE KEY UPDATE details = VALUES(details), last_updated = VALUES(last_updated)";
+                    $q = "DELETE FROM tmdb_cache WHERE tmdb_id = :id ; INSERT INTO tmdb_cache SET tmdb_id = :id, details = :details, last_updated = NOW()";
                     DB::insert($q, ['id' => $id, 'details' => json_encode($response)]);
                 }
             }
@@ -301,7 +301,7 @@ class TMDB {
                 $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
-                    $q = "INSERT INTO tmdb_cache SET tmdbtv_id = :id, details = :details, last_updated = NOW() ON DUPLICATE KEY UPDATE details = VALUES(details), last_updated = VALUES(last_updated)";
+                    $q = "DELETE FROM tmdb_cache WHERE tmdbtv_id = :id ; INSERT INTO tmdb_cache SET tmdbtv_id = :id, details = :details, last_updated = NOW()";
                     DB::insert($q, ['id' => $id, 'details' => json_encode($response)]);
                 }
             }

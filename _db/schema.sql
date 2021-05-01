@@ -84,10 +84,11 @@ CREATE TABLE `sessions` (
 
 CREATE TABLE `tmdb_cache` (
   `tmdb_id` int(11) unsigned DEFAULT NULL,
-  `tmdbtv_id` int(11) unsigned NOT NULL,
+  `tmdbtv_id` int(11) unsigned DEFAULT NULL,
   `details` text DEFAULT NULL,
   `last_updated` timestamp NOT NULL DEFAULT current_timestamp(),
-  UNIQUE KEY `tmdb_id` (`tmdb_id`,`tmdbtv_id`)
+  KEY `tmdbtv_id` (`tmdbtv_id`),
+  KEY `tmdb_id` (`tmdb_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `tmdb_external_ids` (
