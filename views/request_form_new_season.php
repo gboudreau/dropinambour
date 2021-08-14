@@ -68,6 +68,21 @@ use stdClass;
                 <?php endforeach; ?>
             </select>
         </div>
+    <?php else: ?>
+        <input name="path" type="hidden" value="<?php phe($default_path) ?>">
+        <?php if (Config::get('RADARR_SIMPLIFIED_QUALITY')) : ?>
+            <div class="col-auto">
+                <label class="visually-hidden" for="quality-input">Quality</label>
+                <select name="quality" class="form-control" id="quality-input">
+                    <option value="">Choose one</option>
+                    <?php foreach (Config::get('RADARR_SIMPLIFIED_QUALITY', [], Config::GET_OPT_PARSE_AS_JSON) as $id => $name) : ?>
+                        <option value="<?php phe($id) ?>" <?php echo_if($id == $default_quality, 'selected') ?>><?php phe($name) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        <?php else: ?>
+            <input name="quality" type="hidden" value="<?php phe($default_quality) ?>">
+        <?php endif; ?>
     <?php endif; ?>
     <div class="col-auto">
         <button class="btn btn-primary" type="submit" disabled onclick="disable_button(this); this.form.submit()">Request</button>

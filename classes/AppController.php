@@ -383,7 +383,7 @@ class AppController extends AbstractController
             $_REQUEST['sort_by'] = $_SESSION['sort_by'] ?? 'title';
         }
         $_SESSION['sort_by'] = $_REQUEST['sort_by'];
-        $fct_sort = function ($r1, $r2) {
+        $fct_sort = function ($r1, $r2, $order = 'asc') {
             $val1 = $val2 = NULL;
             if ($_REQUEST['sort_by'] == 'type') {
                 $val1 = $r1->type;
@@ -392,11 +392,11 @@ class AppController extends AbstractController
                 $val1 = $r1->requested_by->username;
                 $val2 = $r2->requested_by->username;
             } elseif ($_REQUEST['sort_by'] == 'release_date') {
-                $val1 = ($r1->details->release_date ?? $r1->details->first_air_date ?? $r1->details->next_episode_to_air->air_date ?? '');
+                $val1 = ($r1->filled_when ?? $r1->details->release_date ?? $r1->details->first_air_date ?? $r1->details->next_episode_to_air->air_date ?? '');
                 if (empty($val1)) {
                     $val1 = 9999;
                 }
-                $val2 = ($r2->details->release_date ?? $r2->details->first_air_date ?? $r2->details->next_episode_to_air->air_date ?? '');
+                $val2 = ($r2->filled_when ?? $r2->details->release_date ?? $r2->details->first_air_date ?? $r2->details->next_episode_to_air->air_date ?? '');
                 if (empty($val2)) {
                     $val2 = 9999;
                 }
@@ -405,11 +405,17 @@ class AppController extends AbstractController
                 $val1 = $r1->title;
                 $val2 = $r2->title;
             }
-            return $val1 <=> $val2;
+            if ($order == 'asc') {
+                return $val1 <=> $val2;
+            }
+            return $val2 <=> $val1;
+        };
+        $fct_sort_desc = function ($r1, $r2) use ($fct_sort) {
+            return $fct_sort($r1, $r2, 'desc');
         };
         usort($requests_mine, $fct_sort);
         usort($requests_others, $fct_sort);
-        usort($requests_filled, $fct_sort);
+        usort($requests_filled, $fct_sort_desc);
 
         return $this->response($this->render('/requests', ['requests_mine' => $requests_mine, 'requests_others' => $requests_others, 'requests_filled' => $requests_filled]));
     }

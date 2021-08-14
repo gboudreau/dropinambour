@@ -9,17 +9,19 @@ use PommePause\Dropinambour\ActiveRecord\Request;
 
 $this->layout('/page', ['title' => "Requests | dropinambour - Requests for Plex", 'nav_active' => 'requests']);
 
-function echo_title_sort($title) : void {
+function echo_title_sort($title, $sort_by_param, $section_title) : void {
     $sort_icon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sort-alpha-down" viewBox="0 0 16 16">
       <path fill-rule="evenodd" d="M10.082 5.629 9.664 7H8.598l1.789-5.332h1.234L13.402 7h-1.12l-.419-1.371h-1.781zm1.57-.785L11 2.687h-.047l-.652 2.157h1.351z"/>
       <path d="M12.96 14H9.028v-.691l2.579-3.72v-.054H9.098v-.867h3.785v.691l-2.567 3.72v.054h2.645V14zM4.5 2.5a.5.5 0 0 0-1 0v9.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 1.999.007.007a.497.497 0 0 0 .7-.006l2-2a.5.5 0 0 0-.707-.708L4.5 12.293V2.5z"/>
     </svg>';
-    $sort_by_param = str_replace(' ', '_', strtolower($title));
+    if (empty($sort_by_param)) {
+        $sort_by_param = str_replace(' ', '_', strtolower($title));
+    }
     if (@$_REQUEST['sort_by'] == $sort_by_param) {
         phe($title);
         echo " $sort_icon";
     } else {
-        echo "<a href='" . Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS, ['sort_by' => $sort_by_param]) . "'>" . he($title) . "</a>";
+        echo "<a href='" . Router::getURL(Router::ACTION_VIEW, Router::VIEW_REQUESTS, ['sort_by' => $sort_by_param]) . "#" . he($section_title) . "'>" . he($title) . "</a>";
     }
 }
 ?>
@@ -29,6 +31,8 @@ function echo_title_sort($title) : void {
 <?php $this->end() ?>
 
 <?php foreach (["My Requests" => $requests_mine, "Others' Requests" => $requests_others, "Filled Requests" => $requests_filled] as $title => $requests) : ?>
+    <?php $anchor_title = str_replace([' ', "'"], '_', strtolower($title)); ?>
+    <a name="<?php phe($anchor_title) ?>"></a>
     <h1 style="text-align: center"><?php phe($title) ?></h1>
 
     <?php if (empty($requests) && $title == 'My Requests') : ?>
@@ -46,13 +50,13 @@ function echo_title_sort($title) : void {
     <table id="requests_list" class="table table-striped" style="width: fit-content; margin: 0 auto">
         <thead>
         <tr>
-            <th class="text-center" style="width: 80px"><?php echo_title_sort('Type') ?></th>
+            <th class="text-center" style="width: 80px"><?php echo_title_sort('Type', 'type', $anchor_title) ?></th>
             <th class="text-center" style="width: 90px">Status</th>
-            <th><?php echo_title_sort('Title') ?></th>
+            <th><?php echo_title_sort('Title', 'title', $anchor_title) ?></th>
             <?php if (!empty(first($requests)->requested_by->username)) : ?>
-                <th><?php echo_title_sort('Requested By') ?></th>
+                <th><?php echo_title_sort('Requested By', 'requested_by', $anchor_title) ?></th>
             <?php endif; ?>
-            <th class="text-center" style="width: 130px"><?php echo_title_sort('Release Date') ?></th>
+            <th class="text-center" style="width: 130px"><?php echo_title_sort($title == "Filled Requests" ? 'Filled Date' : 'Release Date', 'release_date', $anchor_title) ?></th>
             <th style="<?php echo_if($show_buttons, 'width: 100px') ?>"></th>
         </tr>
         </thead>
@@ -72,7 +76,7 @@ function echo_title_sort($title) : void {
                     <td><?php phe($request->requested_by->username) ?></td>
                 <?php endif; ?>
                 <td class="text-center">
-                    <?php phe($request->details->release_date ?? $request->details->first_air_date ?? $request->details->next_episode_to_air->air_date ?? '') ?>
+                    <?php phe(substr($request->filled_when ?? $request->details->release_date ?? $request->details->first_air_date ?? $request->details->next_episode_to_air->air_date ?? '', 0, 10)) ?>
                 </td>
                 <td>
                     <?php if ($show_buttons) : ?>

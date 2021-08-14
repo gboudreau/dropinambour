@@ -591,7 +591,7 @@ class TMDB {
                             $season->episode_count = $media->last_episode_to_air->episode_number;
                         }
 
-                        if (@$available_seasons[$season->season_number]->episodes >= $season->episode_count) {
+                        if (@$available_seasons[$season->season_number]->episodes >= $season->episode_count && $season->episode_count > 0) {
                             // All episodes are available for this season
                             $season->is_available = TRUE;
                             $media->available_seasons[] = sprintf("S%02d", $season->season_number);

@@ -24,11 +24,9 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
     <?php endif; ?>
 
     <div class="row justify-content-center top-section">
-        <?php if (!empty($media->poster_path)) : ?>
-            <div class="col col-auto pe-2 pe-md-3">
-                <img class="this poster" src="<?php phe(TMDB::getPosterImageUrl($media->poster_path, TMDB::IMAGE_SIZE_POSTER_W342)) ?>" alt="Poster">
-            </div>
-        <?php endif; ?>
+        <div class="col col-auto pe-2 pe-md-3">
+            <img class="this poster" style="max-width: 342px" src="<?php phe(!empty($media->poster_path) ? TMDB::getPosterImageUrl($media->poster_path, TMDB::IMAGE_SIZE_POSTER_W342) : './img/no_poster.png') ?>" alt="Poster">
+        </div>
         <div class="col col-12 col-md-5 col-lg-7 col-xl-8 mt-4 mt-md-0 ps-3 ps-md-2 pe-3 pe-md-0">
             <div class="sidepanel">
                 <h1><?php phe($media->title) ?></h1>
