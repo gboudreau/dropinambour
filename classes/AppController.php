@@ -454,8 +454,7 @@ class AppController extends AbstractController
 
     private function getNewsletterContent($when) : string {
         $sections = Plex::getSections();
-        $since_when = "DATE_SUB(:when, INTERVAL 1 WEEK)";
-        $since_when = "'2021-03-18 21:11'";
+        $since_when = "DATE_SUB(:when, INTERVAL 1 MONTH)";
         $until_when = "DATE_ADD(:when, INTERVAL 1 DAY)";
         foreach ($sections as $k => $section) {
             $q = "SELECT m.title, m.year, m.key, m.guid, IFNULL(g.source_id, g2.source_id) AS tmdb_id, IFNULL(tc.details, tc2.details) AS details

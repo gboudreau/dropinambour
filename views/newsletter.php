@@ -13,8 +13,10 @@ global $config;
 $config = (object) [
     'background_color_header' => '#690375',
     'background_color_body' => '#2c0e37',
+    'width' => '680px',
 ];
 
+$config->width = '1660px';
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
@@ -233,16 +235,16 @@ function email_template_block_header(string $title) : void {
     global $config;
     ?>
     <div class="dinb_header" style="background-color:transparent">
-        <div class="block-grid two-up" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:transparent">
+        <div class="block-grid two-up" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:transparent">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:transparent">
-            <div class="col num12" style="display:table-cell;vertical-align:top;max-width:680px;min-width:320px;width:680px;text-align:right;font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif;font-size:14px;padding: 10px;">
+            <div class="col num12" style="display:table-cell;vertical-align:top;max-width:<?php phe($config->width) ?>;min-width:320px;width:<?php phe($config->width) ?>;text-align:right;font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif;font-size:14px;padding: 10px;">
                 If you have trouble reading this email, view the
                 <a href="<?php phe(trim(Config::get('BASE_URL'), '/') . '/' . Router::getURL(Router::ACTION_VIEW, Router::VIEW_NEWSLETTER)) ?>" style="display:inline;text-decoration:none;letter-spacing:undefined; color: #cb429f">
                     web version
                 </a>
             </div>
         </div>
-        <div class="block-grid two-up" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_header) ?>">
+        <div class="block-grid two-up" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_header) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_header) ?>">
                 <div class="col num6" style="display: table-cell;vertical-align:top;max-width:320px;min-width:336px;width:340px">
                     <div class="col_cont" style="width:100% !important">
@@ -286,9 +288,9 @@ function email_template_block_title(string $title, int $font_size = 30, int $pad
     global $config;
     ?>
     <div class="dinb_title" style="background-color:transparent">
-        <div class="block-grid" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
+        <div class="block-grid" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_body) ?>">
-                <div class="col num12" style="min-width:320px;max-width:680px;display:table-cell;vertical-align:top;width:680px">
+                <div class="col num12" style="min-width:320px;max-width:<?php phe($config->width) ?>;display:table-cell;vertical-align:top;width:<?php phe($config->width) ?>">
                     <div class="col_cont" style="width:100% !important">
                         <div style="padding:<?php phe($padding_top) ?>px 0 <?php phe($padding_bottom) ?>px">
                             <div style="color:#fefefe;font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif;line-height:1.2;padding:0 10px">
@@ -313,9 +315,9 @@ function email_template_block_paragraphs(array $texts, int $padding_top = 5, int
     global $config;
     ?>
     <div class="dinb_paragraphs" style="background-color:transparent">
-        <div class="block-grid" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
+        <div class="block-grid" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_body) ?>">
-                <div class="col num12" style="min-width:320px;max-width:680px;display:table-cell;vertical-align:top;width:680px">
+                <div class="col num12" style="min-width:320px;max-width:<?php phe($config->width) ?>;display:table-cell;vertical-align:top;width:<?php phe($config->width) ?>">
                     <div class="col_cont" style="width:100% !important">
                         <div style="padding: <?php phe($padding_top) ?>px 30px <?php phe($padding_bottom) ?>px;">
                             <div style="color:#ffffff;font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif;line-height:1.2;padding:10px">
@@ -336,11 +338,12 @@ function email_template_block_paragraphs(array $texts, int $padding_top = 5, int
 }
 
 function email_template_block_padding(int $height, string $bg_color) : void {
+    global $config;
     ?>
     <div class="dinb_padding" style="background-color:transparent">
-        <div class="block-grid" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($bg_color) ?>">
+        <div class="block-grid" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($bg_color) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($bg_color) ?>">
-                <div class="col num12" style="min-width:320px;max-width:680px;display:table-cell;vertical-align:top;width:680px">
+                <div class="col num12" style="min-width:320px;max-width:<?php phe($config->width) ?>;display:table-cell;vertical-align:top;width:<?php phe($config->width) ?>">
                     <div class="col_cont" style="width:100% !important">
                         <div style="padding-left:0">
                             <table border="0" cellpadding="0" cellspacing="0" class="divider" role="presentation" style="table-layout:fixed;vertical-align:top;border-spacing:0;border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0;min-width:100%;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;" valign="top" width="100%">
@@ -367,9 +370,9 @@ function email_template_block_separator() : void {
     global $config;
     ?>
     <div class="dinb_separator" style="background-color:transparent">
-        <div class="block-grid" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
+        <div class="block-grid" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_body) ?>">
-                <div class="col num12" style="min-width:320px;max-width:680px;display:table-cell;vertical-align:top;width:680px">
+                <div class="col num12" style="min-width:320px;max-width:<?php phe($config->width) ?>;display:table-cell;vertical-align:top;width:<?php phe($config->width) ?>">
                     <div class="col_cont" style="width:100% !important">
                         <div style="padding:5px 0">
                             <table border="0" cellpadding="0" cellspacing="0" class="divider" role="presentation" style="table-layout:fixed;vertical-align:top;border-spacing:0;border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0;min-width:100%;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;" valign="top" width="100%">
@@ -393,11 +396,12 @@ function email_template_block_separator() : void {
 }
 
 function email_template_block_image(string $image_url, int $padding_top = 5, int $padding_right = 5, int $padding_bottom = 5, int $padding_left = 5) : void {
+    global $config;
     ?>
     <div class="dinb_image" style="background-color:transparent">
-        <div class="block-grid" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:transparent">
+        <div class="block-grid" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:transparent">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:transparent">
-                <div class="col num12" style="min-width:320px;max-width:680px;display:table-cell;vertical-align:top;width:680px">
+                <div class="col num12" style="min-width:320px;max-width:<?php phe($config->width) ?>;display:table-cell;vertical-align:top;width:<?php phe($config->width) ?>">
                     <div class="col_cont" style="width:100% !important">
                         <div style="padding-left:0">
                             <div align="center" class="img-container center autowidth" style="padding-right:<?php phe($padding_right) ?>px;padding-left:<?php phe($padding_left) ?>px">
@@ -418,9 +422,9 @@ function email_template_block_one_button(string $button_text, string $url, int $
     global $config;
     ?>
     <div class="dinb_button_one" style="background-color:transparent">
-        <div class="block-grid" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
+        <div class="block-grid" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_body) ?>">
-                <div class="col num12" style="min-width:320px;max-width:680px;display:table-cell;vertical-align:top;width:680px">
+                <div class="col num12" style="min-width:320px;max-width:<?php phe($config->width) ?>;display:table-cell;vertical-align:top;width:<?php phe($config->width) ?>">
                     <div class="col_cont" style="width:100% !important">
                         <div style="padding: <?php phe($padding_top) ?>px 10px <?php phe($padding_bottom) ?>px;">
                             <div align="center" class="button-container" style="padding: 10px;">
@@ -469,7 +473,7 @@ function email_template_block_posters_2442(string $poster_html_1, string $poster
     global $config;
     ?>
     <div style="background-color:transparent">
-        <div class="block-grid four-up" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
+        <div class="block-grid four-up" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_body) ?>">
                 <div class="col num2" style="display: table-cell;vertical-align:top;max-width:320px;min-width:112px;width:113px">
                     <div class="col_cont" style="width:100% !important">
@@ -567,9 +571,9 @@ function email_template_block_footer(string $text, string $link = NULL) : void {
     global $config;
     ?>
     <div class="dinb_footer" style="background-color:transparent">
-        <div class="block-grid" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
+        <div class="block-grid" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_header) ?>">
-                <div class="col num12" style="min-width:320px;max-width:680px;display:table-cell;vertical-align:top;width:680px">
+                <div class="col num12" style="min-width:320px;max-width:<?php phe($config->width) ?>;display:table-cell;vertical-align:top;width:<?php phe($config->width) ?>">
                     <div class="col_cont" style="width:100% !important">
                         <div style="padding: 5px 30px;">
                             <div style="color:#cfceca;font-family:'Lato',Tahoma,Verdana,Segoe,sans-serif;line-height:1.8;padding: 10px;">
@@ -599,7 +603,7 @@ function email_template_block_2buttons() : void {
     global $config;
     ?>
     <div style="background-color:transparent">
-        <div class="block-grid four-up" style="min-width:320px;max-width:680px;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
+        <div class="block-grid four-up" style="min-width:320px;max-width:<?php phe($config->width) ?>;overflow-wrap:break-word;word-wrap:break-word;margin:0 auto;background-color:<?php phe($config->background_color_body) ?>">
             <div style="border-collapse:collapse;display:table;width:100%;background-color:<?php phe($config->background_color_body) ?>">
                 <div class="col num2" style="display: table-cell;vertical-align:top;max-width:320px;min-width:112px;width:113px">
                     <div class="col_cont" style="width:100% !important">
