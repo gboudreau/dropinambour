@@ -98,7 +98,7 @@ class Plex
         try {
             $response = static::sendGET($item_key);
         } catch (Exception $ex) {
-            Logger::error("Failed to get Plex Metadata for item $item_key: " . $ex->getMessage());
+            Logger::warning("Failed to get Plex Metadata for item $item_key: " . $ex->getMessage());
             return NULL;
         }
         if ($return_array) {

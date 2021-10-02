@@ -219,7 +219,7 @@ class AvailableMedia extends AbstractActiveRecord
 
         $md = Plex::getItemMetadata($this->key);
         if (empty($md)) {
-            Logger::error("Couldn't load metadata for $this->title ($this->year).");
+            Logger::warning("Couldn't load metadata for $this->title ($this->year).");
             return;
         }
         if (!isset($md->Guid)) {
