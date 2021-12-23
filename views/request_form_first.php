@@ -24,7 +24,7 @@ use stdClass;
     <?php endif; ?>
     <?php if (!Plex::isServerAdmin()) : ?>
         <input name="path" type="hidden" value="<?php phe($default_path) ?>">
-        <?php if (Config::get('RADARR_SIMPLIFIED_QUALITY')) : ?>
+        <?php if ($media->media_type == 'movie' && Config::get('RADARR_SIMPLIFIED_QUALITY')) : ?>
             <div class="col-auto">
                 <label class="visually-hidden" for="quality-input">Quality</label>
                 <select name="quality" class="form-control" id="quality-input">
