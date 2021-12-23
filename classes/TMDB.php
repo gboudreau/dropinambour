@@ -107,6 +107,58 @@ class TMDB {
         return [];
     }
 
+    public static function getIDByShowName(string $title) : int|bool {
+        $q = "SELECT tmdbtv_id FROM tmdb_cache WHERE name = :title";
+        $tmdb_id = DB::getFirstValue($q, $title);
+        if (!$tmdb_id) {
+            $search_results = TMDB::searchMulti($title);
+            if ($search_results) {
+                foreach ($search_results as $search_result) {
+                    if ($search_result->media_type == 'tv') {
+                        $tmdb_id = $search_result->id;
+
+                        TMDB::getDetailsTV($tmdb_id, NULL, FALSE);
+
+                        $q = "UPDATE tmdb_cache SET name = :title WHERE tmdbtv_id = :id";
+                        DB::execute($q, ['id' => $tmdb_id, 'title' => $title]);
+                        break;
+                    }
+                }
+            }
+        }
+        return $tmdb_id;
+    }
+
+    public static function getIDByExternalId(string $id, string $source, ?string $title) : int|bool {
+        if ($source == 'imdb') {
+            $external_id_field = 'imdb_id';
+            $tmdb_id_field = 'tmdb_id';
+        } elseif ($source == 'tvdb') {
+            $external_id_field = 'tvdb_id';
+            $tmdb_id_field = 'tmdbtv_id';
+        } else {
+            return FALSE;
+        }
+        $q = "SELECT $tmdb_id_field FROM tmdb_external_ids WHERE $external_id_field = :external_id";
+        $tmdb_id = DB::getFirstValue($q, $id);
+        if (!$tmdb_id) {
+            $tmdb_media = TMDB::getDetailsByExternalId($id, $source);
+            if ($tmdb_media) {
+                $tmdb_id = $tmdb_media->id;
+            } else {
+                $search_results = TMDB::searchMulti($title);
+                if ($search_results) {
+                    $tmdb_id = first($search_results)->id;
+                }
+            }
+            if ($tmdb_id) {
+                $q = "UPDATE tmdb_external_ids SET $external_id_field = :external_id WHERE $tmdb_id_field = :tmdb_id AND $external_id_field = '0'";
+                DB::execute($q, ['tmdb_id' => $tmdb_id, 'external_id' => $id]);
+            }
+        }
+        return $tmdb_id;
+    }
+
     /**
      * @param string $id     External ID
      * @param string $source 'imdb' or 'tvdb'
@@ -186,9 +238,9 @@ class TMDB {
     }
 
     public static function getSuggestedMovies(int $page = 1) : array {
-        if ($page == 1) {
-            $_SESSION['tmdb_suggested_movie_ids'] = [];
-        }
+        //if ($page == 1) {
+        //    $_SESSION['tmdb_suggested_movie_ids'] = [];
+        //}
 
         // Trending/popular movies on pages 3+ are not really interesting... Show upcoming movies past page 2
         if ($page <= 2) {
@@ -212,29 +264,30 @@ class TMDB {
 
         static::addAvailability($movies);
 
-        $sort_by = function ($m1, $m2) {
-            // Available last, then requested, then ...
-            if ($m1->is_available && !$m2->is_available) {
-                return 1;
-            }
-            if (!$m1->is_available && $m2->is_available) {
-                return -1;
-            }
-            if ($m1->requested && !$m2->requested) {
-                return 1;
-            }
-            if (!$m1->requested && $m2->requested) {
-                return -1;
-            }
-            // Popularity desc
-            return $m2->popularity <=> $m1->popularity;
-        };
-        usort($movies, $sort_by);
+        usort($movies, ['\PommePause\Dropinambour\TMDB', 'sortSuggestedMedias']);
 
         $_SESSION['tmdb_suggested_movie_page'] = $page;
         $_SESSION['tmdb_suggested_movie_ids'] = array_merge($_SESSION['tmdb_suggested_movie_ids'], getPropValuesFromArray($movies, 'id'));
 
         return $movies;
+    }
+
+    public static function sortSuggestedMedias($m1, $m2) : int {
+        // Available last, then requested, then ...
+        if ($m1->is_available && !$m2->is_available) {
+            return 1;
+        }
+        if (!$m1->is_available && $m2->is_available) {
+            return -1;
+        }
+        if ($m1->requested && !$m2->requested) {
+            return 1;
+        }
+        if (!$m1->requested && $m2->requested) {
+            return -1;
+        }
+        // Popularity desc
+        return $m2->popularity <=> $m1->popularity;
     }
 
     public static function getMoreSuggestedMovies() : array {
@@ -301,8 +354,8 @@ class TMDB {
                 $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
-                    $q = "DELETE FROM tmdb_cache WHERE tmdbtv_id = :id ; INSERT INTO tmdb_cache SET tmdbtv_id = :id, details = :details, last_updated = NOW()";
-                    DB::insert($q, ['id' => $id, 'details' => json_encode($response)]);
+                    $q = "DELETE FROM tmdb_cache WHERE tmdbtv_id = :id ; INSERT INTO tmdb_cache SET tmdbtv_id = :id, details = :details, name = :title, last_updated = NOW()";
+                    DB::insert($q, ['id' => $id, 'details' => json_encode($response), 'title' => $response->name]);
                 }
             }
             static::nameToTitle($response);
@@ -332,9 +385,9 @@ class TMDB {
     }
 
     public static function getSuggestedShows(int $page = 1) : array {
-        if ($page == 1) {
-            $_SESSION['tmdb_suggested_tv_ids'] = [];
-        }
+        //if ($page == 1) {
+        //    $_SESSION['tmdb_suggested_tv_ids'] = [];
+        //}
 
         $shows = static::getPopularShows($page);
 
@@ -353,24 +406,7 @@ class TMDB {
 
         static::addAvailability($shows);
 
-        $sort_by = function ($m1, $m2) {
-            // Available last, then requested, then ...
-            if ($m1->is_available && !$m2->is_available) {
-                return 1;
-            }
-            if (!$m1->is_available && $m2->is_available) {
-                return -1;
-            }
-            if ($m1->requested && !$m2->requested) {
-                return 1;
-            }
-            if (!$m1->requested && $m2->requested) {
-                return -1;
-            }
-            // Popularity desc
-            return $m2->popularity <=> $m1->popularity;
-        };
-        usort($shows, $sort_by);
+        usort($shows, ['\PommePause\Dropinambour\TMDB', 'sortSuggestedMedias']);
 
         $_SESSION['tmdb_suggested_tv_page'] = $page;
         $_SESSION['tmdb_suggested_tv_ids'] = array_merge($_SESSION['tmdb_suggested_tv_ids'], getPropValuesFromArray($shows, 'id'));

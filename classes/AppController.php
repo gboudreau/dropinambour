@@ -449,6 +449,14 @@ class AppController extends AbstractController
 
         $newsletter_html = $this->getNewsletterContent($when);
 
+        if (@$_REQUEST['send'] === 'y') {
+            Mailer::send('guillaume@danslereseau.com', "What's new on " . Config::get('PLEX_NAME') . " this week", NULL, $newsletter_html);
+            //Mailer::send('lpauger@netlift.me', "What's new on " . Config::get('PLEX_NAME') . " this week", NULL, $newsletter_html);
+            //Mailer::send('vickie@netlift.me', "What's new on " . Config::get('PLEX_NAME') . " this week", NULL, $newsletter_html);
+            //Mailer::send('christine@netlift.me', "What's new on " . Config::get('PLEX_NAME') . " this week", NULL, $newsletter_html);
+            //Mailer::send('solime@hors-piste.ca', "What's new on " . Config::get('PLEX_NAME') . " this week", NULL, $newsletter_html);
+        }
+
         return $this->response($newsletter_html);
     }
 

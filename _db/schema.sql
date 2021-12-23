@@ -32,7 +32,7 @@ CREATE TABLE `available_medias_guids` (
 
 CREATE TABLE `config` (
   `key` varchar(32) NOT NULL DEFAULT '',
-  `value` text CHARACTER SET utf8mb4 NOT NULL,
+  `value` mediumtext CHARACTER SET utf8mb4 NOT NULL,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -85,6 +85,7 @@ CREATE TABLE `sessions` (
 CREATE TABLE `tmdb_cache` (
   `tmdb_id` int(11) unsigned DEFAULT NULL,
   `tmdbtv_id` int(11) unsigned DEFAULT NULL,
+  `name` tinytext DEFAULT NULL,
   `details` text DEFAULT NULL,
   `last_updated` timestamp NOT NULL DEFAULT current_timestamp(),
   KEY `tmdbtv_id` (`tmdbtv_id`),

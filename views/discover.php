@@ -5,6 +5,17 @@ namespace PommePause\Dropinambour;
 // End of Views variables
 
 $this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex", 'nav_active' => 'discover']);
+
+$_SESSION['tmdb_suggested_tv_page'] = 0;
+
+if (Config::get('TL_UID')) {
+    $result = TorrentLeech::getPopularMedias();
+    $tv_medias = $result['shows'];
+    $movie_medias = $result['movies'];
+} else {
+    $tv_medias = TMDB::getSuggestedShows();
+    $movie_medias = TMDB::getSuggestedMovies();
+}
 ?>
 
 <?php $this->push('head') ?>
@@ -20,7 +31,7 @@ $this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex"
         </div>
     </div>
     <?php $this->stop() ?>
-    <?php $this->insert('/media_items', ['medias' => TMDB::getSuggestedMovies(), 'suffix' => $this->section('cards-suffix')]) ?>
+    <?php $this->insert('/media_items', ['medias' => $movie_medias, 'suffix' => $this->section('cards-suffix')]) ?>
 </div>
 
 <div id="suggested_shows" class="suggested">
@@ -32,7 +43,7 @@ $this->layout('/page', ['title' => "Discover | dropinambour - Requests for Plex"
         </div>
     </div>
     <?php $this->stop() ?>
-    <?php $this->insert('/media_items', ['medias' => TMDB::getSuggestedShows(), 'suffix' => $this->section('cards-suffix')]) ?>
+    <?php $this->insert('/media_items', ['medias' => $tv_medias, 'suffix' => $this->section('cards-suffix')]) ?>
 </div>
 
 <script type="application/javascript">

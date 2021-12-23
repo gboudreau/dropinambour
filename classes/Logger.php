@@ -81,7 +81,7 @@ class Logger
 
         if ($level == 'ERROR' || $level == 'CRITICAL') {
             $email = Config::get('NEW_REQUESTS_NOTIF_EMAIL');
-            Mailer::send($email, 'Dropinambour error', $log);
+            //Mailer::send($email, 'Dropinambour error', $log);
         }
     }
 
