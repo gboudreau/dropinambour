@@ -609,7 +609,7 @@ class TMDB {
                             $season->is_available = FALSE;
                             if (@$media->next_episode_to_air->season_number == $season->season_number && $media->next_episode_to_air->episode_number == 1) {
                                 // Next episode to air = this season; it's normal that we don't have it yet
-                            } else {
+                            } elseif (@$available_seasons[$season->season_number]->episodes > 0) {
                                 $media->not_available_seasons[] = sprintf("S%02d", $season->season_number);
                                 $media->is_available = 'partially';
                             }
