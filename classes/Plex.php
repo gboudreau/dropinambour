@@ -117,6 +117,34 @@ class Plex
                 'type' => $md->type,
                 'title' => $md->title,
                 'year' => !empty($md->year) ? (int) $md->year : NULL,
+                'ratingKey' => $md->ratingKey,
+                'key' => $md->key,
+                'parentTitle' => @$md->parentTitle,
+                'parentKey' => @$md->parentKey,
+                'section' => (object) [
+                    'id' => $md->librarySectionID,
+                    'name' => $md->librarySectionTitle,
+                ],
+                'guid' => $md->guid,
+                'addedAt' => $md->addedAt,
+            ];
+        }
+
+        return $items;
+    }
+
+    public const HUB_TYPE_MOVIES = 1;
+    public const HUB_TYPE_TVSHOWS = 2;
+    public static function getRecentlyAddedHubItems(int $type) : array {
+        $items = [];
+
+        $response = static::sendGET("/hubs/home/recentlyAdded?type=$type");
+        foreach ($response->Metadata as $md) {
+            $items[] = (object) [
+                'type' => $md->type,
+                'title' => $md->title,
+                'year' => !empty($md->year) ? (int) $md->year : NULL,
+                'ratingKey' => $md->ratingKey,
                 'key' => $md->key,
                 'parentTitle' => @$md->parentTitle,
                 'parentKey' => @$md->parentKey,
@@ -331,6 +359,86 @@ class Plex
         return $servers;
     }
 
+    public static function updateRecentlyAddedSeasonsTitles() : void {
+        $items = array_merge(Plex::getRecentlyAddedItems(), Plex::getRecentlyAddedHubItems(Plex::HUB_TYPE_TVSHOWS));
+        foreach ($items as $item) {
+            if (string_begins_with($item->guid, 'plex://season/')) {
+                $plex_season = Plex::getItemMetadata(str_replace('/children', '', $item->key));
+            } elseif (string_begins_with($item->guid, 'plex://episode/')) {
+                $plex_season = Plex::getItemMetadata($item->parentKey);
+            } else {
+                // Movie or ...
+                continue;
+            }
+
+            $show_details = Plex::getItemMetadata($plex_season->parentKey);
+            $season_number = $plex_season->index;
+            $num_plex_episodes = $plex_season->leafCount;
+
+            Logger::info("Season $season_number of $show_details->title currently has $num_plex_episodes episodes in Plex. Season title: $plex_season->title");
+
+            $tvdb_id = FALSE;
+            $tmdbtv_id = FALSE;
+            foreach ($show_details->Guid as $guid) {
+                if (string_begins_with($guid->id, 'tmdb://')) {
+                    $tmdbtv_id = (int) substr($guid->id, 7);
+                    break;
+                }
+                if (string_begins_with($guid->id, 'tvdb://')) {
+                    $tvdb_id = (int) substr($guid->id, 7);
+                }
+            }
+            if (!$tmdbtv_id) {
+                $tmdbtv_id = TMDB::getIDByExternalId($tvdb_id, 'tvdb', $show_details->title);
+                if (!$tmdbtv_id) {
+                    continue;
+                }
+            }
+
+            $season_details = TMDB::getDetailsTVSeason($tmdbtv_id, $season_number);
+            $num_total_eps = count($season_details->episodes);
+
+            $last_ep = last($season_details->episodes);
+            $last_ep_date = $last_ep->air_date;
+
+            Logger::info("  TMDB says: season $season_number has $num_total_eps episodes; ends on $last_ep_date.");
+
+            if ($season_number === 0) {
+                $modified_season_name = $season_details->name;
+            } else {
+                $modified_season_name = "Season $season_number";
+                if ($season_details->name != $modified_season_name) {
+                    $modified_season_name = $season_details->name;
+                }
+                if (strtotime($last_ep_date) > strtotime('-1 year') && !empty($last_ep_date)) {
+                    if (strtotime($last_ep_date) <= strtotime(date('Y-m-d')) && $num_plex_episodes >= $num_total_eps) {
+                        $end_when = 'Ended';
+                    } else {
+                        $end_when = 'Ends ' . date('M-j', strtotime($last_ep_date));
+                    }
+                    $modified_season_name .= " - $num_total_eps Eps - $end_when";
+                }
+            }
+
+            Logger::info("  New season name: $modified_season_name");
+
+            if ($modified_season_name != $plex_season->title) {
+                Logger::info("  Updating season name in Plex.");
+                Plex::setSeasonTitle($item->section->id, $plex_season->ratingKey, $modified_season_name);
+            }
+        }
+    }
+
+    public static function setSeasonTitle(int $section, int $season_media_id, string $new_season_title) {
+        $data = [
+            'type' => 3, // ?
+            'id' => $season_media_id,
+            'includeExternalMedia' => 1,
+            'title.value' => $new_season_title,
+        ];
+        return static::sendPOST("/library/sections/$section/all", $data, 'PUT');
+    }
+
     private static function getServerId() : string {
         $response = static::sendGET("/identity", NULL, 5*60);
         return $response->machineIdentifier;
@@ -417,6 +525,73 @@ class Plex
             try {
                 Logger::debug("Plex::sendGET($base_url$url)");
                 $response = sendGET($base_url . $url, ["Accept: application/json"]);
+            } catch (Exception $ex) {
+                throw new PlexException($ex->getMessage(), $ex->getCode());
+            }
+
+            if (!empty($use_cache_with_timeout)) {
+                $cache["$base_url$url"] = [
+                    'expires' => time() + $use_cache_with_timeout,
+                    'response' => $response,
+                ];
+                if ($use_cache_with_timeout == static::CACHE_DURING_REQUEST) {
+                    $_REQUEST['plex_api_cache'] = $cache;
+                } else {
+                    $_SESSION['plex_api_cache'] = $cache;
+                }
+            }
+        }
+
+        if (!$decode_json) {
+            return $response;
+        }
+
+        $result = json_decode($response);
+        if ($result === NULL && $response !== 'null') {
+            // response is not JSON; return it as text
+            return $response;
+        }
+        if (!empty($result->MediaContainer)) {
+            return $result->MediaContainer;
+        }
+        return $result;
+    }
+
+    private static function sendPOST($url, array $data, $method = 'POST', ?string $base_url = NULL, int $use_cache_with_timeout = 0, ?string $access_token = NULL, bool $decode_json = TRUE) {
+        $data['X-Plex-Client-Identifier'] = static::getClientID();
+        $data['X-Plex-Product'] = static::getAppName();
+        if ($access_token !== static::ACCESS_TOKEN_SKIP) {
+            if ($access_token == NULL) {
+                $access_token = static::getAccessToken();
+            }
+            if (empty($access_token)) {
+                throw new PlexException("Empty access token");
+            }
+            $data['X-Plex-Token'] = $access_token;
+        }
+        $sep = string_contains($url, '?') ? '&' : '?';
+        $url .= $sep . http_build_query($data);
+
+        if (empty($base_url)) {
+            $base_url = static::getBaseURL();
+        }
+
+        if (!empty($use_cache_with_timeout)) {
+            if ($use_cache_with_timeout == static::CACHE_DURING_REQUEST) {
+                $cache = $_REQUEST['plex_api_cache'] ?? [];
+            } else {
+                $cache = $_SESSION['plex_api_cache'] ?? [];
+            }
+            if (isset($cache["$base_url$url"]) && $cache["$base_url$url"]['expires'] > time()) {
+                Logger::debug("Plex::sendGET($base_url$url) : using cached value (" . ($use_cache_with_timeout == static::CACHE_DURING_REQUEST ? "expires with request" : " (expires " . date('Y-m-d H:i:s', $cache["$base_url$url"]['expires'])) . ")");
+                $response = $cache["$base_url$url"]['response'];
+            }
+        }
+
+        if (empty($response)) {
+            try {
+                Logger::debug("Plex::sendPOST($method $base_url$url)");
+                $response = sendPOST($base_url . $url, $data, ["Accept: application/json"], NULL, $method);
             } catch (Exception $ex) {
                 throw new PlexException($ex->getMessage(), $ex->getCode());
             }

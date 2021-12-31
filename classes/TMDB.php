@@ -10,7 +10,7 @@ use stdClass;
 class TMDB {
 
     // Ref: https://developers.themoviedb.org/3/getting-started/introduction
-    // Ref: https://developers.themoviedb.org
+    // Ref: https://developers.themoviedb.org/3/
 
     protected static stdClass $config;
 
@@ -337,6 +337,20 @@ class TMDB {
 
     /* Pragma mark - TV Show */
 
+    public static function getDetailsTVSeason($id, int $season_number) : ?stdClass {
+        // https://developers.themoviedb.org/3/tv-seasons/get-tv-season-details
+        try {
+            if (empty($response)) {
+                $url = "/tv/$id/season/$season_number";
+                $response = static::sendGET($url);
+            }
+            return $response;
+        } catch (Exception $ex) {
+            Logger::error("Failed to load season details on TMDB, for ID $id, season #$season_number: " . $ex->getMessage());
+        }
+        return NULL;
+    }
+
     public static function getDetailsTV($id, ?string $language = NULL, bool $add_availability = TRUE, bool $use_cache = TRUE, int $cache_timeout = 24*60*60) : ?stdClass {
         if ($use_cache) {
             $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdbtv_id = :id";
@@ -514,6 +528,7 @@ class TMDB {
             } else {
                 $pk = 'tmdb_id';
             }
+
             if (@$media->imdb_id === NULL || @$media->tvdb_id === NULL) {
                 if (isset($media->external_ids)) {
                     $external_ids = $media->external_ids;
@@ -545,10 +560,10 @@ class TMDB {
                         Logger::warning("Empty TVDB ID found for $media->title (ID $media->id)");
                     }
                 }
-
-                $q = "INSERT INTO tmdb_external_ids SET $pk = :tmdb_id, imdb_id = :imdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE imdb_id = VALUES(imdb_id), tvdb_id = VALUES(tvdb_id)";
-                DB::insert($q, ['tmdb_id' => $media->id, 'imdb_id' => @$media->imdb_id, 'tvdb_id' => $media->tvdb_id]);
             }
+
+            $q = "INSERT INTO tmdb_external_ids SET $pk = :tmdb_id, imdb_id = :imdb_id, tvdb_id = :tvdb_id ON DUPLICATE KEY UPDATE imdb_id = VALUES(imdb_id), tvdb_id = VALUES(tvdb_id)";
+            DB::insert($q, ['tmdb_id' => $media->id, 'imdb_id' => @$media->imdb_id, 'tvdb_id' => $media->tvdb_id]);
         }
 
         $medias = array_values($medias_by_id);
