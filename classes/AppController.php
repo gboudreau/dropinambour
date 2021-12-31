@@ -607,6 +607,13 @@ class AppController extends AbstractController
         } catch (Exception $ex) {
             Logger::error("Caught exception while trying to import available medias and requests: " . $ex->getMessage());
         }
+
+        if (date('Hi') < 5) {
+            // Daily update of discover page
+            Logger::info("Updating discover (home) page content...");
+            $this->render('/discover');
+        }
+
         Logger::info("Done executing cron.");
 
         // Return empty response when OK
