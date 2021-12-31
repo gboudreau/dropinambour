@@ -12,7 +12,7 @@ class TorrentLeech {
             return (array) json_decode($result);
         }
 
-        $date = urlencode('-2 month');
+        $date = urlencode('-3 weeks');
         $url = TorrentLeech::BASE_URL . "/torrents/browse/list/added/$date/orderby/completed/order/desc";
         $header = 'Cookie: tluid=' . Config::get('TL_UID') . '; tlpass=' . Config::get('TL_PASS');
         $response = sendGET($url, [$header]);
