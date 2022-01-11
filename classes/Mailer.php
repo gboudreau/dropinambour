@@ -37,7 +37,7 @@ class Mailer
             $from_name = Config::get('EMAIL_NOTIF_FROM_NAME');
         }
 
-        Logger::info("Sending email to $email_to");
+        Logger::info("        Sending email to $email_to");
 
         $sendgrid = new SendGrid(Config::get('SENDGRID_API_KEY'));
 

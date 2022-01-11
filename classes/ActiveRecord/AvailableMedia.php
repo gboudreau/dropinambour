@@ -123,7 +123,7 @@ class AvailableMedia extends AbstractActiveRecord
                         $cols_to_update = ['episodes', 'last_updated'];
 
                         if (($season_md->updatedAt ?? $season_md->addedAt) > (@$known_seasons[$season]->last_updated ?? 0)) {
-                            Logger::info("    - Updated season $season; will load recent episodes infos");
+                            Logger::info("    Updated season $season; will load recent episodes infos");
                             $episode_mds = Plex::getItemMetadata($season_md->key, TRUE);
                             $recent_episodes = [];
                             $most_recent_episode_at = 0;
@@ -150,7 +150,7 @@ class AvailableMedia extends AbstractActiveRecord
                     $req = $open_movie_requests["tmdb:$media->tmdb_id"];
                 }
                 if ($req && empty($req->filled_when)) {
-                    Logger::info("First time we notice this movie request has been filed!");
+                    Logger::info("    First time we notice this movie request has been filed!");
                     $req->filled_when = date('Y-m-d H:i:s');
                     $req->save();
                     $req->notifyIsFilled();
@@ -191,7 +191,7 @@ class AvailableMedia extends AbstractActiveRecord
                 $q = "INSERT INTO available_medias_guids SET media_id = :media_id, source = :source, source_id = :id ON DUPLICATE KEY UPDATE source_id = VALUES(source_id)";
                 DB::insert($q, ['media_id' => $this->id, 'source' => 'tvdb', 'id' => $re[1]]);
                 $this->tvdb_id = (int) $re[1];
-                Logger::info("    - Added GUIDs for show '$this->title': TVDB ID = $this->tvdb_id");
+                Logger::info("    Added GUIDs for show '$this->title': TVDB ID = $this->tvdb_id");
                 return;
             } elseif (preg_match('@themoviedb://(\d+)@', $this->guid, $re)) {
                 // Show is matched to TheMovieDB; need to use TMDB API to get (at least) the TVDB ID
@@ -217,7 +217,7 @@ class AvailableMedia extends AbstractActiveRecord
                     DB::insert($q, ['media_id' => $this->id, 'source' => 'tvdb', 'id' => $this->tvdb_id]);
                 }
 
-                Logger::info("    - Added GUIDs for show '$this->title': " . implode(', ', $all_guids));
+                Logger::info("    Added GUIDs for show '$this->title': " . implode(', ', $all_guids));
                 return;
             }
         }
@@ -273,11 +273,11 @@ class AvailableMedia extends AbstractActiveRecord
                 }
             }
             if (empty($this->tmdb_id)) {
-                Logger::warning("    - Couldn't find TMDB ID for this media. Won't be able to mark request as filled.");
+                Logger::warning("    Couldn't find TMDB ID for this media. Won't be able to mark request as filled.");
             }
         }
 
-        Logger::info("    - Added GUIDs for $this->type '$this->title': " . implode(', ', $all_guids));
+        Logger::info("    Added GUIDs for $this->type '$this->title': " . implode(', ', $all_guids));
     }
 
     public static function getAllTMDBIDs() : array {

@@ -375,11 +375,15 @@ class Plex
             $season_number = $plex_season->index;
             $num_plex_episodes = $plex_season->leafCount;
 
-            Logger::info("Season $season_number of $show_details->title currently has $num_plex_episodes episodes in Plex. Season title: $plex_season->title");
+            if ($show_details->title == 'Bébéatrice') {
+                continue;
+            }
+
+            Logger::info("  - Season $season_number of $show_details->title currently has $num_plex_episodes episodes in Plex. Season title: $plex_season->title");
 
             $tvdb_id = FALSE;
             $tmdbtv_id = FALSE;
-            foreach ($show_details->Guid as $guid) {
+            foreach ($show_details->Guid ?? [] as $guid) {
                 if (string_begins_with($guid->id, 'tmdb://')) {
                     $tmdbtv_id = (int) substr($guid->id, 7);
                     break;
@@ -401,7 +405,7 @@ class Plex
             $last_ep = last($season_details->episodes);
             $last_ep_date = $last_ep->air_date;
 
-            Logger::info("  TMDB says: season $season_number has $num_total_eps episodes; ends on $last_ep_date.");
+            Logger::info("    TMDB says: season $season_number has $num_total_eps episodes; ends on $last_ep_date.");
 
             if ($season_number === 0) {
                 $modified_season_name = $season_details->name;
@@ -420,10 +424,10 @@ class Plex
                 }
             }
 
-            Logger::info("  New season name: $modified_season_name");
+            Logger::info("    New season name: $modified_season_name");
 
             if ($modified_season_name != $plex_season->title) {
-                Logger::info("  Updating season name in Plex.");
+                Logger::info("    Updating season name in Plex.");
                 Plex::setSeasonTitle($item->section->id, $plex_season->ratingKey, $modified_season_name);
             }
         }
