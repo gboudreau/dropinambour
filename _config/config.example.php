@@ -54,3 +54,6 @@ $CONFIG->BASE_URL = 'https://drop.in.nam.bour-url.you';
 
 // The name of your server; used in the newsletter "[name here] newsletter"
 $CONFIG->PLEX_SERVER_NAME = "Guillaume's Plex";
+
+// Subscribe to TheTVDB to get a PIN: https://thetvdb.com/dashboard/account/subscription
+$CONFIG->THETVDB_SUBSCRIPTION_PIN = '12AB3CDE';

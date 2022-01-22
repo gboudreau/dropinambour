@@ -342,13 +342,17 @@ class TMDB {
     /* Pragma mark - TV Show */
 
     public static function getDetailsTVSeason($id, int $season_number) : ?stdClass {
+        $cache_file = sys_get_temp_dir() . "/tmdbtv_{$id}_S{$season_number}.json";
+        if (file_exists($cache_file) && filemtime($cache_file) > time()-24*60*60) {
+            return json_decode(file_get_contents($cache_file));
+        }
+
         // https://developers.themoviedb.org/3/tv-seasons/get-tv-season-details
         try {
-            if (empty($response)) {
-                $url = "/tv/$id/season/$season_number";
-                $response = static::sendGET($url);
-            }
-            return $response;
+            $url = "/tv/$id/season/$season_number";
+            $season_details = static::sendGET($url);
+            file_put_contents($cache_file, json_encode($season_details));
+            return $season_details;
         } catch (Exception $ex) {
             Logger::error("Failed to load season details on TMDB, for ID $id, season #$season_number: " . $ex->getMessage());
         }

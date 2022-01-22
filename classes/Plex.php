@@ -401,9 +401,23 @@ class Plex
 
             $season_details = TMDB::getDetailsTVSeason($tmdbtv_id, $season_number);
             $num_total_eps = count($season_details->episodes);
-
             $last_ep = last($season_details->episodes);
             $last_ep_date = $last_ep->air_date;
+
+            // TMDB is crap for future episodes; it never lists episodes with TBA title or date
+            // So let's use TheTVDB to count episodes (when possible)
+            if (empty($tvdb_id)) {
+                $q = "SELECT tvdb_id FROM tmdb_external_ids WHERE tmdbtv_id = :id";
+                $tvdb_id = DB::getFirstValue($q, $tmdbtv_id);
+            }
+            if (!empty($tvdb_id)) {
+                $season_episodes = TheTVDB::getEpisodesForSeason($tvdb_id, $season_number);
+                if (!empty($season_episodes)) {
+                    $num_total_eps = count($season_episodes);
+                    $last_ep = last($season_episodes);
+                    $last_ep_date = $last_ep->aired;
+                }
+            }
 
             Logger::info("    TMDB says: season $season_number has $num_total_eps episodes; ends on $last_ep_date.");
 
@@ -414,12 +428,15 @@ class Plex
                 if ($season_details->name != $modified_season_name) {
                     $modified_season_name = $season_details->name;
                 }
-                if (strtotime($last_ep_date) > strtotime('-1 year') && !empty($last_ep_date)) {
-                    if ($num_plex_episodes >= $num_total_eps) {
-                        $end_when = 'Ended';
-                    } else {
-                        $end_when = 'Ends ' . date('M-j', strtotime($last_ep_date));
-                    }
+                $end_when = FALSE;
+                if ($num_plex_episodes >= $num_total_eps) {
+                    $end_when = 'Ended';
+                } elseif (empty($last_ep_date)) {
+                    $end_when = 'Ends ...';
+                } elseif (strtotime($last_ep_date) > strtotime('-1 year')) {
+                    $end_when = 'Ends ' . date('M-j', strtotime($last_ep_date));
+                }
+                if ($end_when) {
                     $modified_season_name .= " - $num_total_eps Eps - $end_when";
                 }
             }
