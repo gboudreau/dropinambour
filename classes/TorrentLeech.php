@@ -10,36 +10,50 @@ class TorrentLeech {
         $result = Config::getFromDB($cache_key);
         if ($result) {
             return (array) json_decode($result);
+            //$result = (array) json_decode($result);
+            //usort($result['movies'], ['\PommePause\Dropinambour\TMDB', 'sortSuggestedMedias']);
+            //usort($result['shows'], ['\PommePause\Dropinambour\TMDB', 'sortSuggestedMedias']);
+            //return $result;
         }
 
-        $date = urlencode('-3 weeks');
-        $url = TorrentLeech::BASE_URL . "/torrents/browse/list/added/$date/orderby/completed/order/desc";
-        $header = 'Cookie: tluid=' . Config::get('TL_UID') . '; tlpass=' . Config::get('TL_PASS');
-        $response = sendGET($url, [$header]);
-        $torrent_list = json_decode($response)->torrentList;
-        $result = [];
-        foreach ($torrent_list as $torrent) {
-            if (!empty($torrent->tvmazeID)) {
-                if (preg_match('/^(.+) S\d+E\d+/', $torrent->name, $re)) {
-                    $title = $re[1];
-                    $title = preg_replace('/ \(20\d\d\)$/', '', $title);
-                    $title = preg_replace('/ 20\d\d$/', '', $title);
-                    if (!isset($result['shows'][strtolower($title)])) {
-                        $tmdbtv_id = TMDB::getIDByShowName($title);
-                        $result['shows'][strtolower($title)] = TMDB::getDetailsTV($tmdbtv_id, NULL, TRUE, TRUE, 30*24*60*60);
+        $fct_get_results = function ($since_when) {
+            $date = urlencode($since_when);
+            $url = TorrentLeech::BASE_URL . "/torrents/browse/list/added/$date/orderby/completed/order/desc";
+            $header = 'Cookie: tluid=' . Config::get('TL_UID') . '; tlpass=' . Config::get('TL_PASS');
+            $response = sendGET($url, [$header]);
+            $torrent_list = json_decode($response)->torrentList;
+            $result = [];
+            foreach ($torrent_list as $torrent) {
+                if (!empty($torrent->tvmazeID)) {
+                    if (preg_match('/^(.+) S\d+E\d+/', $torrent->name, $re)) {
+                        $title = $re[1];
+                        $title = preg_replace('/ \(20\d\d\)$/', '', $title);
+                        $title = preg_replace('/ 20\d\d$/', '', $title);
+                        if (!isset($result['shows'][strtolower($title)])) {
+                            $tmdbtv_id = TMDB::getIDByShowName($title);
+                            $result['shows'][strtolower($title)] = TMDB::getDetailsTV($tmdbtv_id, NULL, TRUE, TRUE, 30*24*60*60);
+                        }
                     }
-                }
-            } elseif (!empty($torrent->imdbID)) {
-                if (preg_match('/^(.+) \(?(19\d\d)\)?/', $torrent->name, $re) || preg_match('/^(.+) \(?(20\d\d)\)?/', $torrent->name, $re)) {
-                    if (!isset($result['movies'][strtolower($re[1])])) {
-                        $tmdb_id = TMDB::getIDByExternalId($torrent->imdbID, 'imdb', $re[1]);
-                        $result['movies'][strtolower($re[1])] = TMDB::getDetailsMovie($tmdb_id, NULL, TRUE, TRUE, 30*24*60*60);
+                } elseif (!empty($torrent->imdbID)) {
+                    if (preg_match('/^(.+) \(?(19\d\d)\)?/', $torrent->name, $re) || preg_match('/^(.+) \(?(20\d\d)\)?/', $torrent->name, $re)) {
+                        if (!isset($result['movies'][strtolower($re[1])])) {
+                            $tmdb_id = TMDB::getIDByExternalId($torrent->imdbID, 'imdb', $re[1]);
+                            $result['movies'][strtolower($re[1])] = TMDB::getDetailsMovie($tmdb_id, NULL, TRUE, TRUE, 30*24*60*60);
+                        }
                     }
                 }
             }
-        }
-        $result['movies'] = array_values($result['movies']);
-        $result['shows'] = array_values($result['shows']);
+            $result['movies'] = array_values($result['movies']);
+            $result['shows'] = array_values($result['shows']);
+            return $result;
+        };
+        $result1 = $fct_get_results('-2 days');
+        $result2 = $fct_get_results('-1 weeks');
+        $result3 = $fct_get_results('-6 weeks');
+
+        $result = [];
+        $result['movies'] = array_merge($result1['movies'], $result2['movies'], $result3['movies']);
+        $result['shows'] = $result2['shows'];
 
         // Keep only each movie/show once
         $movies = [];
