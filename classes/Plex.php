@@ -415,7 +415,7 @@ class Plex
                     $modified_season_name = $season_details->name;
                 }
                 if (strtotime($last_ep_date) > strtotime('-1 year') && !empty($last_ep_date)) {
-                    if (strtotime($last_ep_date) <= strtotime(date('Y-m-d')) && $num_plex_episodes >= $num_total_eps) {
+                    if ($num_plex_episodes >= $num_total_eps) {
                         $end_when = 'Ended';
                     } else {
                         $end_when = 'Ends ' . date('M-j', strtotime($last_ep_date));
