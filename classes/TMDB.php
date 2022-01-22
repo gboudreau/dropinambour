@@ -286,8 +286,12 @@ class TMDB {
         if (!$m1->requested && $m2->requested) {
             return -1;
         }
-        // Popularity desc
-        return $m2->popularity <=> $m1->popularity;
+        if (!empty($m1->release_date)) {
+            // Sort movies by date desc
+            return strtotime($m2->release_date) <=> strtotime($m1->release_date);
+        }
+        // Sort TV shows by vote desc
+        return $m2->vote_average <=> $m1->vote_average;
     }
 
     public static function getMoreSuggestedMovies() : array {
