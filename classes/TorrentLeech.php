@@ -58,11 +58,13 @@ class TorrentLeech {
         // Keep only each movie/show once
         $movies = [];
         foreach ($result['movies'] as $media) {
+            if (empty($media)) continue;
             $movies[$media->id] = $media;
         }
         $result['movies'] = array_values($movies);
         $shows  = [];
         foreach ($result['shows'] as $media) {
+            if (empty($media)) continue;
             $shows[$media->id] = $media;
         }
         $result['shows'] = array_values($shows);
