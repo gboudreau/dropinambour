@@ -401,21 +401,27 @@ class Plex
 
             $season_details = TMDB::getDetailsTVSeason($tmdbtv_id, $season_number);
             $num_total_eps = count($season_details->episodes);
+            if ($num_total_eps == 0) {
+                Logger::info("    TMDB says: season $season_number has $num_total_eps episodes. Skipping.");
+                continue;
+            }
             $last_ep = last($season_details->episodes);
             $last_ep_date = $last_ep->air_date;
 
-            // TMDB is crap for future episodes; it never lists episodes with TBA title or date
-            // So let's use TheTVDB to count episodes (when possible)
-            if (empty($tvdb_id)) {
-                $q = "SELECT tvdb_id FROM tmdb_external_ids WHERE tmdbtv_id = :id";
-                $tvdb_id = DB::getFirstValue($q, $tmdbtv_id);
-            }
-            if (!empty($tvdb_id)) {
-                $season_episodes = TheTVDB::getEpisodesForSeason($tvdb_id, $season_number);
-                if (!empty($season_episodes)) {
-                    $num_total_eps = count($season_episodes);
-                    $last_ep = last($season_episodes);
-                    $last_ep_date = $last_ep->aired;
+            if ($num_plex_episodes < $num_total_eps) {
+                // TMDB is crap for future episodes; it never lists episodes with TBA title or date
+                // So let's use TheTVDB to count episodes (when possible)
+                if (empty($tvdb_id)) {
+                    $q = "SELECT tvdb_id FROM tmdb_external_ids WHERE tmdbtv_id = :id";
+                    $tvdb_id = DB::getFirstValue($q, $tmdbtv_id);
+                }
+                if (!empty($tvdb_id)) {
+                    $season_episodes = TheTVDB::getEpisodesForSeason($tvdb_id, $season_number);
+                    if (!empty($season_episodes)) {
+                        $num_total_eps = count($season_episodes);
+                        $last_ep = last($season_episodes);
+                        $last_ep_date = $last_ep->aired;
+                    }
                 }
             }
 
