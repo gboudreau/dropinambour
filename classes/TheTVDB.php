@@ -41,6 +41,7 @@ class TheTVDB {
         $response = static::sendPOST('/login', $data);
         $token = $response->data->token;
         Config::setInDB('THETVDB_TOKEN', $token);
+        DB::emptyCache();
         return $token;
     }
 
@@ -54,10 +55,19 @@ class TheTVDB {
         return json_decode($response);
     }
 
-    private static function sendGET($url) {
+    private static function sendGET($url, bool $can_retry = TRUE) {
         $headers = ["Accept: application/json", "Content-type: application/json;charset=utf-8", "Authorization: Bearer " . static::getBearerToken()];
         Logger::debug("TheTVDB::sendGET($url)");
-        $response = sendGET(static::getBaseURL() . $url, $headers);
+        try {
+            $response = sendGET(static::getBaseURL() . $url, $headers);
+        } catch (Exception $ex) {
+            if ($ex->getCode() == 401 && $can_retry) {
+                Config::setInDB('THETVDB_TOKEN', NULL);
+                DB::emptyCache();
+                return static::sendGET($url, FALSE);
+            }
+            throw $ex;
+        }
         return json_decode($response);
     }
 }
