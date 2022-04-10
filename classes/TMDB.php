@@ -596,7 +596,7 @@ class TMDB {
         }
 
         if (!empty($shows)) {
-            $requests = Request::getAllShowRequests();
+            $requests = Request::getAllShowRequests(return_dupes: TRUE);
             foreach ($shows as $media) {
                 $media->requested = $requests["tvdb:$media->tvdb_id"] ?? $requests["tmdb:$media->id"] ?? NULL;
             }

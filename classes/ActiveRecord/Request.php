@@ -182,7 +182,7 @@ class Request extends AbstractActiveRecord
     /**
      * @return self[]
      */
-    public static function getAllShowRequests(bool $order_by_name = FALSE) : array {
+    public static function getAllShowRequests(bool $order_by_name = FALSE, bool $return_dupes = FALSE) : array {
         $q = "SELECT r.*, IFNULL(r.tmdbtv_id, IF(ids.tmdbtv_id <= 0, 0, ids.tmdbtv_id)) AS tmdbtv_id, c.details
                 FROM requests r
                 LEFT JOIN tmdb_external_ids ids ON (ids.tvdb_id = r.tvdb_id)
@@ -193,7 +193,7 @@ class Request extends AbstractActiveRecord
         if ($order_by_name) {
             $q .= " ORDER BY r.title";
         }
-        return static::getRequestsFromQuery($q);
+        return static::getRequestsFromQuery($q, $return_dupes);
     }
 
     /**
@@ -256,7 +256,7 @@ class Request extends AbstractActiveRecord
     /**
      * @return self[]
      */
-    private static function getRequestsFromQuery(string $query) : array {
+    private static function getRequestsFromQuery(string $query, bool $return_dupes = FALSE) : array {
         $rows = static::getAll($query);
         /** @var $rows self[] */
         foreach ($rows as $k => $row) {
@@ -267,8 +267,9 @@ class Request extends AbstractActiveRecord
             } else {
                 if (!empty($row->tvdb_id)) {
                     $rows["tvdb:$row->tvdb_id"] = $row;
-                } else {
-                    $rows["tmdb:$row->external_id"] = $row;
+                }
+                if (empty($row->tvdb_id) || $return_dupes) {
+                    $rows["tmdb:$row->tmdbtv_id"] = $row;
                 }
             }
         }
