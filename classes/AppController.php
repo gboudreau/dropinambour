@@ -333,7 +333,7 @@ class AppController extends AbstractController
             $tvdb_id = $_POST['tvdb_id'];
             if (!empty($tvdb_id)) {
                 try {
-                    Sonarr::addShow($_POST['tmdb_id'], $_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], json_decode($_POST['images_json']));
+                    Sonarr::addShow($_POST['tmdb_id'], $_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], $_POST['season'], json_decode($_POST['images_json']));
                 } catch (Exception $ex) {
                     // Can happen, for example, when the serie exists on TheTVDB, but has no English translation; eg. https://www.thetvdb.com/?id=395619&tab=series
                     Logger::error("Failed to add request on Sonarr; will create request unmonitored. Exception: " . $ex->getMessage());

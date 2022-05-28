@@ -21,6 +21,26 @@ use stdClass;
     <?php if ($media->media_type == 'tv') : ?>
         <input name="title_slug" type="hidden" value="<?php phe($media->titleSlug ?? '') ?>">
         <input name="images_json" type="hidden" value="<?php phe(json_encode($media->images ?? [])) ?>">
+        <div class="col-auto">
+            <label class="visually-hidden" for="season-input">Season</label>
+            <select name="season" class="form-control" id="season-input" required onchange="$(this).closest('form').find('button').prop('disabled', $(this).val() === '');">
+                <option value="">Choose a season</option>
+                <?php foreach ($media->seasons as $season) : ?>
+                    <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored || @$season->episode_count == 0 || @$season->is_available === 'partially' ? '' : $season->season_number) ?>">
+                        <?php phe($season->name) ?>
+                        <?php if (@$season->is_available === TRUE) : ?>
+                            (already available)
+                        <?php elseif (@$season->monitored) : ?>
+                            (already requested)
+                        <?php elseif (@$season->episode_count == 0) : ?>
+                            (empty)
+                        <?php elseif (@$season->is_available === 'partially') : ?>
+                            (partial)
+                        <?php endif; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
     <?php endif; ?>
     <?php if (!Plex::isServerAdmin()) : ?>
         <input name="path" type="hidden" value="<?php phe($default_path) ?>">
@@ -69,6 +89,6 @@ use stdClass;
         </div>
     <?php endif; ?>
     <div class="col-auto">
-        <button class="btn btn-primary" type="submit" onclick="disable_button(this); this.form.submit()">Request</button>
+        <button class="btn btn-primary" type="submit" onclick="disable_button(this); this.form.submit()" <?php echo_if($media->media_type == 'tv', 'disabled') ?>>Request</button>
     </div>
 </form>

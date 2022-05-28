@@ -25,7 +25,7 @@ use stdClass;
         <select name="season" class="form-control" id="season-input" required onchange="$(this).closest('form').find('button').prop('disabled', $(this).val() === '');">
             <option value="">Choose a season</option>
             <?php foreach ($media->seasons as $season) : ?>
-                <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored || @$season->episode_count == 0 ? '' : $season->season_number) ?>">
+                <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored || @$season->episode_count == 0 || @$season->is_available === 'partially' ? '' : $season->season_number) ?>">
                     <?php phe($season->name) ?>
                     <?php if (@$season->is_available === TRUE) : ?>
                         (already available)

@@ -65,7 +65,7 @@ class Sonarr {
         return $paths;
     }
 
-    public static function addShow(int $tmdbtv_id, int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, int $language_profile_id, string $path, ?array $images) : stdClass {
+    public static function addShow(int $tmdbtv_id, int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, int $language_profile_id, string $path, int $season, ?array $images) : stdClass {
         if (empty($title_slug)) {
             $title_slug = $tvdb_id;
         }
@@ -81,12 +81,12 @@ class Sonarr {
             'seasonFolder'      => TRUE,
             'seasons' => [
                 (object) [
-                    'seasonNumber' => 1,
+                    'seasonNumber' => $season,
                     'monitored'    => TRUE,
                 ],
             ],
             'addOptions' => (object) [
-                'monitor'                      => 'firstSeason',
+                //'monitor'                      => $season == 1 ? 'firstSeason' : 'none',
                 'searchForCutoffUnmetEpisodes' => FALSE,
                 'searchForMissingEpisodes'     => TRUE,
             ],
