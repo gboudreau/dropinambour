@@ -345,7 +345,7 @@ class AppController extends AbstractController
                 $request = Request::fromTMDBShow($show);
                 $request->tmdbtv_id = $_POST['tmdb_id'];
                 $request->save();
-                $request->notifyAdminRequestAdded($_POST['season'] ??  1);
+                $request->notifyAdminRequestAdded($_POST['season'] ?? 1);
             }
             $this->showAlert("Added request for \"{$_POST['title']}\" TV show.");
         } else {
