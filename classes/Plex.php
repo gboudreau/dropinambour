@@ -412,7 +412,7 @@ class Plex
             $last_ep = last($season_details->episodes);
             $last_ep_date = $last_ep->air_date;
 
-            if ($num_plex_episodes < $num_total_eps) {
+            if ($num_plex_episodes < $num_total_eps || $num_plex_episodes > $num_total_eps) {
                 // TMDB is crap for future episodes; it never lists episodes with TBA title or date
                 // So let's use TheTVDB to count episodes (when possible)
                 if (empty($tvdb_id)) {
