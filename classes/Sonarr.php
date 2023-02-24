@@ -86,16 +86,18 @@ class Sonarr {
                 ],
             ],
             'addOptions' => (object) [
-                //'monitor'                      => $season == 1 ? 'firstSeason' : 'none',
+                'monitor'                      => $season == 1 ? 'firstSeason' : 'none',
                 'searchForCutoffUnmetEpisodes' => FALSE,
                 'searchForMissingEpisodes'     => TRUE,
             ],
         ];
         $show = static::sendPOST('/series', $data);
+        if ($season > 1) {
+            static::addSeason($show->id, $season);
+        }
         $request = Request::fromSonarrShow($show);
-        $request->tmdbtv_id = $tmdbtv_id;
         $request->save();
-        $request->notifyAdminRequestAdded(1);
+        $request->notifyAdminRequestAdded($season);
         return $show;
     }
 
