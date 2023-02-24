@@ -109,7 +109,7 @@ class Request extends AbstractActiveRecord
         $this->added_when = date('Y-m-d H:i:s', strtotime($movie->added));
     }
 
-    public static function fromSonarrShow($show) : self {
+    public static function fromSonarrShow($show, ?int $tmdbtv_id = NULL) : self {
         $m = new self();
         $m->external_id = $show->id;
         $m->monitored_by = 'sonarr';
@@ -117,6 +117,11 @@ class Request extends AbstractActiveRecord
         $m->requested_by = Plex::getUserInfos()->username . ' <' . Plex::getUserInfos()->email . '>';
         $m->tvdb_id = $show->tvdbId ?? NULL;
         $m->updateFromSonarShow($show);
+        if (empty($tmdbtv_id)) {
+            $q = "SELECT tmdbtv_id FROM requests WHERE external_id = :external_id AND tmdbtv_id IS NOT NULL";
+            $tmdbtv_id = DB::getFirstValue($q, ['external_id' => $m->external_id]);
+        }
+        $m->tmdbtv_id = $tmdbtv_id;
         return $m;
     }
 
