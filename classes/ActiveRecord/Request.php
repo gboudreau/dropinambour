@@ -137,7 +137,7 @@ class Request extends AbstractActiveRecord
 
     public function addSeasonsFromSonarrShow($show) : void {
         foreach ($show->seasons as $season) {
-            if ($season->monitored && $season->statistics->totalEpisodeCount > $season->statistics->episodeCount) {
+            if ($season->monitored && !empty($season->statistics->totalEpisodeCount) && $season->statistics->totalEpisodeCount > $season->statistics->episodeCount) {
                 // Some missing episodes; is it because they are not monitored?
                 $episodes = Sonarr::getShowEpisodes($show->id);
                 foreach ($episodes as $episode) {
