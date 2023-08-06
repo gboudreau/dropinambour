@@ -10,10 +10,6 @@ class TorrentLeech {
         $result = Config::getFromDB($cache_key);
         if ($result) {
             return (array) json_decode($result);
-            //$result = (array) json_decode($result);
-            //usort($result['movies'], ['\PommePause\Dropinambour\TMDB', 'sortSuggestedMedias']);
-            //usort($result['shows'], ['\PommePause\Dropinambour\TMDB', 'sortSuggestedMedias']);
-            //return $result;
         }
 
         $fct_get_results = function ($since_when) {
