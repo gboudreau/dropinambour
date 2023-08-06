@@ -238,9 +238,9 @@ class TMDB {
     }
 
     public static function getSuggestedMovies(int $page = 1) : array {
-        //if ($page == 1) {
-        //    $_SESSION['tmdb_suggested_movie_ids'] = [];
-        //}
+        if ($page == 1) {
+            $_SESSION['tmdb_suggested_movie_ids'] = [];
+        }
 
         // Trending/popular movies on pages 3+ are not really interesting... Show upcoming movies past page 2
         if ($page <= 2) {
@@ -407,9 +407,9 @@ class TMDB {
     }
 
     public static function getSuggestedShows(int $page = 1) : array {
-        //if ($page == 1) {
-        //    $_SESSION['tmdb_suggested_tv_ids'] = [];
-        //}
+        if ($page == 1) {
+            $_SESSION['tmdb_suggested_tv_ids'] = [];
+        }
 
         $shows = static::getPopularShows($page);
 
