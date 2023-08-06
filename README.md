@@ -8,7 +8,6 @@ It will send email notifications to the requester, once the media has been downl
 
 There is currently no users management; all users allowed to access your Plex server are also allowed to connect to *dropinambour* and make requests.
 There is also no approval process; when a user requests a movie or TV show, it is immediately sent to Radarr or Sonarr for processing.
-Of note: for TV shows, only the 1st season is requested, when a request is added for a new show. Users can then choose to request additional seasons.
 
 ## Current status
 
