@@ -96,12 +96,13 @@ class Sonarr {
             static::addSeason($show->id, $season);
         }
         $request = Request::fromSonarrShow($show);
+        $request->tmdbtv_id = $tmdbtv_id;
         $request->save();
         $request->notifyAdminRequestAdded($season);
         return $show;
     }
 
-    public static function addSeason(int $sonarr_id, int $season_number) : stdClass {
+    public static function addSeason(int $sonarr_id, int $tmdbtv_id, int $season_number) : stdClass {
         $show = static::getShow($sonarr_id);
         foreach ($show->seasons as $season) {
             if ($season->seasonNumber == $season_number) {
@@ -126,6 +127,7 @@ class Sonarr {
         static::sendCommand('SeasonSearch', ['seriesId' => $sonarr_id, 'seasonNumber' => $season_number]);
 
         $request = Request::fromSonarrShow($show);
+        $request->tmdbtv_id = $tmdbtv_id;
         $request->save();
         $request->addSeasonsFromSonarrShow($show);
         $request->notifyAdminRequestAdded($season_number);

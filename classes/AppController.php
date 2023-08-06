@@ -323,7 +323,7 @@ class AppController extends AbstractController
             if (empty($request)) {
                 $this->showError("Error: request ID {$_POST['req_id']} not found.");
             } else {
-                Sonarr::addSeason($request->external_id, $_POST['season']);
+                Sonarr::addSeason($request->external_id, $_POST['tmdb_id'], $_POST['season']);
                 $this->showAlert(sprintf("Added request for S%02d of \"$request->title\".", $_POST['season']));
             }
         } elseif ($_POST['media_type'] == 'movie') {
@@ -339,8 +339,7 @@ class AppController extends AbstractController
                     Logger::error("Failed to add request on Sonarr; will create request unmonitored. Exception: " . $ex->getMessage());
                     $tvdb_id = NULL;
                 }
-            }
-            if (empty($tvdb_id)) {
+            } else { // empty $tvdb_id
                 $show = TMDB::getDetailsTV($_POST['tmdb_id']);
                 $request = Request::fromTMDBShow($show);
                 $request->tmdbtv_id = $_POST['tmdb_id'];
