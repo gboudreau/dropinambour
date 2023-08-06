@@ -18,7 +18,9 @@ class ErrorHandler
         E_USER_WARNING      => 'USER WARNING',
         E_USER_NOTICE       => 'USER NOTICE',
         E_STRICT            => 'STRICT NOTICE',
-        E_RECOVERABLE_ERROR => 'RECOVERABLE ERROR'
+        E_RECOVERABLE_ERROR => 'RECOVERABLE ERROR',
+        E_DEPRECATED        => 'DEPRECATION WARNING',
+        E_USER_DEPRECATED   => 'USER DEPRECATION WARNING',
     );
 
     public static function handler($errno, $errstr, $errfile, $errline) {

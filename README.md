@@ -21,7 +21,7 @@ If anyone is interested in developping this further, and use it on their own Ple
 - Plex (obviously)
 - Sonarr and/or Radarr (only v3 are supported)
 - A MySQL-compatible server (eg. MariaDB)
-- PHP 7.3+ & [composer](https://getcomposer.org/), or Docker
+- PHP 8.0+ & [composer](https://getcomposer.org/), or Docker
 
 ## Installation
 

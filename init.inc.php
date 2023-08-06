@@ -3,6 +3,10 @@ namespace PommePause\Dropinambour;
 
 use Exception;
 
+ini_set('error_reporting', E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+ini_set('display_errors', 1);
+ini_set("log_errors", 1);
+
 require 'vendor/autoload.php';
 require 'functions.inc.php';
 
@@ -11,10 +15,6 @@ try {
 } catch (Exception $ex) {
     die($ex->getMessage());
 }
-
-ini_set('error_reporting', E_ALL);
-ini_set('display_errors', 1);
-ini_set("log_errors", 1);
 
 set_error_handler(['PommePause\Dropinambour\ErrorHandler', 'handler']);
 set_exception_handler(['PommePause\Dropinambour\ErrorHandler', 'exHandler']);
