@@ -232,10 +232,39 @@ function sendPOST(string $url, $data, array $headers = array(), ?string $content
     return $result;
 }
 
-function sendGET(string $url, array $headers = array(), bool $follow_redirects = TRUE, int $timeout = 30, bool $retry_on_429 = TRUE) {
+function sendGET(string $url, array $headers = array(), bool $follow_redirects = TRUE, int $timeout = 30, bool $retry_on_429 = TRUE, bool $use_flaresolverr = FALSE) {
     $ch = curl_init();
 
     $headers[] = 'User-agent: PHP/dropinambour';
+
+    if ($use_flaresolverr && Config::get('FLARESOLVERR_URL')) {
+        $cookies = [];
+        foreach ($headers as $header) {
+            if (string_begins_with($header, 'Cookie: ')) {
+                foreach (explode(';', substr($header, 8)) as $cookie_txt) {
+                    [$name, $value] = explode('=', trim($cookie_txt));
+                    $cookies[] = ['name' => $name, 'value' => $value];
+                }
+            }
+        }
+        $data = [
+            'cmd'        => 'request.get',
+            'url'        => $url,
+            'maxTimeout' => $timeout*1000,
+            'cookies'    => $cookies,
+        ];
+        $response = sendPOST(Config::get('FLARESOLVERR_URL'), $data, $headers, 'application/json');
+        $result = @json_decode($response);
+
+        if ($result->solution->status >= 400 || empty($result)) {
+            throw new \Exception('Non-200 HTTP status (' . ($result->solution->status ?? 0) . '). Response: ' . $response, ($result->solution->status ?? 0));
+        }
+
+        if (!empty($result->solution->response)) {
+            $result->solution->response = preg_replace('@.*pre-wrap;.>(.*)</pre.*@', '\1', $result->solution->response);
+            return $result->solution->response;
+        }
+    }
 
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
@@ -267,6 +296,10 @@ function sendGET(string $url, array $headers = array(), bool $follow_redirects =
         // Too Many Requests; sleep 1s and retry
         sleep(1);
         return sendGET($url, $headers, $follow_redirects, $timeout, FALSE);
+    }
+
+    if ($info['http_code'] == 403 && !$use_flaresolverr && Config::get('FLARESOLVERR_URL')) {
+        return sendGET($url, $headers, $follow_redirects, $timeout, use_flaresolverr: TRUE);
     }
 
     if ($info['http_code'] >= 400) {
