@@ -194,6 +194,8 @@ class AppController extends AbstractController
                 }
                 if (preg_match('/Season (\d+)/', $season->name, $re)) {
                     $season->name = sprintf('S%02d', $re[1]);
+                } else {
+                    $season->name = sprintf('[S%02d] %s', $season->season_number, $season->name);
                 }
                 return "$season->name ($season->episode_count ep)";
             };

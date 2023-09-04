@@ -436,8 +436,10 @@ class Plex
             } else {
                 $modified_season_name = "Season $season_number";
                 if ($season_details->name != $modified_season_name) {
-                    $modified_season_name = $season_details->name;
-                    $modified_season_name = str_ireplace([' one', ' two', ' three', ' four', ' five', ' six', ' seven', ' eight', ' nine', ' ten'], [' 1', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', ' 10'], $modified_season_name);
+                    $modified_season_name = str_ireplace([' one', ' two', ' three', ' four', ' five', ' six', ' seven', ' eight', ' nine', ' ten'], [' 1', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', ' 10'], $season_details->name);
+                    if ($season_details->name != $modified_season_name) {
+                        $modified_season_name = sprintf("S%02d %s", $season_number, $season_details->name);
+                    }
                 }
                 if (strtotime($last_ep_date) > strtotime('-6 months')) {
                     $end_when = FALSE;

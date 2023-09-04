@@ -26,7 +26,13 @@ use stdClass;
             <option value="">Choose a season</option>
             <?php foreach ($media->seasons as $season) : ?>
                 <option value="<?php phe(@$season->is_available === TRUE || @$season->monitored || @$season->episode_count == 0 || @$season->is_available === 'partially' ? '' : $season->season_number) ?>">
-                    <?php phe($season->name) ?>
+                    <?php
+                    if (preg_match('/Season (\d+)/', $season->name) || $season->name == 'Specials') {
+                        phe($season->name);
+                    } else {
+                        phe(sprintf('[S%02d] %s', $season->season_number, $season->name));
+                    }
+                    ?>
                     <?php if (@$season->is_available === TRUE) : ?>
                         (already available)
                     <?php elseif (@$season->monitored) : ?>
