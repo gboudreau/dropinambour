@@ -100,7 +100,7 @@ class Radarr
             'tmdbId'              => $tmdb_id,
             'qualityProfileId'    => $quality_profile_id,
             'rootFolderPath'      => $path,
-            'minimumAvailability' => 'announced',
+            'minimumAvailability' => 'released',
             'monitored'           => TRUE,
             'addOptions'          => (object) ['searchForMovie' => TRUE],
             'tags'                => $tag_ids,
