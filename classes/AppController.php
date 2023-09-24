@@ -614,7 +614,7 @@ class AppController extends AbstractController
         $_SESSION['PLEX_ACCESS_TOKEN'] = Config::getFromDB('PLEX_ACCESS_TOKEN');
 
         try {
-            if ((date('Hi') >= 300 && date('Hi') < 305) || @$_REQUEST['daily'] == 'y') {
+            if ((date('Hi') >= 500 && date('Hi') < 505) || @$_REQUEST['daily'] == 'y') {
                 AvailableMedia::importAvailableMediasFromPlex();
             } else {
                 AvailableMedia::importRecentMediasFromPlex();
