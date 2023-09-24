@@ -24,8 +24,8 @@ $this->layout('/page', ['title' => "Sonarr | Admin | dropinambour - Requests for
     </select><br/>
 
     Default language: <select name="language">
-        <?php foreach (Sonarr::getLanguageProfiles() as $qp) : ?>
-            <option value="<?php phe($qp->id) ?>" <?php echo_if(Config::getFromDB('SONARR_DEFAULT_LANGUAGE') == $qp->id, 'selected') ?>><?php phe($qp->name) ?></option>
+        <?php foreach (Sonarr::getLanguageProfiles() as $lp) : ?>
+            <option value="<?php phe($lp->id) ?>" <?php echo_if(Config::getFromDB('SONARR_DEFAULT_LANGUAGE') == $lp->id, 'selected') ?>><?php phe($lp->name) ?></option>
         <?php endforeach; ?>
     </select><br/>
 

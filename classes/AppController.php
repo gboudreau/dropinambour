@@ -288,18 +288,32 @@ class AppController extends AbstractController
         $stats = array_map('to_object', $stats);
         $urls = array_map('to_object', $urls);
 
-        return $this->response($this->render('/tmdb_media', ['media' => $media, 'recommended_medias' => $recommended_medias, 'stats' => $stats, 'urls' => $urls]));
+        return $this->response($this->render('/tmdb_media', ['media' => $media, 'language' => $lang, 'recommended_medias' => $recommended_medias, 'stats' => $stats, 'urls' => $urls]));
     }
 
     #[ArrayShape(['media' => "object", 'paths' => "array", 'profiles' => "array", 'default_path' => "string", 'default_quality' => "int", 'default_language' => "int|string", 'default_tags' => "string"])]
     private static function getRequestFormData(stdClass $media) : array {
+        $default_language_id = $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
+        if (!empty($_GET['language']) && $media->media_type != 'movie') {
+            foreach (Sonarr::getLanguageProfiles() as $lp) {
+                if ($lp->name == 'English' && $_GET['language'] == 'en') {
+                    $default_language_id = $lp->id;
+                    break;
+                }
+                if ($lp->name == 'French' && $_GET['language'] == 'fr') {
+                    $default_language_id = $lp->id;
+                    break;
+                }
+            }
+        }
+
         return [
             'media' => $media,
             'paths' => $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths(),
             'profiles' => $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles(),
             'default_path' => $media->media_type == 'movie' ? Radarr::getDefaultPath($media) : Config::getFromDB('SONARR_DEFAULT_PATH'),
             'default_quality' => $media->media_type == 'movie' ? (int) Radarr::getDefaultQuality($media) : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY'),
-            'default_language' => $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE'),
+            'default_language' => $default_language_id,
             'default_tags' => $media->media_type == 'movie' ? Radarr::getDefaultTags($media) : '',
         ];
     }
@@ -312,7 +326,7 @@ class AppController extends AbstractController
     public function search() : Response {
         if ($this->getQueryParam('query')) {
             $search_results = TMDB::searchMulti($this->getQueryParam('query'), $this->getQueryParam('language'));
-            $this->addData(['search_results' => $search_results]);
+            $this->addData(['search_results' => $search_results, 'language' => $this->getQueryParam('language')]);
         }
         return $this->response($this->render('/search'));
     }
@@ -352,7 +366,11 @@ class AppController extends AbstractController
         } else {
             $this->showError("Error: unknown media type: " . $_POST['media_type']);
         }
-        return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_MEDIA, [$_POST['media_type'] => $_POST['tmdb_id']]));
+        $url_suffix = '';
+        if (!empty($_GET['language'])) {
+            $url_suffix = '&language=' . $_GET['language'];
+        }
+        return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_MEDIA, [$_POST['media_type'] => $_POST['tmdb_id']]) . $url_suffix);
     }
 
     public function viewRequests() : Response {

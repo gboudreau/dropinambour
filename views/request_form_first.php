@@ -12,7 +12,7 @@ use stdClass;
 /** @var stdClass[] $profiles */
 ?>
 
-<form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>">
+<form class="row gy-2 gx-3 align-items-center" method="post" action="<?php phe(Router::getURL(Router::ACTION_SAVE, Router::SAVE_REQUEST)) ?>&language=<?= @$_GET['language'] ?>">
     <input name="media_type" type="hidden" value="<?php phe($media->media_type) ?>">
     <input name="tmdb_id" type="hidden" value="<?php phe($media->id) ?>">
     <input name="tvdb_id" type="hidden" value="<?php phe($media->tvdb_id) ?>">

@@ -191,8 +191,8 @@ class TMDB {
 
     public static function getDetailsMovie($id, ?string $language = NULL, bool $add_availability = TRUE, bool $use_cache = FALSE, int $cache_timeout = 24*60*60) : ?stdClass {
         if ($use_cache) {
-            $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdb_id = :id";
-            $cache = DB::getFirst($q, $id);
+            $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdb_id = :id AND language = :lang";
+            $cache = DB::getFirst($q, ['id' => $id, 'lang' => $language]);
             if ($cache) {
                 if (strtotime($cache->last_updated) >= time()-$cache_timeout) {
                     $response = json_decode($cache->details);
@@ -207,8 +207,8 @@ class TMDB {
                 $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
-                    $q = "DELETE FROM tmdb_cache WHERE tmdb_id = :id ; INSERT INTO tmdb_cache SET tmdb_id = :id, details = :details, last_updated = NOW()";
-                    DB::insert($q, ['id' => $id, 'details' => json_encode($response)]);
+                    $q = "DELETE FROM tmdb_cache WHERE tmdb_id = :id AND language = :lang ; INSERT INTO tmdb_cache SET tmdb_id = :id, language = :lang, details = :details, last_updated = NOW()";
+                    DB::insert($q, ['id' => $id, 'lang' => $language, 'details' => json_encode($response)]);
                 }
             }
             static::addMediaTypeMovie($response);
@@ -361,8 +361,8 @@ class TMDB {
 
     public static function getDetailsTV($id, ?string $language = NULL, bool $add_availability = TRUE, bool $use_cache = TRUE, int $cache_timeout = 24*60*60) : ?stdClass {
         if ($use_cache) {
-            $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdbtv_id = :id";
-            $cache = DB::getFirst($q, $id);
+            $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdbtv_id = :id AND language = :lang";
+            $cache = DB::getFirst($q, ['id' => $id, 'lang' => $language]);
             if ($cache) {
                 if (strtotime($cache->last_updated) >= time()-$cache_timeout) {
                     $response = json_decode($cache->details);
@@ -376,8 +376,8 @@ class TMDB {
                 $response = static::sendGET($url);
                 if ($use_cache) {
                     // Save in cache
-                    $q = "DELETE FROM tmdb_cache WHERE tmdbtv_id = :id ; INSERT INTO tmdb_cache SET tmdbtv_id = :id, details = :details, name = :title, last_updated = NOW()";
-                    DB::insert($q, ['id' => $id, 'details' => json_encode($response), 'title' => $response->name]);
+                    $q = "DELETE FROM tmdb_cache WHERE tmdbtv_id = :id AND language = :lang ; INSERT INTO tmdb_cache SET tmdbtv_id = :id, language = :lang, details = :details, name = :title, last_updated = NOW()";
+                    DB::insert($q, ['id' => $id, 'lang' => $language, 'details' => json_encode($response), 'title' => $response->name]);
                 }
             }
             static::nameToTitle($response);

@@ -3,6 +3,7 @@ namespace PommePause\Dropinambour;
 
 // Views variables
 /** @var $search_results object[] */
+/** @var $language string */
 // End of Views variables
 
 if (!empty($_REQUEST['query'])) {
@@ -26,6 +27,6 @@ $this->layout('/page', ['title' => $title]);
     <h1 class="mb-3">Search results for "<?php phe(@$_REQUEST['query']) ?>"</h1>
 
     <div id="search_results">
-        <?php $this->insert('/media_items', ['medias' => $search_results]) ?>
+        <?php $this->insert('/media_items', ['medias' => $search_results, 'language' => $language]) ?>
     </div>
 <?php endif; ?>

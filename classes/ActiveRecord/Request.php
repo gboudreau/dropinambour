@@ -60,9 +60,9 @@ class Request extends AbstractActiveRecord
         return $this->update($this->id);
     }
 
-    public function notifyAdminRequestAdded(?int $season_number = NULL) : void {
+    public function notifyAdminRequestAdded(?int $season_number = NULL, ?string $lang = NULL) : void {
         $this->media_type = ($this->type == 'show' ? 'TV show' : 'movie');
-        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number]);
+        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number, 'lang' => $lang]);
     }
 
     public function notifyAdminRequestRemoved() : void {

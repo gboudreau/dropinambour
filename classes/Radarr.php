@@ -105,11 +105,26 @@ class Radarr
             'addOptions'          => (object) ['searchForMovie' => TRUE],
             'tags'                => $tag_ids,
         ];
+        $quality = 'unknown';
+        foreach (Config::get('RADARR_SIMPLIFIED_QUALITY', [], Config::GET_OPT_PARSE_AS_JSON) as $id => $name) {
+            if ($id === $quality_profile_id) {
+                $quality = $name;
+                break;
+            }
+        }
+        if ($quality == 'unknown') {
+            foreach (Radarr::getQualityProfiles() as $qp) {
+                if ($qp->id === $quality_profile_id) {
+                    $quality = $qp->name;
+                    break;
+                }
+            }
+        }
         try {
             $movie = static::sendPOST('/movie', $data);
             $request = Request::fromRadarrMovie($movie);
             $request->save();
-            $request->notifyAdminRequestAdded();
+            $request->notifyAdminRequestAdded(NULL, $quality);
         } catch (Exception $ex) {
             if (string_contains($ex->getMessage(), "MovieExistsValidator")) {
                 return NULL;

@@ -85,6 +85,7 @@ CREATE TABLE `sessions` (
 CREATE TABLE `tmdb_cache` (
   `tmdb_id` int(11) unsigned DEFAULT NULL,
   `tmdbtv_id` int(11) unsigned DEFAULT NULL,
+  `language` char(2) DEFAULT 'en',
   `name` tinytext DEFAULT NULL,
   `details` text DEFAULT NULL,
   `last_updated` timestamp NOT NULL DEFAULT current_timestamp(),

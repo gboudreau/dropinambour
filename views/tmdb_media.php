@@ -5,6 +5,7 @@ use PommePause\Dropinambour\ActiveRecord\AvailableMedia;
 use \stdClass;
 
 /** @var $media stdClass  */
+/** @var $language string|null */
 /** @var $recommended_medias stdClass[] */
 /** @var $stats stdClass[] */
 /** @var $urls stdClass[] */
@@ -79,7 +80,7 @@ $this->layout('/page', ['title' => $media->title . " | dropinambour - Requests f
     <?php if (!empty($recommended_medias)) : ?>
         <h4>Similar <?php phe($media->media_type == 'movie' ? 'movies' : 'shows') ?></h4>
         <div id="recommended_medias">
-            <?php $this->insert('media_items', ['medias' => $recommended_medias]) ?>
+            <?php $this->insert('media_items', ['medias' => $recommended_medias, 'language' => $language]) ?>
         </div>
     <?php endif; ?>
 

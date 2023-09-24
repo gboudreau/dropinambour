@@ -91,14 +91,21 @@ class Sonarr {
                 'searchForMissingEpisodes'     => TRUE,
             ],
         ];
+        $lang = 'unknown';
+        foreach (Sonarr::getLanguageProfiles() as $lp) {
+            if ($lp->id == $language_profile_id) {
+                $lang = $lp->name;
+                break;
+            }
+        }
         $show = static::sendPOST('/series', $data);
         if ($season > 1) {
-            static::addSeason($show->id, $season);
+            static::addSeason($show->id, $tmdbtv_id, $season);
         }
         $request = Request::fromSonarrShow($show);
         $request->tmdbtv_id = $tmdbtv_id;
         $request->save();
-        $request->notifyAdminRequestAdded($season);
+        $request->notifyAdminRequestAdded($season, $lang);
         return $show;
     }
 
