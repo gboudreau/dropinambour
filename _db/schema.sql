@@ -66,7 +66,8 @@ CREATE TABLE `requests` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `external_id` (`external_id`,`monitored_by`),
   KEY `notified_when` (`notified_when`),
-  KEY `monitored_by` (`monitored_by`)
+  KEY `monitored_by` (`monitored_by`),
+  KEY `type_hidden` (`type`, `hidden`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `sections` (
@@ -90,7 +91,9 @@ CREATE TABLE `tmdb_cache` (
   `details` text DEFAULT NULL,
   `last_updated` timestamp NOT NULL DEFAULT current_timestamp(),
   KEY `tmdbtv_id` (`tmdbtv_id`),
-  KEY `tmdb_id` (`tmdb_id`)
+  KEY `tmdb_id` (`tmdb_id`),
+  UNIQUE KEY `tmdbtv_id_lang` (`tmdbtv_id`, `language`),
+  UNIQUE KEY `tmdb_id_lang` (`tmdb_id`, `language`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 CREATE TABLE `tmdb_external_ids` (
