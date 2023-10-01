@@ -132,6 +132,10 @@ class AvailableMedia extends AbstractActiveRecord
                                     $most_recent_episode_at = $episode_md->addedAt;
                                 }
                                 if ($episode_md->addedAt > strtotime('-1 month')) {
+                                    if (!isset($episode_md->index)) {
+                                        // Could happen with DVR-recorded episodes
+                                        continue;
+                                    }
                                     $recent_episodes[] = (object) ['title' => $episode_md->title, 'addedAt' => $episode_md->addedAt, 'index' => $episode_md->index];
                                 }
                             }
