@@ -181,7 +181,7 @@ class Request extends AbstractActiveRecord
         if ($order_by_name) {
             $q .= " ORDER BY r.title";
         }
-        return static::getRequestsFromQuery($q);
+        return get_from_cache(static::class . '/getAllMovieRequests', fn() => static::getRequestsFromQuery($q));
     }
 
     /**
@@ -198,7 +198,7 @@ class Request extends AbstractActiveRecord
         if ($order_by_name) {
             $q .= " ORDER BY r.title";
         }
-        return static::getRequestsFromQuery($q, $return_dupes);
+        return get_from_cache(static::class . '/getAllShowRequests', fn() => static::getRequestsFromQuery($q, $return_dupes));
     }
 
     /**

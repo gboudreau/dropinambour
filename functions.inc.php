@@ -501,3 +501,11 @@ function lang_from_code(?string $iso_639_1_code) : string {
         'zu' => 'Zulu'
     ][$iso_639_1_code] ?? $iso_639_1_code;
 }
+
+function get_from_cache(string $cache_key, callable $calculate_fn) : mixed {
+    $key = "globalcache-$cache_key";
+    if (empty($GLOBALS[$key])) {
+        $GLOBALS[$key] = $calculate_fn();
+    }
+    return $GLOBALS[$key];
+}
