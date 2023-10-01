@@ -27,14 +27,14 @@ class TorrentLeech {
                         $title = preg_replace('/ 20\d\d$/', '', $title);
                         if (!isset($result['shows'][strtolower($title)])) {
                             $tmdbtv_id = TMDB::getIDByShowName($title);
-                            $result['shows'][strtolower($title)] = TMDB::getDetailsTV($tmdbtv_id, NULL, TRUE, TRUE, 30*24*60*60);
+                            $result['shows'][strtolower($title)] = TMDB::getDetailsTV($tmdbtv_id, $_GET['language'] ?? 'en', TRUE, TRUE, 30*24*60*60);
                         }
                     }
                 } elseif (!empty($torrent->imdbID)) {
                     if (preg_match('/^(.+) \(?(19\d\d)\)?/', $torrent->name, $re) || preg_match('/^(.+) \(?(20\d\d)\)?/', $torrent->name, $re)) {
                         if (!isset($result['movies'][strtolower($re[1])])) {
                             $tmdb_id = TMDB::getIDByExternalId($torrent->imdbID, 'imdb', $re[1]);
-                            $result['movies'][strtolower($re[1])] = TMDB::getDetailsMovie($tmdb_id, NULL, TRUE, TRUE, 30*24*60*60);
+                            $result['movies'][strtolower($re[1])] = TMDB::getDetailsMovie($tmdb_id, $_GET['language'] ?? 'en', TRUE, TRUE, 30*24*60*60);
                         }
                     }
                 }

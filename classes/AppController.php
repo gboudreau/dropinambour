@@ -49,7 +49,7 @@ class AppController extends AbstractController
     }
 
     public function viewMedia() : Response {
-        $lang = $this->getQueryParam('language');
+        $lang = $this->getQueryParam('language') ?? 'en';
         if ($this->getQueryParam('tv')) {
             $media = TMDB::getDetailsTV($this->getQueryParam('tv'), $lang);
         } elseif ($this->getQueryParam('movie')) {
@@ -356,7 +356,7 @@ class AppController extends AbstractController
                     $tvdb_id = NULL;
                 }
             } else { // empty $tvdb_id
-                $show = TMDB::getDetailsTV($_POST['tmdb_id']);
+                $show = TMDB::getDetailsTV($_POST['tmdb_id'], $_GET['language'] ?? 'en');
                 $request = Request::fromTMDBShow($show);
                 $request->tmdbtv_id = $_POST['tmdb_id'];
                 $request->save();
@@ -487,9 +487,9 @@ class AppController extends AbstractController
             $q = "SELECT m.title, m.year, m.key, m.guid, IFNULL(g.source_id, g2.source_id) AS tmdb_id, IFNULL(tc.details, tc2.details) AS details
                     FROM available_medias m
                     LEFT JOIN available_medias_guids g ON (g.media_id = m.id AND g.source = 'tmdb')
-                    LEFT JOIN tmdb_cache tc ON (tc.tmdb_id = g.source_id)
+                    LEFT JOIN tmdb_cache tc ON (tc.tmdb_id = g.source_id AND tc.language = 'en')
                     LEFT JOIN available_medias_guids g2 ON (g2.media_id = m.id AND g2.source = 'tmdbtv')
-                    LEFT JOIN tmdb_cache tc2 ON (tc2.tmdbtv_id = g2.source_id)
+                    LEFT JOIN tmdb_cache tc2 ON (tc2.tmdbtv_id = g2.source_id AND tc2.language = 'en')
                    WHERE m.added_when BETWEEN $since_when AND $until_when
                      AND m.section_id = :section
                    GROUP BY m.key
@@ -501,7 +501,7 @@ class AppController extends AbstractController
                         FROM available_medias m
                         JOIN available_episodes eps ON (eps.media_id = m.id)
                         LEFT JOIN available_medias_guids g ON (g.media_id = m.id AND g.source = 'tmdbtv')
-                        LEFT JOIN tmdb_cache tc ON (tc.tmdbtv_id = g.source_id)                
+                        LEFT JOIN tmdb_cache tc ON (tc.tmdbtv_id = g.source_id AND tc.language = 'en')
                        WHERE FROM_UNIXTIME(eps.most_recent_episode_at) BETWEEN $since_when AND $until_when
                          AND m.section_id = :section
                          AND m.type = 'show'
@@ -523,9 +523,9 @@ class AppController extends AbstractController
                     $media->details = json_decode($media->details);
                 } elseif (!empty($media->tmdb_id)) {
                     if ($section->type == 'movie') {
-                        $media->details = TMDB::getDetailsMovie($media->tmdb_id, NULL, FALSE, TRUE);
+                        $media->details = TMDB::getDetailsMovie($media->tmdb_id, 'en', FALSE, TRUE);
                     } else {
-                        $media->details = TMDB::getDetailsTV($media->tmdb_id, NULL, FALSE, TRUE);
+                        $media->details = TMDB::getDetailsTV($media->tmdb_id, 'en', FALSE, TRUE);
                     }
                 }
 

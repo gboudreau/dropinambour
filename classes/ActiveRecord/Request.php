@@ -177,7 +177,7 @@ class Request extends AbstractActiveRecord
      * @return self[]
      */
     public static function getAllMovieRequests(bool $order_by_name = FALSE) : array {
-        $q = "SELECT r.*, c.details FROM requests r LEFT JOIN tmdb_cache c ON (c.tmdb_id = r.tmdb_id) WHERE r.type = 'movie' AND NOT r.hidden";
+        $q = "SELECT r.*, c.details FROM requests r LEFT JOIN tmdb_cache c ON (c.tmdb_id = r.tmdb_id AND c.language = 'en') WHERE r.type = 'movie' AND NOT r.hidden";
         if ($order_by_name) {
             $q .= " ORDER BY r.title";
         }
@@ -191,7 +191,7 @@ class Request extends AbstractActiveRecord
         $q = "SELECT r.*, IFNULL(r.tmdbtv_id, IF(ids.tmdbtv_id <= 0, 0, ids.tmdbtv_id)) AS tmdbtv_id, c.details
                 FROM requests r
                 LEFT JOIN tmdb_external_ids ids ON (ids.tvdb_id = r.tvdb_id)
-                LEFT JOIN tmdb_cache c ON (c.tmdbtv_id = r.tmdbtv_id)
+                LEFT JOIN tmdb_cache c ON (c.tmdbtv_id = r.tmdbtv_id AND c.language = 'en')
                WHERE r.type = 'show'
                  AND NOT r.hidden
                GROUP BY r.id";
@@ -234,9 +234,9 @@ class Request extends AbstractActiveRecord
             $row->details = json_decode($row->details);
         } else {
             if (!empty($row->tmdb_id)) {
-                $row->details = TMDB::getDetailsMovie($row->tmdb_id, NULL, FALSE, TRUE);
+                $row->details = TMDB::getDetailsMovie($row->tmdb_id, $_GET['language'] ?? 'en', FALSE, TRUE);
             } elseif (!empty($row->tmdbtv_id)) {
-                $row->details = TMDB::getDetailsTV($row->tmdbtv_id, NULL, FALSE, TRUE);
+                $row->details = TMDB::getDetailsTV($row->tmdbtv_id, $_GET['language'] ?? 'en', FALSE, TRUE);
             }
         }
         if ($row->monitored_by == 'sonarr' && @$row->tmdbtv_id === NULL && property_exists($row, 'tmdbtv_id')) {

@@ -117,7 +117,7 @@ class TMDB {
                     if ($search_result->media_type == 'tv') {
                         $tmdb_id = $search_result->id;
 
-                        TMDB::getDetailsTV($tmdb_id, NULL, FALSE);
+                        TMDB::getDetailsTV($tmdb_id, 'en', FALSE);
 
                         $q = "UPDATE tmdb_cache SET name = :title WHERE tmdbtv_id = :id";
                         DB::execute($q, ['id' => $tmdb_id, 'title' => $title]);
@@ -189,7 +189,7 @@ class TMDB {
 
     /* Pragma mark - Movie */
 
-    public static function getDetailsMovie($id, ?string $language = NULL, bool $add_availability = TRUE, bool $use_cache = FALSE, int $cache_timeout = 24*60*60) : ?stdClass {
+    public static function getDetailsMovie($id, string $language, bool $add_availability = TRUE, bool $use_cache = FALSE, int $cache_timeout = 24*60*60) : ?stdClass {
         if ($use_cache) {
             $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdb_id = :id AND language = :lang";
             $cache = DB::getFirst($q, ['id' => $id, 'lang' => $language]);
@@ -359,7 +359,7 @@ class TMDB {
         return NULL;
     }
 
-    public static function getDetailsTV($id, ?string $language = NULL, bool $add_availability = TRUE, bool $use_cache = TRUE, int $cache_timeout = 24*60*60) : ?stdClass {
+    public static function getDetailsTV($id, string $language, bool $add_availability = TRUE, bool $use_cache = TRUE, int $cache_timeout = 24*60*60) : ?stdClass {
         if ($use_cache) {
             $q = "SELECT details, last_updated FROM tmdb_cache WHERE tmdbtv_id = :id AND language = :lang";
             $cache = DB::getFirst($q, ['id' => $id, 'lang' => $language]);
@@ -616,7 +616,7 @@ class TMDB {
 
                     if (empty($media->seasons)) {
                         // Search result don't include all the details we need to identify completely/partially available shows
-                        $full_media = static::getDetailsTV($media->id, NULL, FALSE);
+                        $full_media = static::getDetailsTV($media->id, $_GET['language'] ?? 'en', FALSE);
                         $full_media->is_available = $media->is_available;
                         $full_media->requested = $media->requested;
                         $media = $full_media;
