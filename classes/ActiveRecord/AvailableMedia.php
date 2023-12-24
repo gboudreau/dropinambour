@@ -178,9 +178,11 @@ class AvailableMedia extends AbstractActiveRecord
             DB::commitTransaction();
             Logger::info("Done importing available medias from Plex.");
 
-            Logger::info("Updating (recent) seasons titles in Plex...");
-            Plex::updateRecentlyAddedSeasonsTitles();
-            Logger::info("Done updating seasons titles Plex.");
+            if (date('H') == 5 && date('i') < 10) {
+                Logger::info("Updating (recent) seasons titles in Plex...");
+                Plex::updateRecentlyAddedSeasonsTitles();
+                Logger::info("Done updating seasons titles Plex.");
+            }
 
             return $num;
         } catch (Exception $ex) {
