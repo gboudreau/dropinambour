@@ -1,40 +1,39 @@
-FROM php:8.2-apache
+FROM serversideup/php:8.2-fpm-apache
 
-# Install packages
-RUN apt-get update && apt-get install -y curl unzip tzdata && rm -rf /var/lib/apt/lists/*
-
-# Add pho_mysql extension
-RUN docker-php-ext-install pdo_mysql
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl unzip tzdata php8.2-mysqli php8.2-pdo php8.2-pdo-mysql \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
 ENV TZ="UTC"
 
-# Setup document root
-RUN mkdir -p /var/www/
+# Without this, mail() specifying a From header errors out with "msmtp: cannot use both --from and --read-envelope-from"
+RUN sed -i -e 's/ --read-envelope-from//' /etc/php/8.2/fpm/pool.d/z-fpm-with-overrides.conf
 
-# Install application
-WORKDIR /var/www/
-RUN rm -rf html
+# Setup document root
+RUN mkdir -p /var/www/html
+WORKDIR /var/www/html
 
 # This ADD will force 'docker build' to skip the cache starting from this line, when the Github repo changes
 ADD "https://api.github.com/repos/gboudreau/dropinambour/commits?per_page=1" latest_commit
-RUN curl -sLO "https://github.com/gboudreau/dropinambour/archive/main.zip" && unzip main.zip && rm main.zip && mv dropinambour-main html
+RUN curl -sLO "https://github.com/gboudreau/dropinambour/archive/main.zip" && unzip main.zip && rm main.zip && mv dropinambour-main public
 
-WORKDIR /var/www/html/
-RUN curl -sLo /usr/bin/composer https://getcomposer.org/download/2.4.4/composer.phar && chmod +x /usr/bin/composer \
+WORKDIR /var/www/html/public/
+RUN curl -sLo /usr/bin/composer https://getcomposer.org/download/2.6.6/composer.phar && chmod +x /usr/bin/composer \
 	&& composer install
 
 # Use port 8080
 RUN sed -ri -e 's!80!8080!g' /etc/apache2/sites-available/*.conf /etc/apache2/ports.conf
 
 # Use production php.ini
-RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+RUN mv /usr/lib/php/8.2/php.ini-production /usr/lib/php/8.2/php.ini
 
 # Make the config folder a volume
 VOLUME /config
 
-CMD sh -c "if [ ! -f /config/config.php ]; then cp /var/www/html/_config/config.example.php /config/config.php; fi" \
-	&& rm -f /var/www/html/_config/config.example.php || true \
-	&& rmdir /var/www/html/_config || true \
-	&& ln -s /config /var/www/html/_config || true \
-	&& echo "date.timezone=$TZ" >> $PHP_INI_DIR/php.ini \
-	&& apache2-foreground
+CMD sh -c "if [ ! -f /config/config.php ]; then cp /var/www/html/public/_config/config.example.php /config/config.php; fi" \
+	&& rm -f /var/www/html/public/_config/config.example.php || true \
+	&& rmdir /var/www/html/public/_config || true \
+	&& ln -s /config /var/www/html/public/_config || true \
+	&& echo "date.timezone=$TZ" >> /usr/lib/php/8.2/php.ini \
+	&& /init

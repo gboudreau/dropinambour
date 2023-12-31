@@ -26,7 +26,7 @@ If anyone is interested in developping this further, and use it on their own Ple
 
 If you want to use Docker to run dropinambour, skip steps 1 to 3 below, and instead run a container using this command:
 
-    sudo docker run --rm --name dropinambour -v /path/to/config:/config -e TZ=America/Toronto -p 3578:8080 -t gboudreau/dropinambour
+    sudo docker run --rm --name dropinambour -v /path/to/config:/config -e TZ=America/Toronto -e MSMTP_RELAY_SERVER_HOSTNAME=172.17.0.1 -e MSMTP_RELAY_SERVER_PORT=25 -p 3578:8080 -t gboudreau/dropinambour
 
 `/path/to/config` should be the path to an empty folder where `config.php` will be placed. You will probably want to put the log file in there too; see `LOG_FILE` in `config.php`
 
