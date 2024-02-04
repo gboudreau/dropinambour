@@ -105,21 +105,10 @@ class Radarr
             'addOptions'          => (object) ['searchForMovie' => TRUE],
             'tags'                => $tag_ids,
         ];
-        $quality = 'unknown';
-        foreach (Config::get('RADARR_SIMPLIFIED_QUALITY', [], Config::GET_OPT_PARSE_AS_JSON) as $id => $name) {
-            if ($id === $quality_profile_id) {
-                $quality = $name;
-                break;
-            }
-        }
-        if ($quality == 'unknown') {
-            foreach (Radarr::getQualityProfiles() as $qp) {
-                if ($qp->id === $quality_profile_id) {
-                    $quality = $qp->name;
-                    break;
-                }
-            }
-        }
+
+        $qualities = Config::get('RADARR_SIMPLIFIED_QUALITY', [], Config::GET_OPT_PARSE_AS_JSON);
+        $quality = $qualities[$quality_profile_id] ?? findPropValueInArray(Radarr::getQualityProfiles(), 'id', $quality_profile_id, 'name', 'unknown');
+
         try {
             $movie = static::sendPOST('/movie', $data);
             $request = Request::fromRadarrMovie($movie);

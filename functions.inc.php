@@ -163,6 +163,32 @@ function getPropValuesFromArray(array $array, string $props, bool $keep_indices 
     return $values;
 }
 
+/**
+ * Loop on $array, and then on element.$prop, and if $value is found, return element.$return_prop (or element, if $return_prop === '.').
+ * If $value is not found, return $default_return_value.
+ *
+ * @param array  $array
+ * @param string $prop
+ * @param        $value
+ * @param string $return_prop
+ * @param        $default_return_value
+ *
+ * @return mixed
+ */
+function findPropValueInArray(array $array, string $prop, $value, string $return_prop, $default_return_value) : mixed {
+    foreach ($array as $element) {
+        $found = is_array($element->{$prop}) && array_contains($element->{$prop}, $value);
+        $found |= !is_array($element->{$prop}) && $element->{$prop} == $value;
+        if ($found) {
+            if ($return_prop === '.') {
+                return $element;
+            }
+            return $element->{$return_prop};
+        }
+    }
+    return $default_return_value;
+}
+
 function get_http_accepts() : array {
     $accept = strtolower(str_replace(' ', '', $_SERVER['HTTP_ACCEPT']));
     return explode(',', $accept);
