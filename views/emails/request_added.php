@@ -16,9 +16,9 @@ use stdClass;
 
 <div style="margin-top: 12px">
     <?php if (!empty($params->season_number)) : ?>
-        <?php phe(sprintf("%s added a request for the season %d of \"%s\" (%s).", $params->request->requested_by, $params->season_number, $params->request->title, $params->lang)) ?>
+        <?php phe(sprintf("%s added a request for the season %d of \"%s\" (%s).", $params->request->requested_by, $params->season_number, $params->request->title, $params->quality)) ?>
     <?php else : ?>
-        <?php phe(sprintf("%s added a request for the %s \"%s\" (%s).", $params->request->requested_by, $params->request->media_type, $params->request->title, $params->lang)) ?>
+        <?php phe(sprintf("%s added a request for the %s \"%s\" (%s).", $params->request->requested_by, $params->request->media_type, $params->request->title, $params->quality)) ?>
     <?php endif; ?>
 </div>
 

@@ -3,7 +3,7 @@ dropinambour - Requests manager for Plex
 
 **dropinambour** is a software that one can use to manage requests, from Plex users, to add new content (TV shows & movies) onto a Plex server.
 
-It connects to your Plex server (using your Plex account), and manages its own database of requests, and will dispatch them to either Sonarr (v3) or Radarr (v3).
+It connects to your Plex server (using your Plex account), and manages its own database of requests, and will dispatch them to either Sonarr (v4) or Radarr (v3).
 It will send email notifications to the requester, once the media has been downloaded by either Sonarr or Radarr, and is made available on the Plex server.
 
 There is currently no users management; all users allowed to access your Plex server are also allowed to connect to *dropinambour* and make requests.
@@ -13,12 +13,12 @@ There is also no approval process; when a user requests a movie or TV show, it i
 
 It-works-for-me™.
 
-If anyone is interested in developping this further, and use it on their own Plex server, I'd be happy to answer any questons (use the [Discussion](https://github.com/gboudreau/dropinambour/discussions) tab), and merge [Pull Requests](https://github.com/gboudreau/dropinambour/pulls).
+If anyone is interested in developing this further, and use it on their own Plex server, I'd be happy to answer any questons (use the [Discussion](https://github.com/gboudreau/dropinambour/discussions) tab), and merge [Pull Requests](https://github.com/gboudreau/dropinambour/pulls).
 
 ## Requirements
 
 - Plex (obviously)
-- Sonarr and/or Radarr (only v3 are supported)
+- Sonarr (v4) and/or Radarr (v3)
 - A MySQL-compatible server (eg. MariaDB)
 - PHP 8.0+ & [composer](https://getcomposer.org/), or Docker
 

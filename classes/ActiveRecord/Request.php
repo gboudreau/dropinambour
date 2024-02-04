@@ -21,7 +21,6 @@ class Request extends AbstractActiveRecord
     public $type; // movie or show
     public $requested_by;
     public $quality_profile;
-    public $language_profile;
     public $path;
     public $title;
     public $monitored;
@@ -60,9 +59,9 @@ class Request extends AbstractActiveRecord
         return $this->update($this->id);
     }
 
-    public function notifyAdminRequestAdded(?int $season_number = NULL, ?string $lang = NULL) : void {
+    public function notifyAdminRequestAdded(?int $season_number = NULL, ?string $quality = NULL) : void {
         $this->media_type = ($this->type == 'show' ? 'TV show' : 'movie');
-        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number, 'lang' => $lang]);
+        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number, 'quality' => $quality]);
     }
 
     public function notifyAdminRequestRemoved() : void {
@@ -127,7 +126,6 @@ class Request extends AbstractActiveRecord
 
     public function updateFromSonarShow($show) : void {
         $this->quality_profile = $show->qualityProfileId;
-        $this->language_profile = $show->languageProfileId;
         $this->path = $show->path;
         $this->title = $show->title;
         $this->monitored = $show->monitored;

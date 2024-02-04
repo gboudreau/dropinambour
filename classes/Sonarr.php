@@ -45,15 +45,6 @@ class Sonarr {
         return $profiles;
     }
 
-    public static function getLanguageProfiles() : array {
-        $profiles = static::sendGET('/languageProfile');
-        $fct_sort = function ($q1, $q2) {
-            return strtolower($q1->name) <=> strtolower($q2->name);
-        };
-        usort($profiles, $fct_sort);
-        return $profiles;
-    }
-
     public static function getConfigPaths() : array {
         $requests = Request::getAllShowRequests();
         $paths = array_unique(array_map('dirname', getPropValuesFromArray($requests, 'path')));
@@ -65,7 +56,40 @@ class Sonarr {
         return $paths;
     }
 
-    public static function addShow(int $tmdbtv_id, int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, int $language_profile_id, string $path, int $season, ?array $images) : stdClass {
+    private static function getDefault($media) : stdClass {
+        $defaults = Config::getFromDB('SONARR_DEFAULTS', ['language=en' => ''], Config::GET_OPT_PARSE_AS_JSON);
+        foreach ($defaults as $when => $default) {
+            $when = explode('=', $when);
+            if ($when[0] == 'language' && @$media->original_language == $when[1]) {
+                return $default;
+            }
+            if ($when[0] == 'genre') {
+                foreach ($media->genres ?? [] as $genre) {
+                    if (strtolower($genre->name) == strtolower($when[1])) {
+                        return $default;
+                    }
+                }
+            }
+        }
+        return $defaults->default;
+    }
+
+    public static function getDefaultPath($media) : string {
+        $default = static::getDefault($media);
+        return $default->path ?? '';
+    }
+
+    public static function getDefaultQuality($media) : string {
+        $default = static::getDefault($media);
+        return $default->quality ?? '';
+    }
+
+    public static function getDefaultTags($media) : string {
+        $default = static::getDefault($media);
+        return $default->tags ?? '';
+    }
+
+    public static function addShow(int $tmdbtv_id, int $tvdb_id, string $title, string $title_slug, int $quality_profile_id, string $path, int $season, ?array $images) : stdClass {
         if (empty($title_slug)) {
             $title_slug = $tvdb_id;
         }
@@ -74,7 +98,6 @@ class Sonarr {
             'tvdbId'            => $tvdb_id,
             'titleSlug'         => $title_slug,
             'qualityProfileId'  => $quality_profile_id,
-            'languageProfileId' => $language_profile_id,
             'rootFolderPath'    => $path,
             'images'            => $images ?? [],
             'monitored'         => TRUE,
@@ -91,13 +114,10 @@ class Sonarr {
                 'searchForMissingEpisodes'     => TRUE,
             ],
         ];
-        $lang = 'unknown';
-        foreach (Sonarr::getLanguageProfiles() as $lp) {
-            if ($lp->id == $language_profile_id) {
-                $lang = $lp->name;
-                break;
-            }
-        }
+
+        $qualities = Config::get('SONARR_SIMPLIFIED_QUALITY', [], Config::GET_OPT_PARSE_AS_JSON);
+        $quality = $qualities[$quality_profile_id] ?? findPropValueInArray(Sonarr::getQualityProfiles(), 'id', $quality_profile_id, 'name', 'unknown');
+
         $show = static::sendPOST('/series', $data);
         if ($season > 1) {
             static::addSeason($show->id, $tmdbtv_id, $season);
@@ -105,7 +125,7 @@ class Sonarr {
         $request = Request::fromSonarrShow($show);
         $request->tmdbtv_id = $tmdbtv_id;
         $request->save();
-        $request->notifyAdminRequestAdded($season, $lang);
+        $request->notifyAdminRequestAdded($season, $quality);
         return $show;
     }
 

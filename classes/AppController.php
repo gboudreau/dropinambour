@@ -291,30 +291,15 @@ class AppController extends AbstractController
         return $this->response($this->render('/tmdb_media', ['media' => $media, 'language' => $lang, 'recommended_medias' => $recommended_medias, 'stats' => $stats, 'urls' => $urls]));
     }
 
-    #[ArrayShape(['media' => "object", 'paths' => "array", 'profiles' => "array", 'default_path' => "string", 'default_quality' => "int", 'default_language' => "int|string", 'default_tags' => "string"])]
+    #[ArrayShape(['media' => "object", 'paths' => "array", 'profiles' => "array", 'default_path' => "string", 'default_quality' => "int", 'default_tags' => "string"])]
     private static function getRequestFormData(stdClass $media) : array {
-        $default_language_id = $media->media_type == 'movie' ? '' : (int) Config::getFromDB('SONARR_DEFAULT_LANGUAGE');
-        if (!empty($_GET['language']) && $media->media_type != 'movie') {
-            foreach (Sonarr::getLanguageProfiles() as $lp) {
-                if ($lp->name == 'English' && $_GET['language'] == 'en') {
-                    $default_language_id = $lp->id;
-                    break;
-                }
-                if ($lp->name == 'French' && $_GET['language'] == 'fr') {
-                    $default_language_id = $lp->id;
-                    break;
-                }
-            }
-        }
-
         return [
             'media' => $media,
             'paths' => $media->media_type == 'movie' ? Radarr::getConfigPaths() : Sonarr::getConfigPaths(),
             'profiles' => $media->media_type == 'movie' ? Radarr::getQualityProfiles() : Sonarr::getQualityProfiles(),
-            'default_path' => $media->media_type == 'movie' ? Radarr::getDefaultPath($media) : Config::getFromDB('SONARR_DEFAULT_PATH'),
-            'default_quality' => $media->media_type == 'movie' ? (int) Radarr::getDefaultQuality($media) : (int) Config::getFromDB('SONARR_DEFAULT_QUALITY'),
-            'default_language' => $default_language_id,
-            'default_tags' => $media->media_type == 'movie' ? Radarr::getDefaultTags($media) : '',
+            'default_path' => $media->media_type == 'movie' ? Radarr::getDefaultPath($media) : Sonarr::getDefaultPath($media),
+            'default_quality' => $media->media_type == 'movie' ? (int) Radarr::getDefaultQuality($media) : (int) Sonarr::getDefaultQuality($media),
+            'default_tags' => $media->media_type == 'movie' ? Radarr::getDefaultTags($media) : Sonarr::getDefaultTags($media),
         ];
     }
 
@@ -349,7 +334,7 @@ class AppController extends AbstractController
             $tvdb_id = $_POST['tvdb_id'];
             if (!empty($tvdb_id)) {
                 try {
-                    Sonarr::addShow($_POST['tmdb_id'], $_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['language'], $_POST['path'], $_POST['season'], json_decode($_POST['images_json']));
+                    Sonarr::addShow($_POST['tmdb_id'], $_POST['tvdb_id'], $_POST['title'], $_POST['title_slug'], $_POST['quality'], $_POST['path'], $_POST['season'], json_decode($_POST['images_json']));
                 } catch (Exception $ex) {
                     // Can happen, for example, when the serie exists on TheTVDB, but has no English translation; eg. https://www.thetvdb.com/?id=395619&tab=series
                     Logger::error("Failed to add request on Sonarr; will create request unmonitored. Exception: " . $ex->getMessage());
@@ -594,10 +579,15 @@ class AppController extends AbstractController
     }
 
     public function saveSonarrSettings() : Response {
-        Config::setInDB('SONARR_DEFAULT_PATH', $_POST['path']);
-        Config::setInDB('SONARR_DEFAULT_QUALITY', $_POST['quality']);
-        Config::setInDB('SONARR_DEFAULT_LANGUAGE', $_POST['language']);
-        $this->showAlert("Saved settings for Sonarr.");
+        $defaults = Config::getFromDB('SONARR_DEFAULTS', (object) [], Config::GET_OPT_PARSE_AS_JSON);
+        $when = $_POST['when'];
+        $defaults->{$when} = (object) [
+            'path' => $_POST['path'],
+            'quality' => $_POST['quality'],
+            'tags' => $_POST['tags'],
+        ];
+        Config::setInDB('SONARR_DEFAULTS', $defaults);
+        $this->showAlert("Saved settings for Radarr.");
         return $this->redirectResponse(Router::getURL(Router::ACTION_VIEW, Router::VIEW_ADMIN_SONARR));
     }
 

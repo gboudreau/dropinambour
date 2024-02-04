@@ -28,13 +28,13 @@ $CONFIG->RADARR_API_KEY = '3a0000000000000000000000000000c8';
 // Link used in email notifications:
 $CONFIG->RADARR_BASE_URL = 'http://192.168.155.88:7878';
 
-// Only Sonarr v3 is supported
+// Only Sonarr v4 is supported
 $CONFIG->SONARR_API_URL = 'http://192.168.155.88:8989/api/v3';
 $CONFIG->SONARR_API_KEY = 'd1000000000000000000000000000044';
 // Link used in email notifications:
 $CONFIG->SONARR_BASE_URL = 'http://192.168.155.88:8989';
 
-// Unused for now; should be used as available option for search
+// Used as available option for search
 $CONFIG->LANGUAGES = ['en', 'fr'];
 
 // Sendgrid API key to send emails

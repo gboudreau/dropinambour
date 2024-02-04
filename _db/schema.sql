@@ -51,7 +51,6 @@ CREATE TABLE `requests` (
   `type` enum('movie','show') NOT NULL,
   `requested_by` tinytext DEFAULT NULL,
   `quality_profile` tinyint(3) unsigned DEFAULT NULL,
-  `language_profile` tinyint(3) unsigned DEFAULT NULL,
   `path` varchar(255) CHARACTER SET utf8mb4 DEFAULT NULL,
   `title` tinytext CHARACTER SET utf8mb4 DEFAULT NULL,
   `monitored` tinyint(1) NOT NULL DEFAULT 1,
