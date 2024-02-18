@@ -171,11 +171,11 @@ function getPropValuesFromArray(array $array, string $props, bool $keep_indices 
  * @param string $prop
  * @param        $value
  * @param string $return_prop
- * @param        $default_return_value
+ * @param mixed  $default_return_value
  *
  * @return mixed
  */
-function findPropValueInArray(array $array, string $prop, $value, string $return_prop, $default_return_value) : mixed {
+function findPropValueInArray(array $array, string $prop, $value, string $return_prop, $default_return_value = FALSE) : mixed {
     foreach ($array as $element) {
         $found = is_array($element->{$prop}) && array_contains($element->{$prop}, $value);
         $found |= !is_array($element->{$prop}) && $element->{$prop} == $value;

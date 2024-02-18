@@ -15,6 +15,7 @@ class Router
     public const ACTION_SEARCH   = 'search';
     public const ACTION_CRON     = 'cron';
     public const ACTION_REMOVE   = 'remove';
+    public const ACTION_PLEX_WEB_HOOK = 'plexWebHook';
 
     public const VIEW_MEDIA        = 'media';
     public const VIEW_COLLECTION   = 'collection';
@@ -79,7 +80,7 @@ class Router
 
         // Unless this is a cron request (which use the token saved in the DB), verify that the user is logged in.
         // Otherwise, re-direct to the login page.
-        if ($action != static::ACTION_CRON && $request->query->get('what') != static::AJAX_CHECK_LOGIN) {
+        if ($action != static::ACTION_CRON && $request->query->get('what') != static::AJAX_CHECK_LOGIN && $action != static::ACTION_PLEX_WEB_HOOK) {
             if (Plex::needsAuth()) {
                 return 'viewRoot';
             }
@@ -94,6 +95,7 @@ class Router
                 => $action . ucfirst($request->query->get('what')),
             static::ACTION_SEARCH,
             static::ACTION_CRON,
+            static::ACTION_PLEX_WEB_HOOK,
                 => $action,
             default => 'viewRoot',
         };

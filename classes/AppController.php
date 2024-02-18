@@ -628,4 +628,12 @@ class AppController extends AbstractController
         // Return empty response when OK
         return $this->response('');
     }
+
+    public function plexWebHook() : Response {
+        // Ref: https://support.plex.tv/articles/115002267687-webhooks/
+        // Add in Plex settings: https://dropinambour.domain.com/?action=plexWebHook
+        //$payload = json_decode($_POST['payload']);
+        //Logger::info("Received Plex WebHook: " . json_encode($payload));
+        return $this->response('OK');
+    }
 }
