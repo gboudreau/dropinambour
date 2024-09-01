@@ -291,7 +291,7 @@ class AppController extends AbstractController
         return $this->response($this->render('/tmdb_media', ['media' => $media, 'language' => $lang, 'recommended_medias' => $recommended_medias, 'stats' => $stats, 'urls' => $urls]));
     }
 
-    #[ArrayShape(['media' => "object", 'paths' => "array", 'profiles' => "array", 'default_path' => "string", 'default_quality' => "int", 'default_tags' => "string"])]
+    #[ArrayShape(['media' => "object", 'paths' => "array", 'profiles' => "array", 'default_path' => "string", 'default_quality' => "int", 'default_tags' => "string", 'default_language' => "string"])]
     private static function getRequestFormData(stdClass $media) : array {
         return [
             'media' => $media,
@@ -300,6 +300,7 @@ class AppController extends AbstractController
             'default_path' => $media->media_type == 'movie' ? Radarr::getDefaultPath($media) : Sonarr::getDefaultPath($media),
             'default_quality' => $media->media_type == 'movie' ? (int) Radarr::getDefaultQuality($media) : (int) Sonarr::getDefaultQuality($media),
             'default_tags' => $media->media_type == 'movie' ? Radarr::getDefaultTags($media) : Sonarr::getDefaultTags($media),
+            'default_language' => @$_GET['language'] ?? 'en',
         ];
     }
 
