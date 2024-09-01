@@ -1,4 +1,4 @@
-FROM serversideup/php:8.2-fpm-apache
+FROM serversideup/php:8.2-fpm-apache-v2.2.1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl unzip tzdata php8.2-mysqli php8.2-pdo php8.2-pdo-mysql \
