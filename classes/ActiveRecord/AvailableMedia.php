@@ -106,6 +106,10 @@ class AvailableMedia extends AbstractActiveRecord
                 if ($media->type == 'show') {
                     // Import episodes
                     $season_mds = Plex::getItemMetadata($item->key . '/children', TRUE);
+                    if (!is_array($season_mds)) {
+                        Logger::warning("Failed to get season metadata for $item->key/children from Plex: " . json_encode($season_mds));
+                        continue;
+                    }
 
                     $q = "SELECT * FROM available_episodes WHERE media_id = :media_id";
                     $known_seasons = DB::getAll($q, $media->id, 'season');

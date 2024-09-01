@@ -371,6 +371,10 @@ class Plex
                 continue;
             }
 
+            if (empty($plex_season->parentKey)) {
+                continue;
+            }
+
             $show_details = Plex::getItemMetadata($plex_season->parentKey);
             $season_number = $plex_season->index;
             $num_plex_episodes = $plex_season->leafCount;
@@ -404,7 +408,7 @@ class Plex
                 Logger::info("    Failed to load TV show season details on TMDB, for TV ID $tmdbtv_id, season $season_number. Skipping.");
                 continue;
             }
-            $num_total_eps = count($season_details->episodes);
+            $num_total_eps = count($season_details->episodes ?? []);
             if ($num_total_eps == 0) {
                 Logger::info("    TMDB says: season $season_number has $num_total_eps episodes. Skipping.");
                 continue;
