@@ -13,6 +13,7 @@ if (Config::get('TL_UID')) {
     $tv_medias = $result['shows'];
     $movie_medias = $result['movies'];
 } else {
+//if (empty($tv_medias) || empty($movie_medias)) {
     $tv_medias = TMDB::getSuggestedShows();
     $movie_medias = TMDB::getSuggestedMovies();
 }

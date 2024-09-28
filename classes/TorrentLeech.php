@@ -8,7 +8,7 @@ class TorrentLeech {
     public static function getPopularMedias() : array {
         $cache_key = 'TL_POPULAR_' . date('Ymd');
         $result = Config::getFromDB($cache_key);
-        if ($result) {
+        if (!empty($result)) {
             return (array) json_decode($result);
         }
 
@@ -16,7 +16,7 @@ class TorrentLeech {
             $date = urlencode($since_when);
             $url = TorrentLeech::BASE_URL . "/torrents/browse/list/added/$date/orderby/completed/order/desc";
             $header = 'Cookie: tluid=' . Config::get('TL_UID') . '; tlpass=' . Config::get('TL_PASS');
-            $response = sendGET($url, [$header]);
+            $response = sendGET($url, [$header], TRUE, 90, TRUE, TRUE);
             $torrent_list = json_decode($response)->torrentList;
             $result = [];
             foreach ($torrent_list as $torrent) {
@@ -39,8 +39,8 @@ class TorrentLeech {
                     }
                 }
             }
-            $result['movies'] = array_values($result['movies']);
-            $result['shows'] = array_values($result['shows']);
+            $result['movies'] = array_values($result['movies'] ?? []);
+            $result['shows'] = array_values($result['shows'] ?? []);
             return $result;
         };
         $result1 = $fct_get_results('-2 days');

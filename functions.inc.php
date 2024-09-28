@@ -287,6 +287,9 @@ function sendGET(string $url, array $headers = array(), bool $follow_redirects =
         }
 
         if (!empty($result->solution->response)) {
+            if (is_object($result->solution->response)) {
+                $result->solution->response = json_encode($result->solution->response);
+            }
             $result->solution->response = preg_replace('@.*pre-wrap;.>(.*)</pre.*@', '\1', $result->solution->response);
             return $result->solution->response;
         }
