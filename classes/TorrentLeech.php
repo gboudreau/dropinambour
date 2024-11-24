@@ -2,6 +2,8 @@
 
 namespace PommePause\Dropinambour;
 
+use Exception;
+
 class TorrentLeech {
     private const BASE_URL = 'https://www.torrentleech.org';
 
@@ -16,7 +18,20 @@ class TorrentLeech {
             $date = urlencode($since_when);
             $url = TorrentLeech::BASE_URL . "/torrents/browse/list/added/$date/orderby/completed/order/desc";
             $header = 'Cookie: tluid=' . Config::get('TL_UID') . '; tlpass=' . Config::get('TL_PASS');
-            $response = sendGET($url, [$header], TRUE, 90, TRUE, TRUE);
+
+            $tries = 0;
+            while (TRUE) {
+                try {
+                    $response = sendGET($url, [$header], TRUE, 90, TRUE, TRUE);
+                    break;
+                } catch (Exception $ex) {
+                    $tries++;
+                    if ($tries >= 3) {
+                        throw $ex;
+                    }
+                }
+            }
+
             $torrent_list = json_decode($response)->torrentList;
             $result = [];
             foreach ($torrent_list as $torrent) {
