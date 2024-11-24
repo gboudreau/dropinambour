@@ -599,13 +599,19 @@ class AppController extends AbstractController
     }
 
     public function cron() : Response {
+        $locked = DB::getFirst('SELECT GET_LOCK(:lock_name, 20)', 'dropi_cron');
+        if (!$locked) {
+            Logger::warning("Won't execute cron; another cron process is already running.");
+            return $this->response('');
+        }
+
         Logger::info("Executing cron...");
 
         // Use Plex admin' access token
         $_SESSION['PLEX_ACCESS_TOKEN'] = Config::getFromDB('PLEX_ACCESS_TOKEN');
 
         try {
-            if ((date('Hi') >= 500 && date('Hi') < 505) || @$_REQUEST['daily'] == 'y') {
+            if ((date('Hi') >= 500 && date('Hi') < 510 && date('D') === 'Sun') || @$_REQUEST['daily'] == 'y') {
                 AvailableMedia::importAvailableMediasFromPlex();
             } else {
                 AvailableMedia::importRecentMediasFromPlex();

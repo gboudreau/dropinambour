@@ -65,18 +65,20 @@ class AvailableMedia extends AbstractActiveRecord
 
     public static function importAvailableMediasFromPlex(?int $section = NULL) : int {
         $num = 0;
+        $run_daily_jobs = empty($section) || (date('Hi') >= 500 && date('Hi') < 510);
+
+        if ($run_daily_jobs) {
+            Logger::info("Updating (recent) seasons titles in Plex...");
+            Plex::updateRecentlyAddedSeasonsTitles();
+            Logger::info("Done updating seasons titles Plex.");
+        }
 
         Logger::info("Importing available medias from Plex...");
         DB::startTransaction();
 
         try {
             if (empty($section)) {
-                Logger::info("Importing all sections from Plex: will truncate available_* tables, and re-import everything.");
-
-                DB::execute("TRUNCATE available_medias");
-                DB::execute("TRUNCATE available_medias_guids");
-                DB::execute("TRUNCATE available_episodes");
-
+                Logger::info("Importing all sections from Plex.");
                 $items = Plex::getAllSectionsItems();
             } elseif ($section == Plex::SECTION_RECENTLY_ADDED) {
                 $items = Plex::getRecentlyAddedItems();
@@ -181,12 +183,6 @@ class AvailableMedia extends AbstractActiveRecord
 
             DB::commitTransaction();
             Logger::info("Done importing available medias from Plex.");
-
-            if (date('H') == 5 && date('i') < 10) {
-                Logger::info("Updating (recent) seasons titles in Plex...");
-                Plex::updateRecentlyAddedSeasonsTitles();
-                Logger::info("Done updating seasons titles Plex.");
-            }
 
             return $num;
         } catch (Exception $ex) {
