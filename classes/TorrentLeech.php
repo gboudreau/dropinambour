@@ -58,9 +58,14 @@ class TorrentLeech {
             $result['shows'] = array_values($result['shows'] ?? []);
             return $result;
         };
-        $result1 = $fct_get_results('-2 days');
-        $result2 = $fct_get_results('-1 weeks');
-        $result3 = $fct_get_results('-6 weeks');
+        try {
+            $result1 = $fct_get_results('-2 days');
+            $result2 = $fct_get_results('-1 weeks');
+            $result3 = $fct_get_results('-6 weeks');
+        } catch (\Exception $ex) {
+            error_log("Failed to load popular medias on TorrentLeech: " . $ex->getMessage());
+            return [];
+        }
 
         $result = [];
         $result['movies'] = array_merge($result1['movies'], $result2['movies'], $result3['movies']);
