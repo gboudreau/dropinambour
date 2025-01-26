@@ -475,6 +475,7 @@ class Plex
             'id' => $season_media_id,
             'includeExternalMedia' => 1,
             'title.value' => $new_season_title,
+            'title.locked' => 1,
         ];
         return static::sendPOST("/library/sections/$section/all", $data, 'PUT');
     }
