@@ -599,8 +599,9 @@ class Plex
     }
 
     private static function sendPOST($url, array $data, $method = 'POST', ?string $base_url = NULL, int $use_cache_with_timeout = 0, ?string $access_token = NULL, bool $decode_json = TRUE) {
-        $data['X-Plex-Client-Identifier'] = static::getClientID();
-        $data['X-Plex-Product'] = static::getAppName();
+        $data_url = [];
+        $data_url['X-Plex-Client-Identifier'] = static::getClientID();
+        $data_url['X-Plex-Product'] = static::getAppName();
         if ($access_token !== static::ACCESS_TOKEN_SKIP) {
             if ($access_token == NULL) {
                 $access_token = static::getAccessToken();
@@ -608,10 +609,13 @@ class Plex
             if (empty($access_token)) {
                 throw new PlexException("Empty access token");
             }
-            $data['X-Plex-Token'] = $access_token;
+            $data_url['X-Plex-Token'] = $access_token;
+        }
+        if ($method !== 'POST') {
+            $data_url = array_merge($data_url, $data);
         }
         $sep = string_contains($url, '?') ? '&' : '?';
-        $url .= $sep . http_build_query($data);
+        $url .= $sep . http_build_query($data_url);
 
         if (empty($base_url)) {
             $base_url = static::getBaseURL();
@@ -632,7 +636,7 @@ class Plex
         if (empty($response)) {
             try {
                 Logger::debug("Plex::sendPOST($method $base_url$url)");
-                $response = sendPOST($base_url . $url, $data, ["Accept: application/json"], NULL, $method);
+                $response = sendPOST($base_url . $url, $method === 'POST' ? $data : [], ["Accept: application/json"], NULL, $method);
             } catch (Exception $ex) {
                 throw new PlexException($ex->getMessage(), $ex->getCode());
             }
