@@ -93,6 +93,7 @@ class Sonarr {
         if (empty($title_slug)) {
             $title_slug = $tvdb_id;
         }
+        $monitored = Config::get('SONARR_MONITOR_ON_REQ', TRUE);
         $data = [
             'title'             => $title,
             'tvdbId'            => $tvdb_id,
@@ -100,18 +101,18 @@ class Sonarr {
             'qualityProfileId'  => $quality_profile_id,
             'rootFolderPath'    => $path,
             'images'            => $images ?? [],
-            'monitored'         => TRUE,
+            'monitored'         => $monitored,
             'seasonFolder'      => TRUE,
             'seasons' => [
                 (object) [
                     'seasonNumber' => $season,
-                    'monitored'    => TRUE,
+                    'monitored'    => $monitored,
                 ],
             ],
             'addOptions' => (object) [
-                'monitor'                      => $season == 1 ? 'firstSeason' : 'none',
+                'monitor'                      => $monitored && $season == 1 ? 'firstSeason' : 'none',
                 'searchForCutoffUnmetEpisodes' => FALSE,
-                'searchForMissingEpisodes'     => TRUE,
+                'searchForMissingEpisodes'     => $monitored,
             ],
         ];
 
@@ -130,10 +131,11 @@ class Sonarr {
     }
 
     public static function addSeason(int $sonarr_id, int $tmdbtv_id, int $season_number) : stdClass {
+        $monitored = Config::get('SONARR_MONITOR_ON_REQ', TRUE);
         $show = static::getShow($sonarr_id);
         foreach ($show->seasons as $season) {
             if ($season->seasonNumber == $season_number) {
-                $season->monitored = TRUE;
+                $season->monitored = $monitored;
                 break;
             }
         }
@@ -148,7 +150,7 @@ class Sonarr {
             }
         }
         if (!empty($episodes_to_monitor)) {
-            static::sendPOST("/episode/monitor", ['episodeIds' => $episodes_to_monitor, 'monitored' => TRUE], 'PUT');
+            static::sendPOST("/episode/monitor", ['episodeIds' => $episodes_to_monitor, 'monitored' => $monitored], 'PUT');
         }
 
         static::sendCommand('SeasonSearch', ['seriesId' => $sonarr_id, 'seasonNumber' => $season_number]);

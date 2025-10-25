@@ -95,14 +95,15 @@ class Radarr
                 $tag_ids[] = getPropValuesFromArray($existing_tags, 'id')[$pos];
             }
         }
+        $monitored = Config::get('RADARR_MONITOR_ON_REQ', TRUE);
         $data = [
             'title'               => $title,
             'tmdbId'              => $tmdb_id,
             'qualityProfileId'    => $quality_profile_id,
             'rootFolderPath'      => $path,
             'minimumAvailability' => 'released',
-            'monitored'           => TRUE,
-            'addOptions'          => (object) ['searchForMovie' => TRUE],
+            'monitored'           => $monitored,
+            'addOptions'          => (object) ['searchForMovie' => $monitored],
             'tags'                => $tag_ids,
         ];
 

@@ -27,12 +27,17 @@ $CONFIG->RADARR_API_URL = 'http://192.168.155.88:7878/api/v3';
 $CONFIG->RADARR_API_KEY = '3a0000000000000000000000000000c8';
 // Link used in email notifications:
 $CONFIG->RADARR_BASE_URL = 'http://192.168.155.88:7878';
+// FALSE = Radarr will NOT monitor/search for new requests - you will need to search manually.
+$CONFIG->RADARR_MONITOR_ON_REQ = TRUE;
 
 // Only Sonarr v4 is supported
 $CONFIG->SONARR_API_URL = 'http://192.168.155.88:8989/api/v3';
 $CONFIG->SONARR_API_KEY = 'd1000000000000000000000000000044';
 // Link used in email notifications:
 $CONFIG->SONARR_BASE_URL = 'http://192.168.155.88:8989';
+// FALSE = Sonarr will NOT monitor/search for new requests - you will need to search manually.
+// Can be useful if you prefer season packs (who wouldn't?), since Sonarr will sometimes download episodes instead...
+$CONFIG->SONARR_MONITOR_ON_REQ = FALSE;
 
 // Used as available option for search
 $CONFIG->LANGUAGES = ['en', 'fr'];
