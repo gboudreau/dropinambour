@@ -37,8 +37,9 @@ $CONFIG->SONARR_BASE_URL = 'http://192.168.155.88:8989';
 // Used as available option for search
 $CONFIG->LANGUAGES = ['en', 'fr'];
 
-// Sendgrid API key to send emails
-$CONFIG->SENDGRID_API_KEY         = 'SG....x8';
+// Brevo API key to send emails
+$CONFIG->BREVO_API_KEY            = 'xkeysib-...';
+
 $CONFIG->EMAIL_NOTIF_FROM_NAME    = 'dropinambour';
 $CONFIG->EMAIL_NOTIF_FROM_ADDRESS = 'admin@something.com';
 

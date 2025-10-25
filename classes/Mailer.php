@@ -39,61 +39,132 @@ class Mailer
 
         Logger::info("        Sending email to $email_to");
 
-        $sendgrid = new SendGrid(Config::get('SENDGRID_API_KEY'));
+        $brevo_api_key = Config::get('BREVO_API_KEY');
+        if ($brevo_api_key) {
+            $config = \Brevo\Client\Configuration::getDefaultConfiguration()->setApiKey('api-key', $brevo_api_key);
+            $brevo_api = new \Brevo\Client\Api\TransactionalEmailsApi(NULL, $config);
+            $brevo_email = new \Brevo\Client\Model\SendSmtpEmail();
 
-        $_from = new Email($from_name, $from_email);
+            $brevo_email->setSender(
+                new \Brevo\Client\Model\SendSmtpEmailSender(
+                    [
+                        'name' => $from_name,
+                        'email' => $from_email,
+                    ]
+                )
+            );
 
-        if (preg_match('/^(.*) <(.*)>$/', $email_to, $re)) {
-            $_to = new Email($re[1], $re[2]);
+            if (preg_match('/^(.*) <(.*)>$/', $email_to, $re)) {
+                $brevo_email->setTo(
+                    [
+                        new \Brevo\Client\Model\SendSmtpEmailTo(
+                            [
+                                'email' => $re[2],
+                                'name' => $re[1],
+                            ]
+                        )
+                    ]
+                );
+            } else {
+                $brevo_email->setTo(
+                    [
+                        new \Brevo\Client\Model\SendSmtpEmailTo(
+                            [
+                                'email' => $email_to,
+                                ]
+                        )
+                    ]
+                );
+            }
+
+            if (!empty($text_content)) {
+                $brevo_email->setTextContent($text_content);
+            }
+            if ($html_content !== NULL) {
+                $brevo_email->setHtmlContent($html_content);
+            }
+
+            $brevo_email->setSubject($subject);
+
+            if (!empty($attachments)) {
+                $brevo_attachments = [];
+                foreach ($attachments as $file_name => $file) {
+                    $file_encoded = base64_encode(file_get_contents($file));
+                    $brevo_attachments[] = new \Brevo\Client\Model\SendSmtpEmailAttachment(
+                        [
+                            'name' => $file_name,
+                            'content' => $file_encoded,
+                        ]
+                    );
+                }
+                $brevo_email->setAttachment($brevo_attachments);
+            }
+
+            $brevo_email->setTags($categories);
+
+            try {
+                $brevo_api->sendTransacEmail($brevo_email);
+            } catch (Exception $e) {
+                Logger::error("Couldn't send email to $email_to. Response from Sendgrid: " . var_export($e, TRUE));
+                return FALSE;
+            }
         } else {
-            $_to = new Email(NULL, $email_to);
-        }
+            $sendgrid = new SendGrid(Config::get('SENDGRID_API_KEY'));
 
-        $_contents = [];
-        if (!empty($text_content)) {
-            $_contents[] = new Content("text/plain", $text_content);
-        }
-        if ($html_content !== NULL) {
-            $_contents[] = new Content("text/html", $html_content);
-        }
-        if (empty($_contents)) {
-            throw new Exception("Empty");
-        }
+            $_from = new Email($from_name, $from_email);
 
-        $mail = new Mail($_from, $subject, $_to, $_contents[0]);
-
-        if (count($_contents) == 2) {
-            $mail->addContent($_contents[1]);
-        }
-
-        if (!empty($categories)) {
-            foreach ($categories as $category) {
-                $mail->addCategory($category);
+            if (preg_match('/^(.*) <(.*)>$/', $email_to, $re)) {
+                $_to = new Email($re[1], $re[2]);
+            } else {
+                $_to = new Email(NULL, $email_to);
             }
-        }
 
-        if (!empty($attachments)) {
-            foreach ($attachments as $file_name => $file) {
-                $file_encoded = base64_encode(file_get_contents($file));
-                $attachment = new Attachment();
-                $attachment->setContent($file_encoded);
-                $attachment->setDisposition("attachment");
-                $attachment->setFilename($file_name);
-                $mail->addAttachment($attachment);
+            $_contents = [];
+            if (!empty($text_content)) {
+                $_contents[] = new Content("text/plain", $text_content);
             }
-        }
+            if ($html_content !== NULL) {
+                $_contents[] = new Content("text/html", $html_content);
+            }
+            if (empty($_contents)) {
+                throw new Exception("Empty");
+            }
 
-        // Track opens & clicks?
-        $tracking_settings = new TrackingSettings();
-        $tracking_settings->setClickTracking($track_clicks);
-        $tracking_settings->setOpenTracking($track_clicks);
-        $tracking_settings->setSubscriptionTracking(FALSE);
+            $mail = new Mail($_from, $subject, $_to, $_contents[0]);
 
-        $response = $sendgrid->client->mail()->send()->post($mail);
+            if (count($_contents) == 2) {
+                $mail->addContent($_contents[1]);
+            }
 
-        if ($response->statusCode() >= 400) {
-            Logger::error("Couldn't send email to $email_to. Response from Sendgrid: " . var_export($response, TRUE));
-            return FALSE;
+            if (!empty($categories)) {
+                foreach ($categories as $category) {
+                    $mail->addCategory($category);
+                }
+            }
+
+            if (!empty($attachments)) {
+                foreach ($attachments as $file_name => $file) {
+                    $file_encoded = base64_encode(file_get_contents($file));
+                    $attachment = new Attachment();
+                    $attachment->setContent($file_encoded);
+                    $attachment->setDisposition("attachment");
+                    $attachment->setFilename($file_name);
+                    $mail->addAttachment($attachment);
+                }
+            }
+
+            // Track opens & clicks?
+            $tracking_settings = new TrackingSettings();
+            $tracking_settings->setClickTracking($track_clicks);
+            $tracking_settings->setOpenTracking($track_clicks);
+            $tracking_settings->setSubscriptionTracking(FALSE);
+
+            $response = $sendgrid->client->mail()->send()->post($mail);
+
+            if ($response->statusCode() >= 400) {
+                Logger::error("Couldn't send email to $email_to. Response from Sendgrid: " . var_export($response, TRUE));
+                return FALSE;
+            }
         }
 
         return TRUE;

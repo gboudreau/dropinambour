@@ -17,7 +17,8 @@
     "delight-im/cookie": "^3.4",
     "sendgrid/sendgrid": "~6.2",
     "league/plates": "3.*",
-    "symfony/http-foundation": "^v5.4.48"
+    "symfony/http-foundation": "^v5.4.48",
+    "getbrevo/brevo-php": "^2.0"
   },
   "require-dev": {
     "jetbrains/phpstorm-attributes": "^1.0"
