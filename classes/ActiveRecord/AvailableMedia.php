@@ -65,12 +65,15 @@ class AvailableMedia extends AbstractActiveRecord
 
     public static function importAvailableMediasFromPlex(?int $section = NULL) : int {
         $num = 0;
-        $run_daily_jobs = empty($section) || (date('Hi') >= 500 && date('Hi') < 510);
+
+        $daily_lock_file = sys_get_temp_dir() . '/' . date('Ymd') . '.lock'; // To make sure we only run daily jobs once per day
+        $run_daily_jobs = empty($section) || ((date('Hi') >= 500 && !file_exists($daily_lock_file)));
 
         if ($run_daily_jobs) {
             Logger::info("Updating (recent) seasons titles in Plex...");
             Plex::updateRecentlyAddedSeasonsTitles();
             Logger::info("Done updating seasons titles Plex.");
+            file_put_contents($daily_lock_file, '1');
         }
 
         Logger::info("Importing available medias from Plex...");
