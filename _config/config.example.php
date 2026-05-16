@@ -64,5 +64,8 @@ $CONFIG->PLEX_SERVER_NAME = "Guillaume's Plex";
 // Subscribe to TheTVDB to get a PIN: https://thetvdb.com/dashboard/account/subscription
 $CONFIG->THETVDB_SUBSCRIPTION_PIN = '12AB3CDE';
 
-// (Optional) Used when a remove host is protected by Cloudflare
+// (Optional) Used when a remote host is protected by Cloudflare
 //$CONFIG->FLARESOLVERR_URL = 'http://127.0.0.1:8191/v1';
+
+// (Optional) Health Check for cron job
+//$CONFIG->HEALTH_CHECK_URL = 'https://hc-ping.com/.../0';

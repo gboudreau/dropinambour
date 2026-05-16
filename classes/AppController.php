@@ -610,6 +610,9 @@ class AppController extends AbstractController
         // Use Plex admin' access token
         $_SESSION['PLEX_ACCESS_TOKEN'] = Config::getFromDB('PLEX_ACCESS_TOKEN');
 
+        $success = 0;
+        $expect = 1;
+
         try {
             if ((date('Hi') >= 500 && date('Hi') < 510 && date('D') === 'Sun') || @$_REQUEST['daily'] == 'y') {
                 AvailableMedia::importAvailableMediasFromPlex();
@@ -618,6 +621,7 @@ class AppController extends AbstractController
             }
             Radarr::importAllRequests();
             Sonarr::importAllRequests();
+            $success++;
         } catch (PlexException $ex) {
             Logger::error("Caught exception while trying to import available medias From Plex: " . $ex->getMessage());
         } catch (Exception $ex) {
@@ -626,8 +630,15 @@ class AppController extends AbstractController
 
         if (date('Hi') < 5) {
             // Daily update of discover page
+            $expect++;
             Logger::info("Updating discover (home) page content...");
             $this->render('/discover');
+            $success++;
+        }
+
+        $hc_ping_url = Config::get('HEALTH_CHECK_URL');
+        if ($hc_ping_url && $expect === $success) {
+            exec("curl --retry 3 -s -X GET " . escapeshellarg($hc_ping_url));
         }
 
         Logger::info("Done executing cron.");
