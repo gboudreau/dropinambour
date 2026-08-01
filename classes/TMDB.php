@@ -638,12 +638,18 @@ class TMDB {
                         $shows[$key] = $media;
                     }
 
-                    $local_media_id = array_search($media->tvdb_id, $available_tvdb_ids);
-                    if (empty($local_media_id)) {
-                        $local_media_id = array_search($media->id, $available_tmdb_ids);
-                    }
-                    $q = "SELECT * FROM available_episodes WHERE media_id = :media_id";
-                    $available_seasons = DB::getAll($q, $local_media_id, 'season');
+                    // A show can be linked to several local available_medias rows
+                    // (e.g. when Plex re-matches a show and its GUID changes, creating a new row),
+                    // so aggregate available_episodes across all of them, taking the MAX episode count per season.
+                    $q = "SELECT season, MAX(episodes) AS episodes
+                          FROM available_episodes
+                          WHERE media_id IN (
+                              SELECT media_id FROM available_medias_guids
+                              WHERE (source = 'tvdb'   AND source_id = :tvdb_id)
+                                 OR (source = 'tmdbtv' AND source_id = :tmdbtv_id)
+                          )
+                          GROUP BY season";
+                    $available_seasons = DB::getAll($q, ['tvdb_id' => $media->tvdb_id ?? -1, 'tmdbtv_id' => $media->id ?? -1], 'season');
 
                     if (count($medias_by_id) == 1 && !empty($media->requested)) {
                         $q = "SELECT season, monitored FROM requested_episodes WHERE request_id = :req_id";
