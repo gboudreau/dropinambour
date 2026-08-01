@@ -22,7 +22,7 @@ class TorrentLeech {
             $tries = 0;
             while (TRUE) {
                 try {
-                    $response = sendGET($url, [$header], TRUE, 90, TRUE, TRUE);
+                    $response = sendGET($url, [$header], TRUE, 90, TRUE, FALSE);
                     break;
                 } catch (Exception $ex) {
                     $tries++;
