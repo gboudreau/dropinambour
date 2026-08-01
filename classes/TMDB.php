@@ -205,11 +205,19 @@ class TMDB {
             if (empty($response)) {
                 $url = "/movie/$id?append_to_response=videos,external_ids" . (!empty($language) ? '&language=' . urlencode($language) : '');
                 $response = static::sendGET($url);
-                if ($use_cache) {
+                if ($use_cache && !empty($response)) {
                     // Save in cache
                     $q = "DELETE FROM tmdb_cache WHERE tmdb_id = :id AND language = :lang ; INSERT INTO tmdb_cache SET tmdb_id = :id, language = :lang, details = :details, last_updated = NOW()";
                     DB::insert($q, ['id' => $id, 'lang' => $language, 'details' => json_encode($response)]);
                 }
+            }
+            if (empty($response)) {
+                if ($use_cache) {
+                    $q = "DELETE FROM tmdb_cache WHERE tmdb_id = :id AND language = :lang";
+                    DB::execute($q, ['id' => $id, 'lang' => $language]);
+                }
+                Logger::error("Received empty response from TMDB for movie ID $id");
+                return NULL;
             }
             static::addMediaTypeMovie($response);
             $medias = [$response];
@@ -374,11 +382,19 @@ class TMDB {
             if (empty($response)) {
                 $url = "/tv/$id?append_to_response=videos,external_ids" . (!empty($language) ? '&language=' . urlencode($language) : '');
                 $response = static::sendGET($url);
-                if ($use_cache) {
+                if ($use_cache && !empty($response)) {
                     // Save in cache
                     $q = "DELETE FROM tmdb_cache WHERE tmdbtv_id = :id AND language = :lang ; INSERT INTO tmdb_cache SET tmdbtv_id = :id, language = :lang, details = :details, name = :title, last_updated = NOW()";
                     DB::insert($q, ['id' => $id, 'lang' => $language, 'details' => json_encode($response), 'title' => $response->name]);
                 }
+            }
+            if (empty($response)) {
+                if ($use_cache) {
+                    $q = "DELETE FROM tmdb_cache WHERE tmdbtv_id = :id AND language = :lang";
+                    DB::insert($q, ['id' => $id, 'lang' => $language]);
+                }
+                Logger::error("Received empty response from TMDB for TV series ID $id");
+                return NULL;
             }
             static::nameToTitle($response);
             static::addMediaTypeTV($response);
@@ -478,8 +494,7 @@ class TMDB {
         $token = static::getBearerToken();
         Logger::debug("TMDB::sendGET($url)");
         $response = sendGET(static::getBaseURL() . $url, ["Accept: application/json", "Authorization: Bearer $token", "Content-Type: application/json;charset=utf-8"]);
-        $response = json_decode($response);
-        return $response;
+        return json_decode($response);
     }
 
     /* Pragma mark - Internal functions */
