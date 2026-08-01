@@ -321,6 +321,19 @@ function sendGET(string $url, array $headers = array(), bool $follow_redirects =
 
     curl_close($ch);
 
+    // double-gzipped ! Ref: https://www.themoviedb.org/talk/6a0cf9a5dd8f54b8836a3750
+    if (str_starts_with($result, "\x1f\x8b")) {
+        $decoded = FALSE;
+        if (function_exists('gzdecode')) {
+            $decoded = @gzdecode($result);
+        } elseif (function_exists('gzinflate')) { // raw deflate fallback
+            $decoded = @gzinflate($result);
+        }
+        if ($decoded !== FALSE) {
+            $result = $decoded;
+        }
+    }
+
     if ($info['http_code'] == 429 && $retry_on_429) {
         // Too Many Requests; sleep 1s and retry
         sleep(1);
