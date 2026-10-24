@@ -1,39 +1,75 @@
-FROM serversideup/php:8.2-fpm-apache-v2.2.1
+FROM php:8.4-apache
 
+ENV TZ=UTC
+
+# System dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl unzip tzdata php8.2-mysqli php8.2-pdo php8.2-pdo-mysql \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
+    && apt-get install -y --no-install-recommends \
+        curl unzip tzdata \
+        libonig-dev libxml2-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV TZ="UTC"
+# PHP extensions
+RUN docker-php-ext-install -j"$(nproc)" \
+    mysqli pdo_mysql mbstring simplexml
 
-# Without this, mail() specifying a From header errors out with "msmtp: cannot use both --from and --read-envelope-from"
-RUN sed -i -e 's/ --read-envelope-from//' /etc/php/8.2/fpm/pool.d/z-fpm-with-overrides.conf
+# Production PHP configuration
+RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && echo "date.timezone=${TZ}" > "$PHP_INI_DIR/conf.d/timezone.ini"
 
-# Setup document root
-RUN mkdir -p /var/www/html
+# Apache: port 8080, document root, .htaccess
+RUN a2enmod rewrite \
+    && sed -ri 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf \
+    && sed -ri 's/:80>/:8080>/' /etc/apache2/sites-available/*.conf \
+    && sed -ri 's!/var/www/html!/var/www/html/public!g' \
+        /etc/apache2/sites-available/*.conf \
+    && printf '%s\n' \
+        '<Directory /var/www/html/public>' \
+        '    AllowOverride All' \
+        '    Require all granted' \
+        '</Directory>' \
+        > /etc/apache2/conf-available/app.conf \
+    && a2enconf app
+
 WORKDIR /var/www/html
 
-# This ADD will force 'docker build' to skip the cache starting from this line, when the Github repo changes
-ADD "https://api.github.com/repos/gboudreau/dropinambour/commits?per_page=1" latest_commit
-RUN curl -sLO "https://github.com/gboudreau/dropinambour/archive/main.zip" && unzip main.zip && rm main.zip && mv dropinambour-main public
+# Bust cache when GitHub repository changes
+ADD https://api.github.com/repos/gboudreau/dropinambour/commits?per_page=1 latest_commit
 
-WORKDIR /var/www/html/public/
-RUN curl -sLo /usr/bin/composer https://getcomposer.org/download/2.6.6/composer.phar && chmod +x /usr/bin/composer \
-	&& composer install
+# Download application
+RUN curl -fsSL -o main.zip \
+        https://github.com/gboudreau/dropinambour/archive/refs/heads/main.zip \
+    && unzip -q main.zip \
+    && rm main.zip \
+    && mv dropinambour-main public
 
-# Use port 8080
-RUN sed -ri -e 's!80!8080!g' /etc/apache2/sites-available/*.conf /etc/apache2/ports.conf
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Use production php.ini
-RUN mv /usr/lib/php/8.2/php.ini-production /usr/lib/php/8.2/php.ini
+WORKDIR /var/www/html/public
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Make the config folder a volume
+# Preserve example config and replace _config with symlink
+RUN cp _config/config.example.php /tmp/config.example.php \
+    && rm -rf _config \
+    && mkdir -p /config \
+    && ln -s /config _config \
+    && touch /var/log/dropinambour.log \
+    && chown www-data:www-data /var/log/dropinambour.log
+
+# Initialize config at startup
+RUN printf '%s\n' \
+    '#!/bin/sh' \
+    'set -e' \
+    'if [ ! -f /config/config.php ]; then' \
+    '    cp /tmp/config.example.php /config/config.php' \
+    'fi' \
+    'exec apache2-foreground' \
+    > /usr/local/bin/start-app \
+    && chmod +x /usr/local/bin/start-app
+
 VOLUME /config
 
-CMD sh -c "if [ ! -f /config/config.php ]; then cp /var/www/html/public/_config/config.example.php /config/config.php; fi" \
-	&& rm -f /var/www/html/public/_config/config.example.php || true \
-	&& rmdir /var/www/html/public/_config || true \
-	&& ln -s /config /var/www/html/public/_config || true \
-	&& echo "date.timezone=$TZ" >> /usr/lib/php/8.2/php.ini \
-	&& /init
+EXPOSE 8080
+
+CMD ["start-app"]

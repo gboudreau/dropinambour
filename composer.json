@@ -7,7 +7,7 @@
     "apcu-autoloader": true
   },
   "require": {
-    "php": ">=8.0",
+    "php": ">=8.2",
     "ext-PDO": "*",
     "ext-curl": "*",
     "ext-json": "*",
@@ -17,7 +17,7 @@
     "delight-im/cookie": "^3.4",
     "sendgrid/sendgrid": "~6.2",
     "league/plates": "3.*",
-    "symfony/http-foundation": "^v5.4.48",
+    "symfony/http-foundation": "^v5.4.54",
     "getbrevo/brevo-php": "^2.0"
   },
   "require-dev": {

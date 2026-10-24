@@ -20,7 +20,7 @@ If anyone is interested in developing this further, and use it on their own Plex
 - Plex (obviously)
 - Sonarr (v4) and/or Radarr (v3)
 - A MySQL-compatible server (eg. MariaDB)
-- PHP 8.0+ & [composer](https://getcomposer.org/), or Docker
+- PHP 8.2+ & [composer](https://getcomposer.org/), or Docker
 
 ## Installation
 
