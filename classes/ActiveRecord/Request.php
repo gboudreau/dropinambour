@@ -60,8 +60,14 @@ class Request extends AbstractActiveRecord
     }
 
     public function notifyAdminRequestAdded(?int $season_number = NULL, ?string $quality = NULL) : void {
+        $admin_email = Config::get('NEW_REQUESTS_NOTIF_EMAIL');
+        $user_email = Plex::getUserInfos()->email ?? NULL;
+        $recipient_email = preg_match('/^(.*) <(.*)>$/', $admin_email, $matches) ? $matches[2] : $admin_email;
+        if ((!empty($user_email) && strcasecmp(trim($user_email), trim($recipient_email)) === 0) || Plex::isServerAdmin()) {
+            return;
+        }
         $this->media_type = ($this->type == 'show' ? 'TV show' : 'movie');
-        Mailer::sendFromTemplate(Config::get('NEW_REQUESTS_NOTIF_EMAIL'), "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number, 'quality' => $quality]);
+        Mailer::sendFromTemplate($admin_email, "New request: \"$this->title\"", 'request_added', ['request' => $this, 'season_number' => $season_number, 'quality' => $quality]);
     }
 
     public function notifyAdminRequestRemoved() : void {
